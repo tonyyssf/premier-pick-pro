@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, BarChart3, Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
@@ -25,7 +25,7 @@ export const Navbar: React.FC = () => {
               alt="PLPE Logo" 
               className="h-10 w-auto"
             />
-            <span className="text-xl font-bold bg-plpe-gradient bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-gray-900">
               Pick'em
             </span>
           </div>
@@ -64,12 +64,6 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="p-2 text-gray-600 hover:text-plpe-purple transition-colors">
-              <Users className="h-5 w-5" />
-            </button>
-            <button className="p-2 text-gray-600 hover:text-plpe-purple transition-colors">
-              <BarChart3 className="h-5 w-5" />
-            </button>
             <button className="p-2 text-gray-600 hover:text-plpe-purple transition-colors">
               <Settings className="h-5 w-5" />
             </button>
