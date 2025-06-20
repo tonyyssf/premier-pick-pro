@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
-import { Calendar, Clock, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Undo } from 'lucide-react';
 import { usePicks } from '../contexts/PicksContext';
 import { Button } from './ui/button';
 
@@ -8,10 +8,13 @@ export const WeeklyPicks: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedFixture, setSelectedFixture] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [undoing, setUndoing] = useState(false);
   const { 
     fixtures, 
     currentGameweek, 
     submitPick, 
+    undoPick,
+    canUndoPick,
     getTeamUsedCount, 
     hasPickForGameweek, 
     getCurrentPick, 
@@ -21,6 +24,7 @@ export const WeeklyPicks: React.FC = () => {
 
   const currentPick = getCurrentPick();
   const hasAlreadyPicked = currentGameweek ? hasPickForGameweek(currentGameweek.id) : false;
+  const canUndo = canUndoPick();
 
   const handleTeamSelect = (fixtureId: string, teamId: string) => {
     setSelectedFixture(fixtureId);
@@ -37,6 +41,12 @@ export const WeeklyPicks: React.FC = () => {
       }
       setSubmitting(false);
     }
+  };
+
+  const handleUndoPick = async () => {
+    setUndoing(true);
+    await undoPick();
+    setUndoing(false);
   };
 
   const getSelectedTeamInfo = () => {
@@ -111,12 +121,25 @@ export const WeeklyPicks: React.FC = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
-          <div className="flex items-center space-x-3 mb-4">
-            <CheckCircle className="h-8 w-8 text-green-500" />
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Pick Confirmed</h3>
-              <p className="text-gray-600">You've made your pick for this gameweek</p>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="h-8 w-8 text-green-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Pick Confirmed</h3>
+                <p className="text-gray-600">You've made your pick for this gameweek</p>
+              </div>
             </div>
+            {canUndo && (
+              <Button
+                onClick={handleUndoPick}
+                variant="outline"
+                disabled={undoing}
+                className="flex items-center space-x-2"
+              >
+                <Undo className="h-4 w-4" />
+                <span>{undoing ? 'Undoing...' : 'Undo Pick'}</span>
+              </Button>
+            )}
           </div>
           
           {pickInfo && (
@@ -144,6 +167,14 @@ export const WeeklyPicks: React.FC = () => {
                   </p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {!canUndo && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Note:</strong> You can no longer change your pick as the first match of this gameweek has started.
+              </p>
             </div>
           )}
         </div>

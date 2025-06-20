@@ -58,6 +58,8 @@ interface PicksContextType {
   gameweekScores: GameweekScore[];
   userStandings: UserStanding[];
   submitPick: (fixtureId: string, teamId: string) => Promise<boolean>;
+  undoPick: () => Promise<boolean>;
+  canUndoPick: () => boolean;
   getTeamUsedCount: (teamId: string) => number;
   hasPickForGameweek: (gameweekId: string) => boolean;
   getCurrentPick: () => Pick | null;
@@ -463,6 +465,88 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
+  const canUndoPick = (): boolean => {
+    if (!currentGameweek || !hasPickForGameweek(currentGameweek.id)) {
+      return false;
+    }
+
+    // Check if any fixture in the current gameweek has started
+    const now = new Date();
+    const hasStartedFixture = fixtures.some(fixture => 
+      fixture.kickoffTime <= now
+    );
+
+    return !hasStartedFixture;
+  };
+
+  const undoPick = async (): Promise<boolean> => {
+    if (!user || !currentGameweek) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to undo picks.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!canUndoPick()) {
+      toast({
+        title: "Cannot Undo Pick",
+        description: "You can only undo your pick before the first match starts.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    const currentPick = getCurrentPick();
+    if (!currentPick) {
+      toast({
+        title: "No Pick to Undo",
+        description: "You haven't made a pick for this gameweek yet.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_picks')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('gameweek_id', currentGameweek.id);
+
+      if (error) {
+        console.error('Error undoing pick:', error);
+        toast({
+          title: "Error Undoing Pick",
+          description: "Could not undo your pick. Please try again.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Remove the pick from local state
+      setPicks(prevPicks => 
+        prevPicks.filter(pick => pick.gameweekId !== currentGameweek.id)
+      );
+      
+      toast({
+        title: "Pick Undone",
+        description: "Your pick has been removed. You can now make a new selection.",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   const getTeamUsedCount = (teamId: string): number => {
     return picks.filter(pick => pick.pickedTeamId === teamId).length;
   };
@@ -484,6 +568,8 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       gameweekScores,
       userStandings,
       submitPick,
+      undoPick,
+      canUndoPick,
       getTeamUsedCount,
       hasPickForGameweek,
       getCurrentPick,
