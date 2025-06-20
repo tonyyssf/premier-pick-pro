@@ -18,14 +18,14 @@ export const WeeklyPicks: React.FC = () => {
   const { submitPick, getTeamUsedCount, hasPickForGameweek, getCurrentPick, currentGameweek } = usePicks();
   
   const teams: Team[] = [
-    { id: '1', name: 'Arsenal', opponent: 'Chelsea', venue: 'H', usedCount: 0 },
-    { id: '2', name: 'Manchester City', opponent: 'Liverpool', venue: 'A', usedCount: 0 },
-    { id: '3', name: 'Manchester United', opponent: 'Tottenham', venue: 'H', usedCount: 0 },
-    { id: '4', name: 'Liverpool', opponent: 'Manchester City', venue: 'H', usedCount: 0 },
-    { id: '5', name: 'Chelsea', opponent: 'Arsenal', venue: 'A', usedCount: 0 },
-    { id: '6', name: 'Tottenham', opponent: 'Manchester United', venue: 'A', usedCount: 0 },
-    { id: '7', name: 'Newcastle', opponent: 'Brighton', venue: 'H', usedCount: 0 },
-    { id: '8', name: 'Brighton', opponent: 'Newcastle', venue: 'A', usedCount: 0 },
+    { id: '1', name: 'Arsenal', opponent: 'Chelsea', venue: 'H' as const, usedCount: 0 },
+    { id: '2', name: 'Manchester City', opponent: 'Liverpool', venue: 'A' as const, usedCount: 0 },
+    { id: '3', name: 'Manchester United', opponent: 'Tottenham', venue: 'H' as const, usedCount: 0 },
+    { id: '4', name: 'Liverpool', opponent: 'Manchester City', venue: 'H' as const, usedCount: 0 },
+    { id: '5', name: 'Chelsea', opponent: 'Arsenal', venue: 'A' as const, usedCount: 0 },
+    { id: '6', name: 'Tottenham', opponent: 'Manchester United', venue: 'A' as const, usedCount: 0 },
+    { id: '7', name: 'Newcastle', opponent: 'Brighton', venue: 'H' as const, usedCount: 0 },
+    { id: '8', name: 'Brighton', opponent: 'Newcastle', venue: 'A' as const, usedCount: 0 },
   ].map(team => ({
     ...team,
     usedCount: getTeamUsedCount(team.id)
