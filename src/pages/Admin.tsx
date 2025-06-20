@@ -3,6 +3,7 @@ import React from 'react';
 import { Layout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AdminDataSync } from '@/components/AdminDataSync';
+import { AdminDataTable } from '@/components/AdminDataTable';
 import { Shield } from 'lucide-react';
 
 const Admin = () => {
@@ -20,7 +21,10 @@ const Admin = () => {
             </p>
           </div>
 
-          <AdminDataSync />
+          <div className="space-y-8">
+            <AdminDataSync />
+            <AdminDataTable />
+          </div>
         </div>
       </Layout>
     </ProtectedRoute>
