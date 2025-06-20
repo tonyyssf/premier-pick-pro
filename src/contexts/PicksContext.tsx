@@ -222,7 +222,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const { data: standingsData, error: standingsError } = await supabase
         .from('user_standings')
         .select('*')
-        .order('current_rank', { ascending: true, nullsLast: true });
+        .order('current_rank', { ascending: true, nullsFirst: false });
 
       if (standingsError) {
         console.error('Error loading standings:', standingsError);
