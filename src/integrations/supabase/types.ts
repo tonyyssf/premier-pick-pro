@@ -349,6 +349,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_league_creator: {
+        Args: { _user_id: string; _league_id: string }
+        Returns: boolean
+      }
+      is_league_member: {
+        Args: { _user_id: string; _league_id: string }
+        Returns: boolean
+      }
+      is_league_public: {
+        Args: { _league_id: string }
+        Returns: boolean
+      }
       update_all_scores: {
         Args: Record<PropertyKey, never>
         Returns: undefined
