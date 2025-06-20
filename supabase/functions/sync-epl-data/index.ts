@@ -189,11 +189,10 @@ async function syncGameweeksAndFixtures() {
   console.log('Starting gameweeks and fixtures sync...');
   
   try {
-    // Use the correct schedule endpoint with the current year
-    const currentYear = new Date().getFullYear();
-    console.log(`Fetching schedule for year: ${currentYear}`);
+    // Fetch schedule for 2025/26 season (which actually runs from 2025 to 2026)
+    console.log(`Fetching schedule for 2025/26 season...`);
     
-    const scheduleData = await fetchFromRapidAPI(`schedule?year=${currentYear}`);
+    const scheduleData = await fetchFromRapidAPI(`schedule?year=2025`);
     
     if (!scheduleData) {
       throw new Error('No schedule data received from API');
@@ -202,34 +201,44 @@ async function syncGameweeksAndFixtures() {
     console.log(`Received schedule data structure:`, JSON.stringify(scheduleData, null, 2));
     
     // Parse fixtures data based on the actual API response structure
-    let fixtures = [];
-    if (Array.isArray(scheduleData)) {
-      fixtures = scheduleData;
-    } else if (scheduleData.fixtures) {
-      fixtures = scheduleData.fixtures;
-    } else if (scheduleData.matches) {
-      fixtures = scheduleData.matches;
-    } else if (scheduleData.data) {
-      fixtures = Array.isArray(scheduleData.data) ? scheduleData.data : [scheduleData.data];
-    } else if (scheduleData.schedule) {
-      fixtures = scheduleData.schedule;
+    let allFixtures = [];
+    
+    if (scheduleData.schedule && typeof scheduleData.schedule === 'object') {
+      // The schedule is an object with date keys containing arrays of fixtures
+      for (const [dateKey, dayFixtures] of Object.entries(scheduleData.schedule)) {
+        if (Array.isArray(dayFixtures)) {
+          allFixtures.push(...dayFixtures);
+        }
+      }
+    } else if (Array.isArray(scheduleData)) {
+      allFixtures = scheduleData;
+    } else if (scheduleData.fixtures && Array.isArray(scheduleData.fixtures)) {
+      allFixtures = scheduleData.fixtures;
+    } else if (scheduleData.matches && Array.isArray(scheduleData.matches)) {
+      allFixtures = scheduleData.matches;
+    } else if (scheduleData.data && Array.isArray(scheduleData.data)) {
+      allFixtures = scheduleData.data;
     }
     
-    console.log(`Parsed ${fixtures.length} fixtures from response`);
+    console.log(`Parsed ${allFixtures.length} fixtures from response`);
     
-    if (fixtures.length === 0) {
+    if (allFixtures.length === 0) {
       throw new Error('No fixtures found in API response. The API may return data in a different format.');
     }
     
-    // Group fixtures by rounds (gameweeks) - simplified approach
+    // Group fixtures by rounds (gameweeks) based on date
     const gameweeksMap = new Map<string, any[]>();
     
-    for (const fixture of fixtures) {
+    for (const fixture of allFixtures) {
       try {
-        // Adapt to different fixture data structures
+        // Extract fixture date from various possible fields
         const fixtureDate = new Date(fixture.date || fixture.kickoffTime || fixture.fixture?.date || fixture.startTime);
-        const weekNumber = Math.ceil((fixtureDate.getTime() - new Date(`${currentYear}-08-01`).getTime()) / (7 * 24 * 60 * 60 * 1000));
-        const gameweekKey = `Gameweek ${Math.max(1, Math.min(38, weekNumber))}`;
+        
+        // Calculate gameweek number based on the start of the season (August 2025)
+        const seasonStart = new Date('2025-08-01');
+        const weekNumber = Math.ceil((fixtureDate.getTime() - seasonStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+        const gameweekNumber = Math.max(1, Math.min(38, weekNumber));
+        const gameweekKey = `Gameweek ${gameweekNumber}`;
         
         if (!gameweeksMap.has(gameweekKey)) {
           gameweeksMap.set(gameweekKey, []);
@@ -284,21 +293,44 @@ async function syncGameweeksAndFixtures() {
         for (const fixture of sortedFixtures) {
           try {
             const fixtureId = fixture.id || fixture.fixture?.id;
-            const homeTeam = fixture.homeTeam || fixture.teams?.home || fixture.home;
-            const awayTeam = fixture.awayTeam || fixture.teams?.away || fixture.away;
-            const homeScore = fixture.homeScore || fixture.goals?.home || fixture.score?.home;
-            const awayScore = fixture.awayScore || fixture.goals?.away || fixture.score?.away;
-            const status = fixture.status || fixture.fixture?.status?.short || 'scheduled';
+            
+            // Handle different team data structures
+            let homeTeam, awayTeam;
+            if (fixture.competitors && Array.isArray(fixture.competitors)) {
+              homeTeam = fixture.competitors.find(team => team.isHome === true);
+              awayTeam = fixture.competitors.find(team => team.isHome === false);
+            } else if (fixture.teams) {
+              homeTeam = fixture.teams.home || fixture.teams[1];
+              awayTeam = fixture.teams.away || fixture.teams[0];
+            } else {
+              homeTeam = fixture.homeTeam;
+              awayTeam = fixture.awayTeam;
+            }
+            
+            // Handle scores
+            let homeScore, awayScore;
+            if (fixture.competitors && Array.isArray(fixture.competitors)) {
+              homeScore = fixture.competitors.find(team => team.isHome === true)?.score;
+              awayScore = fixture.competitors.find(team => team.isHome === false)?.score;
+            } else {
+              homeScore = fixture.homeScore || fixture.goals?.home || fixture.score?.home;
+              awayScore = fixture.awayScore || fixture.goals?.away || fixture.score?.away;
+            }
+            
+            // Handle status
+            let status = 'scheduled';
+            if (fixture.completed === true || fixture.status?.detail === 'FT' || fixture.status === 'FT') {
+              status = 'finished';
+            } else if (fixture.status?.state === 'in' || fixture.status === 'LIVE') {
+              status = 'live';
+            }
             
             if (!fixtureId || !homeTeam?.id || !awayTeam?.id) {
               console.log(`Skipping invalid fixture:`, fixture);
               continue;
             }
             
-            const fixtureStatus = status === 'FT' || status === 'finished' ? 'finished' : 
-                                status === 'LIVE' || status === 'live' ? 'live' : 'scheduled';
-            
-            console.log(`Creating fixture: ${homeTeam.name} vs ${awayTeam.name}`);
+            console.log(`Creating fixture: ${homeTeam.name || homeTeam.displayName} vs ${awayTeam.name || awayTeam.displayName}`);
             
             const { error: fixtureError } = await supabase
               .from('fixtures')
@@ -310,7 +342,7 @@ async function syncGameweeksAndFixtures() {
                 kickoff_time: fixture.date || fixture.kickoffTime || fixture.fixture?.date || fixture.startTime,
                 home_score: homeScore,
                 away_score: awayScore,
-                status: fixtureStatus
+                status: status
               }, {
                 onConflict: 'id'
               });
