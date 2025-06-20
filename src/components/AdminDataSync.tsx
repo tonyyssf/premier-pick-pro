@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Download, Database, Users } from 'lucide-react';
@@ -11,6 +12,7 @@ export const AdminDataSync: React.FC = () => {
   const [syncingTeams, setSyncingTeams] = useState(false);
   const [syncingFixtures, setSyncingFixtures] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const syncData = async (action: 'sync-teams' | 'sync-fixtures' | 'sync-all') => {
     const setSyncState = action === 'sync-teams' ? setSyncingTeams : 
@@ -24,6 +26,11 @@ export const AdminDataSync: React.FC = () => {
       });
 
       if (error) throw error;
+
+      // Invalidate all admin-related queries to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['admin-teams'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-gameweeks'] });
+      await queryClient.invalidateQueries({ queryKey: ['admin-fixtures'] });
 
       toast({
         title: "Sync Successful",
