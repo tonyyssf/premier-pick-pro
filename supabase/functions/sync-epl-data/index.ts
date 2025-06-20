@@ -38,11 +38,29 @@ interface EPLFixture {
 // Add delay between API calls to avoid rate limiting
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper function to generate consistent UUID from integer ID
+// Helper function to generate proper UUID from integer ID using crypto namespace
 function generateUUIDFromId(id: number, prefix: string = 'fixture'): string {
-  // Create a consistent UUID-like string from the integer ID
-  const idStr = id.toString().padStart(8, '0');
-  return `${prefix}-${idStr.slice(0, 4)}-${idStr.slice(4, 8)}-0000-000000000000`;
+  // Create a deterministic seed from the ID and prefix
+  const seed = `${prefix}-${id}`;
+  
+  // Use a simple hash to create deterministic bytes
+  const encoder = new TextEncoder();
+  const data = encoder.encode(seed);
+  
+  // Create a simple hash
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    hash = ((hash << 5) - hash + data[i]) & 0xffffffff;
+  }
+  
+  // Convert to positive number and create UUID-like format
+  const positiveHash = Math.abs(hash);
+  const hashStr = positiveHash.toString(16).padStart(8, '0');
+  
+  // Create a proper UUID format (8-4-4-4-12)
+  const uuid = `${hashStr.slice(0, 8)}-${hashStr.slice(0, 4)}-4${hashStr.slice(1, 4)}-8${hashStr.slice(4, 7)}-${hashStr.padEnd(12, '0').slice(0, 12)}`;
+  
+  return uuid;
 }
 
 async function fetchFromRapidAPI(endpoint: string) {
@@ -196,13 +214,32 @@ async function syncGameweeksAndFixtures() {
   console.log('Starting gameweeks and fixtures sync...');
   
   try {
-    // Fetch schedule for 2025/26 season (which actually runs from 2025 to 2026)
+    // Fetch schedule for 2025/26 season (try both 2025 and 2026 to be sure)
     console.log(`Fetching schedule for 2025/26 season...`);
     
-    const scheduleData = await fetchFromRapidAPI(`schedule?year=2025`);
+    let scheduleData;
+    const possibleYears = [2025, 2026];
+    
+    for (const year of possibleYears) {
+      try {
+        console.log(`Trying to fetch schedule for year: ${year}`);
+        scheduleData = await fetchFromRapidAPI(`schedule?year=${year}`);
+        
+        if (scheduleData && (scheduleData.schedule || scheduleData.fixtures || scheduleData.matches || Array.isArray(scheduleData))) {
+          console.log(`Successfully fetched schedule data for year ${year}`);
+          break;
+        }
+        
+        // Add delay between attempts
+        await delay(2000);
+      } catch (error) {
+        console.log(`Failed to fetch schedule for year ${year}:`, error.message);
+        await delay(2000);
+      }
+    }
     
     if (!scheduleData) {
-      throw new Error('No schedule data received from API');
+      throw new Error('No schedule data received from API for 2025/26 season');
     }
     
     console.log(`Received schedule data structure:`, JSON.stringify(scheduleData, null, 2));
@@ -241,8 +278,8 @@ async function syncGameweeksAndFixtures() {
         // Extract fixture date from various possible fields
         const fixtureDate = new Date(fixture.date || fixture.kickoffTime || fixture.fixture?.date || fixture.startTime);
         
-        // Calculate gameweek number based on the start of the season (August 2025)
-        const seasonStart = new Date('2025-08-01');
+        // Calculate gameweek number based on the start of the 2025/26 season (August 2025)
+        const seasonStart = new Date('2025-08-15'); // Typical Premier League season start
         const weekNumber = Math.ceil((fixtureDate.getTime() - seasonStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
         const gameweekNumber = Math.max(1, Math.min(38, weekNumber));
         const gameweekKey = `Gameweek ${gameweekNumber}`;
