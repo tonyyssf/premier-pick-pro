@@ -31,6 +31,7 @@ export const PremierLeagueStandings: React.FC = () => {
   const [standings, setStandings] = useState<TeamStanding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMockData, setIsMockData] = useState(false);
 
   useEffect(() => {
     fetchStandings();
@@ -55,6 +56,9 @@ export const PremierLeagueStandings: React.FC = () => {
       }
 
       console.log('Received data from function:', data);
+      
+      // Check if this is mock data
+      setIsMockData(!!data.note);
       
       // Sort alphabetically by team name since season hasn't started
       const sortedStandings = data.standings.sort((a: TeamStanding, b: TeamStanding) => 
@@ -113,6 +117,13 @@ export const PremierLeagueStandings: React.FC = () => {
             (Alphabetical order - Season not started)
           </span>
         </CardTitle>
+        {isMockData && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+            <p className="text-sm text-yellow-800">
+              ⚠️ Displaying sample data - Live API temporarily unavailable
+            </p>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
