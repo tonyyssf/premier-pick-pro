@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
 import { Calendar, Clock, CheckCircle } from 'lucide-react';
@@ -68,7 +67,7 @@ export const WeeklyPicks: React.FC = () => {
 
   if (loading || fixturesLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple"></div>
           <span className="ml-3 text-gray-600">Loading your picks...</span>
@@ -79,7 +78,7 @@ export const WeeklyPicks: React.FC = () => {
 
   if (!currentGameweek) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">No Active Gameweek</h2>
           <p className="text-gray-600">There's currently no active gameweek to make picks for.</p>
@@ -92,7 +91,7 @@ export const WeeklyPicks: React.FC = () => {
     const pickInfo = getCurrentPickInfo();
     
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
         <div className="mb-8">
           <div className="flex items-center space-x-2 text-plpe-purple mb-2">
             <Calendar className="h-5 w-5" />
@@ -153,7 +152,7 @@ export const WeeklyPicks: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-plpe-purple mb-2">
           <Calendar className="h-5 w-5" />
