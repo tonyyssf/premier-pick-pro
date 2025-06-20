@@ -1,20 +1,32 @@
 
-
-import React from 'react';
-import { Settings, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export const Navbar: React.FC = () => {
   const { signOut, user } = useAuth();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
   };
 
   const isActive = (path: string) => location.pathname === path;
+
+  const navigationItems = [
+    { to: "/", label: "My Picks" },
+    { to: "/leagues", label: "Leagues" },
+    { to: "/leaderboards", label: "Leaderboards" },
+    { to: "/admin", label: "Admin" }
+  ];
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
 
   return (
     <nav className="bg-white shadow-lg border-b-4 border-plpe-purple">
@@ -28,51 +40,72 @@ export const Navbar: React.FC = () => {
             />
           </div>
           
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/" 
-              className={`font-medium transition-colors ${
-                isActive('/') 
-                  ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
-                  : 'text-gray-700 hover:text-plpe-purple'
-              }`}
-            >
-              My Picks
-            </Link>
-            <Link 
-              to="/leagues" 
-              className={`font-medium transition-colors ${
-                isActive('/leagues') 
-                  ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
-                  : 'text-gray-700 hover:text-plpe-purple'
-              }`}
-            >
-              Leagues
-            </Link>
-            <Link 
-              to="/leaderboards" 
-              className={`font-medium transition-colors ${
-                isActive('/leaderboards') 
-                  ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
-                  : 'text-gray-700 hover:text-plpe-purple'
-              }`}
-            >
-              Leaderboards
-            </Link>
-            <Link 
-              to="/admin" 
-              className={`font-medium transition-colors ${
-                isActive('/admin') 
-                  ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
-                  : 'text-gray-700 hover:text-plpe-purple'
-              }`}
-            >
-              Admin
-            </Link>
+            {navigationItems.map((item) => (
+              <Link 
+                key={item.to}
+                to={item.to} 
+                className={`font-medium transition-colors ${
+                  isActive(item.to) 
+                    ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
+                    : 'text-gray-700 hover:text-plpe-purple'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="p-2 text-gray-600 hover:text-plpe-purple transition-colors">
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-gray-600 hover:text-plpe-purple">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-64">
+                  <div className="flex flex-col space-y-4 mt-8">
+                    {navigationItems.map((item) => (
+                      <Link 
+                        key={item.to}
+                        to={item.to}
+                        onClick={closeMobileMenu}
+                        className={`font-medium text-lg py-2 px-4 rounded-lg transition-colors ${
+                          isActive(item.to) 
+                            ? 'text-plpe-purple bg-purple-50' 
+                            : 'text-gray-700 hover:text-plpe-purple hover:bg-gray-50'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                    
+                    {user && (
+                      <div className="border-t pt-4 mt-6">
+                        <Button 
+                          onClick={() => {
+                            handleSignOut();
+                            closeMobileMenu();
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Sign Out</span>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Desktop Settings and Sign Out */}
+            <button className="hidden md:block p-2 text-gray-600 hover:text-plpe-purple transition-colors">
               <Settings className="h-5 w-5" />
             </button>
             
@@ -81,7 +114,7 @@ export const Navbar: React.FC = () => {
                 onClick={handleSignOut}
                 variant="outline"
                 size="sm"
-                className="flex items-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
+                className="hidden md:flex items-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Sign Out</span>
