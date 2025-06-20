@@ -4,10 +4,16 @@ import { Layout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal, Award, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { LeagueLeaderboard } from '@/components/LeagueLeaderboard';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface LeagueWithRank {
   id: string;
@@ -20,6 +26,7 @@ interface LeagueWithRank {
 const Leaderboards = () => {
   const [leaguesWithRanks, setLeaguesWithRanks] = useState<LeagueWithRank[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set());
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -103,6 +110,18 @@ const Leaderboards = () => {
     }
   };
 
+  const toggleLeagueExpansion = (leagueId: string) => {
+    setExpandedLeagues(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(leagueId)) {
+        newSet.delete(leagueId);
+      } else {
+        newSet.add(leagueId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <ProtectedRoute>
       <Layout>
@@ -110,7 +129,7 @@ const Leaderboards = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">My League Rankings</h1>
             <p className="text-gray-600 mb-6">
-              See your current rank in each league you're a member of.
+              See your current rank in each league you're a member of. Click on any league to see the full leaderboard.
             </p>
           </div>
 
@@ -122,44 +141,72 @@ const Leaderboards = () => {
               <p className="text-sm text-gray-500">Create or join a league to see your rankings!</p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-6">
               {leaguesWithRanks.map((league) => (
-                <Card key={league.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="bg-plpe-gradient text-white">
-                    <CardTitle className="text-lg">{league.name}</CardTitle>
-                    {league.description && (
-                      <p className="text-sm text-white/80">{league.description}</p>
-                    )}
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Your Rank</p>
-                        <div className="flex items-center gap-2">
-                          {getRankIcon(league.user_rank)}
-                          {league.user_rank && (
-                            <span className="text-sm text-gray-500">
-                              out of {league.member_count}
-                            </span>
-                          )}
+                <Collapsible key={league.id}>
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CollapsibleTrigger 
+                      className="w-full"
+                      onClick={() => toggleLeagueExpansion(league.id)}
+                    >
+                      <CardHeader className="bg-plpe-gradient text-white">
+                        <div className="flex items-center justify-between">
+                          <div className="text-left">
+                            <CardTitle className="text-lg">{league.name}</CardTitle>
+                            {league.description && (
+                              <p className="text-sm text-white/80 mt-1">{league.description}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <p className="text-sm text-white/80">Your Rank</p>
+                              <div className="flex items-center justify-end gap-2">
+                                {getRankIcon(league.user_rank)}
+                                {league.user_rank && (
+                                  <span className="text-sm text-white/70">
+                                    of {league.member_count}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {expandedLeagues.has(league.id) ? (
+                              <ChevronUp className="h-5 w-5 text-white" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-white" />
+                            )}
+                          </div>
                         </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600 mb-1">Members</p>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {league.member_count}
+                          </p>
+                        </div>
+                        {!league.user_rank && (
+                          <div className="flex-1 ml-4">
+                            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                              <p className="text-sm text-yellow-800">
+                                No ranking yet - start making picks to see your position!
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600 mb-1">Members</p>
-                        <p className="text-lg font-semibold text-gray-900">
-                          {league.member_count}
-                        </p>
-                      </div>
-                    </div>
-                    {!league.user_rank && (
-                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-sm text-yellow-800">
-                          No ranking yet - start making picks to see your position!
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+
+                      <CollapsibleContent className="mt-6">
+                        <LeagueLeaderboard 
+                          leagueId={league.id} 
+                          leagueName={league.name}
+                        />
+                      </CollapsibleContent>
+                    </CardContent>
+                  </Card>
+                </Collapsible>
               ))}
             </div>
           )}
