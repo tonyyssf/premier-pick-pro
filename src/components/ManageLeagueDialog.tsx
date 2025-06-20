@@ -35,7 +35,7 @@ interface LeagueMember {
     username: string | null;
     name: string | null;
     email: string | null;
-  };
+  } | null;
 }
 
 interface ManageLeagueDialogProps {
@@ -67,24 +67,47 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
   const fetchMembers = async () => {
     setLoadingMembers(true);
     try {
-      const { data, error } = await supabase
+      // First get league members
+      const { data: leagueMembers, error: membersError } = await supabase
         .from('league_members')
-        .select(`
-          id,
-          user_id,
-          joined_at,
-          profiles:user_id (
-            username,
-            name,
-            email
-          )
-        `)
+        .select('id, user_id, joined_at')
         .eq('league_id', league.id)
         .order('joined_at', { ascending: true });
 
-      if (error) throw error;
-      setMembers(data || []);
+      if (membersError) throw membersError;
+
+      if (!leagueMembers || leagueMembers.length === 0) {
+        setMembers([]);
+        return;
+      }
+
+      // Get user IDs to fetch profiles
+      const userIds = leagueMembers.map(member => member.user_id);
+
+      // Fetch profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, name, email')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const membersWithProfiles = leagueMembers.map(member => {
+        const profile = profiles?.find(p => p.id === member.user_id);
+        return {
+          ...member,
+          profiles: profile ? {
+            username: profile.username,
+            name: profile.name,
+            email: profile.email
+          } : null
+        };
+      });
+
+      setMembers(membersWithProfiles);
     } catch (error: any) {
+      console.error('Error fetching members:', error);
       toast({
         title: "Error Loading Members",
         description: error.message,
