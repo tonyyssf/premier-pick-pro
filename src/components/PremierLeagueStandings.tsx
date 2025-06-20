@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Table,
   TableBody,
@@ -40,18 +41,20 @@ export const PremierLeagueStandings: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/epl-standings', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      console.log('Calling Supabase Edge Function: epl-standings');
+      
+      const { data, error: functionError } = await supabase.functions.invoke('epl-standings');
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch standings');
+      if (functionError) {
+        console.error('Supabase function error:', functionError);
+        throw new Error(`Function error: ${functionError.message}`);
       }
 
-      const data = await response.json();
+      if (!data) {
+        throw new Error('No data received from function');
+      }
+
+      console.log('Received data from function:', data);
       
       // Sort alphabetically by team name since season hasn't started
       const sortedStandings = data.standings.sort((a: TeamStanding, b: TeamStanding) => 
