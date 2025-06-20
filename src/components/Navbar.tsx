@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,7 +23,7 @@ export const Navbar: React.FC = () => {
             <img 
               src="/lovable-uploads/4daf5c45-5994-4a33-a05e-7b987e09ed78.png" 
               alt="PLPE Logo" 
-              className="h-12 w-auto"
+              className="h-24 w-auto"
             />
           </div>
           
