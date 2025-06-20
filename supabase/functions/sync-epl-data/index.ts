@@ -69,11 +69,25 @@ async function fetchFromRapidAPI(endpoint: string) {
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`API request failed with status ${response.status}: ${errorText}`);
-    throw new Error(`API request failed: ${response.status} - ${errorText}`);
+    
+    // Check for specific error types
+    if (response.status === 403) {
+      throw new Error(`API access denied (403). Please check: 1) Your RapidAPI subscription is active, 2) You have access to the API-FOOTBALL service, 3) Your API key is correct. Error: ${errorText}`);
+    } else if (response.status === 429) {
+      throw new Error(`Rate limit exceeded (429). Please wait before making more requests. Error: ${errorText}`);
+    } else {
+      throw new Error(`API request failed: ${response.status} - ${errorText}`);
+    }
   }
   
   const data = await response.json();
   console.log(`Received data with ${data.response?.length || 0} items`);
+  
+  // Check if the API returned an error in the response body
+  if (data.errors && data.errors.length > 0) {
+    throw new Error(`API returned errors: ${JSON.stringify(data.errors)}`);
+  }
+  
   return data;
 }
 
@@ -81,11 +95,21 @@ async function syncTeams() {
   console.log('Starting teams sync...');
   
   try {
-    // Fetch teams from Premier League (league id: 39, season: 2024)
-    const teamsData = await fetchFromRapidAPI('teams?league=39&season=2024');
+    // Try current season (2024) first, then fall back to 2023
+    let teamsData;
+    try {
+      teamsData = await fetchFromRapidAPI('teams?league=39&season=2024');
+    } catch (error) {
+      console.log('Failed to fetch 2024 season, trying 2023...');
+      teamsData = await fetchFromRapidAPI('teams?league=39&season=2023');
+    }
     
     const teams = teamsData.response as EPLTeam[];
     console.log(`Fetched ${teams.length} teams`);
+    
+    if (teams.length === 0) {
+      throw new Error('No teams returned from API. Please check your subscription includes Premier League data.');
+    }
     
     for (const teamData of teams) {
       const { team } = teamData;
@@ -98,7 +122,7 @@ async function syncTeams() {
           id: team.id.toString(),
           name: team.name,
           short_name: team.code || team.name.slice(0, 3).toUpperCase(),
-          logo_url: team.logo
+          logo_url: team.logo || ''
         }, {
           onConflict: 'id'
         });
@@ -110,6 +134,7 @@ async function syncTeams() {
     }
     
     console.log('Teams sync completed successfully');
+    return { message: `Successfully synced ${teams.length} teams`, count: teams.length };
   } catch (error) {
     console.error('Error in syncTeams:', error);
     throw error;
@@ -120,11 +145,21 @@ async function syncGameweeksAndFixtures() {
   console.log('Starting gameweeks and fixtures sync...');
   
   try {
-    // Fetch fixtures from Premier League
-    const fixturesData = await fetchFromRapidAPI('fixtures?league=39&season=2024');
-    const fixtures = fixturesData.response as EPLFixture[];
+    // Try current season first, then fall back
+    let fixturesData;
+    try {
+      fixturesData = await fetchFromRapidAPI('fixtures?league=39&season=2024');
+    } catch (error) {
+      console.log('Failed to fetch 2024 fixtures, trying 2023...');
+      fixturesData = await fetchFromRapidAPI('fixtures?league=39&season=2023');
+    }
     
+    const fixtures = fixturesData.response as EPLFixture[];
     console.log(`Fetched ${fixtures.length} fixtures`);
+    
+    if (fixtures.length === 0) {
+      throw new Error('No fixtures returned from API. Please check your subscription includes Premier League fixtures.');
+    }
     
     // Group fixtures by rounds (gameweeks)
     const gameweeksMap = new Map<string, EPLFixture[]>();
@@ -143,6 +178,8 @@ async function syncGameweeksAndFixtures() {
     
     // Create gameweeks and fixtures
     let gameweekNumber = 1;
+    let totalFixtures = 0;
+    
     for (const [gameweekName, gameweekFixtures] of gameweeksMap) {
       if (gameweekNumber > 38) break; // Premier League has 38 gameweeks
       
@@ -203,6 +240,8 @@ async function syncGameweeksAndFixtures() {
           
         if (fixtureError) {
           console.error(`Error creating fixture:`, fixtureError);
+        } else {
+          totalFixtures++;
         }
       }
       
@@ -210,6 +249,7 @@ async function syncGameweeksAndFixtures() {
     }
     
     console.log('Gameweeks and fixtures sync completed successfully');
+    return { message: `Successfully synced ${gameweekNumber - 1} gameweeks and ${totalFixtures} fixtures`, gameweeks: gameweekNumber - 1, fixtures: totalFixtures };
   } catch (error) {
     console.error('Error in syncGameweeksAndFixtures:', error);
     throw error;
@@ -225,23 +265,31 @@ const handler = async (req: Request): Promise<Response> => {
     const { action } = await req.json();
     console.log(`Received sync request for action: ${action}`);
     
+    let result;
+    
     switch (action) {
       case 'sync-teams':
-        await syncTeams();
-        return new Response(JSON.stringify({ success: true, message: 'Teams synced successfully' }), {
+        result = await syncTeams();
+        return new Response(JSON.stringify({ success: true, ...result }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
         
       case 'sync-fixtures':
-        await syncGameweeksAndFixtures();
-        return new Response(JSON.stringify({ success: true, message: 'Gameweeks and fixtures synced successfully' }), {
+        result = await syncGameweeksAndFixtures();
+        return new Response(JSON.stringify({ success: true, ...result }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
         
       case 'sync-all':
-        await syncTeams();
-        await syncGameweeksAndFixtures();
-        return new Response(JSON.stringify({ success: true, message: 'All data synced successfully' }), {
+        const teamsResult = await syncTeams();
+        const fixturesResult = await syncGameweeksAndFixtures();
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: `${teamsResult.message}. ${fixturesResult.message}`,
+          teams: teamsResult.count,
+          gameweeks: fixturesResult.gameweeks,
+          fixtures: fixturesResult.fixtures
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
         
