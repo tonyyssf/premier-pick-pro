@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -17,11 +18,13 @@ interface Fixture {
     id: string;
     name: string;
     shortName: string;
+    teamColor?: string;
   };
   awayTeam: {
     id: string;
     name: string;
     shortName: string;
+    teamColor?: string;
   };
   kickoffTime: Date;
   status: string;
@@ -150,13 +153,13 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       console.log('Current gameweek loaded:', gameweek);
       setCurrentGameweek(gameweek);
 
-      // Load fixtures for current gameweek
+      // Load fixtures for current gameweek - UPDATED to include team_color
       const { data: fixturesData, error: fixturesError } = await supabase
         .from('fixtures')
         .select(`
           *,
-          home_team:teams!fixtures_home_team_id_fkey(*),
-          away_team:teams!fixtures_away_team_id_fkey(*)
+          home_team:teams!fixtures_home_team_id_fkey(id, name, short_name, team_color),
+          away_team:teams!fixtures_away_team_id_fkey(id, name, short_name, team_color)
         `)
         .eq('gameweek_id', gameweek.id);
 
@@ -173,11 +176,13 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           id: fixture.home_team.id,
           name: fixture.home_team.name,
           shortName: fixture.home_team.short_name,
+          teamColor: fixture.home_team.team_color,
         },
         awayTeam: {
           id: fixture.away_team.id,
           name: fixture.away_team.name,
           shortName: fixture.away_team.short_name,
+          teamColor: fixture.away_team.team_color,
         },
         kickoffTime: new Date(fixture.kickoff_time),
         status: fixture.status,
