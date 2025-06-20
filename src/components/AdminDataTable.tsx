@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Eye, Calendar, Users, Database } from 'lucide-react';
+import { Eye, Calendar, Users, Database, User } from 'lucide-react';
 
 interface TeamData {
   id: string;
@@ -35,8 +34,16 @@ interface FixtureData {
   away_score: number | null;
 }
 
+interface ProfileData {
+  id: string;
+  email: string | null;
+  username: string | null;
+  name: string | null;
+  created_at: string;
+}
+
 export const AdminDataTable: React.FC = () => {
-  const [selectedTable, setSelectedTable] = useState<'teams' | 'gameweeks' | 'fixtures'>('teams');
+  const [selectedTable, setSelectedTable] = useState<'teams' | 'gameweeks' | 'fixtures' | 'profiles'>('profiles');
 
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['admin-teams'],
@@ -81,6 +88,44 @@ export const AdminDataTable: React.FC = () => {
       return data as FixtureData[];
     }
   });
+
+  const { data: profiles, isLoading: profilesLoading } = useQuery({
+    queryKey: ['admin-profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as ProfileData[];
+    }
+  });
+
+  const renderProfilesTable = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Username</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Created At</TableHead>
+          <TableHead>ID</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {profiles?.map((profile) => (
+          <TableRow key={profile.id}>
+            <TableCell className="font-medium">{profile.name || 'N/A'}</TableCell>
+            <TableCell>{profile.username || 'N/A'}</TableCell>
+            <TableCell>{profile.email || 'N/A'}</TableCell>
+            <TableCell>{new Date(profile.created_at).toLocaleString()}</TableCell>
+            <TableCell className="text-xs text-gray-500">{profile.id}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
 
   const renderTeamsTable = () => (
     <Table>
@@ -177,6 +222,8 @@ export const AdminDataTable: React.FC = () => {
 
   const getTableData = () => {
     switch (selectedTable) {
+      case 'profiles':
+        return { data: profiles, loading: profilesLoading, count: profiles?.length || 0 };
       case 'teams':
         return { data: teams, loading: teamsLoading, count: teams?.length || 0 };
       case 'gameweeks':
@@ -209,6 +256,14 @@ export const AdminDataTable: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex space-x-2">
                   <Button
+                    variant={selectedTable === 'profiles' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedTable('profiles')}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Users ({profiles?.length || 0})
+                  </Button>
+                  <Button
                     variant={selectedTable === 'teams' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setSelectedTable('teams')}
@@ -239,6 +294,7 @@ export const AdminDataTable: React.FC = () => {
                     <div className="p-8 text-center">Loading...</div>
                   ) : (
                     <>
+                      {selectedTable === 'profiles' && renderProfilesTable()}
                       {selectedTable === 'teams' && renderTeamsTable()}
                       {selectedTable === 'gameweeks' && renderGameweeksTable()}
                       {selectedTable === 'fixtures' && renderFixturesTable()}
@@ -251,7 +307,11 @@ export const AdminDataTable: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">{profiles?.length || 0}</div>
+            <div className="text-sm text-gray-600">Users</div>
+          </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{teams?.length || 0}</div>
             <div className="text-sm text-gray-600">Teams</div>
@@ -261,7 +321,7 @@ export const AdminDataTable: React.FC = () => {
             <div className="text-sm text-gray-600">Gameweeks</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{fixtures?.length || 0}</div>
+            <div className="text-2xl font-bold text-orange-600">{fixtures?.length || 0}</div>
             <div className="text-sm text-gray-600">Fixtures</div>
           </div>
         </div>
