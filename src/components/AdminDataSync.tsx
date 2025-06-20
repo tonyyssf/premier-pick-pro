@@ -21,8 +21,18 @@ export const AdminDataSync: React.FC = () => {
     setSyncState(true);
     
     try {
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('You must be logged in to perform this action');
+      }
+
       const { data, error } = await supabase.functions.invoke('sync-gameweek-data', {
-        body: { action }
+        body: { action },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
@@ -39,9 +49,19 @@ export const AdminDataSync: React.FC = () => {
       });
     } catch (error: any) {
       console.error('Sync error:', error);
+      
+      let errorMessage = error.message || 'An error occurred during sync';
+      
+      // Handle specific error cases
+      if (error.message?.includes('Insufficient privileges')) {
+        errorMessage = 'You do not have admin privileges to perform this action';
+      } else if (error.message?.includes('authentication')) {
+        errorMessage = 'Authentication failed. Please log in again.';
+      }
+      
       toast({
         title: "Sync Failed",
-        description: error.message || 'An error occurred during sync',
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

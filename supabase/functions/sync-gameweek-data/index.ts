@@ -15,6 +15,42 @@ const supabase = createClient(
 // Add delay between API calls to avoid rate limiting
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Function to verify user authentication and admin privileges
+async function verifyAdminAccess(authHeader: string | null): Promise<{ user: any; isAdmin: boolean }> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('Missing or invalid authorization header');
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  
+  // Verify the JWT token
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  
+  if (authError || !user) {
+    throw new Error('Invalid authentication token');
+  }
+
+  // Check if user has admin role
+  const { data: userRole, error: roleError } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single();
+
+  if (roleError) {
+    console.error('Error checking user role:', roleError);
+    throw new Error('Unable to verify user permissions');
+  }
+
+  const isAdmin = userRole?.role === 'admin';
+  
+  if (!isAdmin) {
+    throw new Error('Insufficient privileges. Admin access required.');
+  }
+
+  return { user, isAdmin };
+}
+
 async function fetchFromRapidAPI(endpoint: string) {
   const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
   
@@ -342,6 +378,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Verify admin access before processing any requests
+    const authHeader = req.headers.get('authorization');
+    const { user } = await verifyAdminAccess(authHeader);
+    
+    console.log(`Admin user ${user.email} making sync request`);
+
     const { action } = await req.json();
     console.log(`Received sync request for action: ${action}`);
     
@@ -368,11 +410,21 @@ const handler = async (req: Request): Promise<Response> => {
     }
   } catch (error: any) {
     console.error('Sync error:', error);
+    
+    // Return appropriate status codes for different error types
+    let statusCode = 500;
+    if (error.message.includes('Missing or invalid authorization') || 
+        error.message.includes('Invalid authentication token')) {
+      statusCode = 401;
+    } else if (error.message.includes('Insufficient privileges')) {
+      statusCode = 403;
+    }
+    
     return new Response(JSON.stringify({ 
       error: error.message || 'Unknown error occurred',
       details: error.toString()
     }), {
-      status: 500,
+      status: statusCode,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
