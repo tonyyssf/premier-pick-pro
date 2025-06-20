@@ -385,9 +385,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      advance_to_next_gameweek: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       calculate_gameweek_scores: {
         Args: { gameweek_uuid: string }
         Returns: undefined
+      }
+      check_gameweek_completion: {
+        Args: { gameweek_uuid: string }
+        Returns: boolean
       }
       generate_invite_code: {
         Args: Record<PropertyKey, never>

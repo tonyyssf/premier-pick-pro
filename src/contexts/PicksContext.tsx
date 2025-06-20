@@ -62,6 +62,7 @@ interface PicksContextType {
   hasPickForGameweek: (gameweekId: string) => boolean;
   getCurrentPick: () => Pick | null;
   calculateScores: (gameweekId?: string) => Promise<void>;
+  advanceToNextGameweek: () => Promise<boolean>;
   loading: boolean;
   fixturesLoading: boolean;
   scoresLoading: boolean;
@@ -271,6 +272,49 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
+  const advanceToNextGameweek = async (): Promise<boolean> => {
+    try {
+      setScoresLoading(true);
+      
+      const { error } = await supabase.rpc('advance_to_next_gameweek');
+      
+      if (error) {
+        console.error('Error advancing to next gameweek:', error);
+        toast({
+          title: "Error Advancing Gameweek",
+          description: error.message || "Could not advance to the next gameweek.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Reload current gameweek and fixtures after advancement
+      await loadCurrentGameweek();
+      
+      // Reload user picks for the new gameweek
+      if (user) {
+        await loadUserPicks();
+      }
+      
+      toast({
+        title: "Gameweek Advanced",
+        description: "Successfully advanced to the next gameweek.",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while advancing the gameweek.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setScoresLoading(false);
+    }
+  };
+
   const calculateScores = async (gameweekId?: string) => {
     try {
       setScoresLoading(true);
@@ -288,6 +332,19 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             variant: "destructive",
           });
           return;
+        }
+
+        // After calculating scores, check if we can advance to the next gameweek
+        const { data: isComplete, error: checkError } = await supabase.rpc('check_gameweek_completion', {
+          gameweek_uuid: gameweekId
+        });
+
+        if (checkError) {
+          console.error('Error checking gameweek completion:', checkError);
+        } else if (isComplete && currentGameweek?.id === gameweekId) {
+          // Automatically advance to next gameweek if all fixtures are finished
+          console.log('All fixtures finished, attempting to advance gameweek...');
+          await advanceToNextGameweek();
         }
       } else {
         const { error } = await supabase.rpc('update_all_scores');
@@ -431,6 +488,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       hasPickForGameweek,
       getCurrentPick,
       calculateScores,
+      advanceToNextGameweek,
       loading,
       fixturesLoading,
       scoresLoading,

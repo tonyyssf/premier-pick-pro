@@ -3,15 +3,17 @@ import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { usePicks } from '@/contexts/PicksContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RefreshCw, Download, Database, Calendar } from 'lucide-react';
+import { RefreshCw, Download, Database, Calendar, ArrowRight } from 'lucide-react';
 
 export const AdminDataSync: React.FC = () => {
   const [syncingCurrentGameweek, setSyncingCurrentGameweek] = useState(false);
   const [syncingScores, setSyncingScores] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { advanceToNextGameweek, calculateScores, currentGameweek, scoresLoading } = usePicks();
 
   const syncGameweekData = async (action: 'sync-current-gameweek' | 'update-scores') => {
     const setSyncState = action === 'sync-current-gameweek' ? setSyncingCurrentGameweek : setSyncingScores;
@@ -47,16 +49,26 @@ export const AdminDataSync: React.FC = () => {
     }
   };
 
+  const handleCalculateCurrentGameweekScores = async () => {
+    if (currentGameweek) {
+      await calculateScores(currentGameweek.id);
+    }
+  };
+
+  const handleAdvanceGameweek = async () => {
+    await advanceToNextGameweek();
+  };
+
   return (
     <div className="space-y-6">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Gameweek Data Management</h2>
         <p className="text-gray-600">
-          Manage current gameweek fixtures and update match results from the API.
+          Manage current gameweek fixtures, update match results, and control gameweek progression.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center space-x-2">
@@ -120,6 +132,68 @@ export const AdminDataSync: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center space-x-2">
+              <ArrowRight className="h-5 w-5 text-purple-500" />
+              <span>Gameweek Control</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">
+                  Calculate scores for gameweek {currentGameweek?.number || 'N/A'}
+                </p>
+                <Button
+                  onClick={handleCalculateCurrentGameweekScores}
+                  disabled={scoresLoading || !currentGameweek}
+                  className="w-full"
+                  variant="outline"
+                  size="sm"
+                >
+                  {scoresLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
+                      Calculating...
+                    </>
+                  ) : (
+                    <>
+                      <Database className="mr-2 h-3 w-3" />
+                      Calculate Scores
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-600 mb-2">
+                  Manually advance to next gameweek
+                </p>
+                <Button
+                  onClick={handleAdvanceGameweek}
+                  disabled={scoresLoading}
+                  className="w-full"
+                  variant="outline"
+                  size="sm"
+                >
+                  {scoresLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
+                      Advancing...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="mr-2 h-3 w-3" />
+                      Advance Gameweek
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="bg-blue-50 border-blue-200">
@@ -129,12 +203,12 @@ export const AdminDataSync: React.FC = () => {
               <Database className="h-4 w-4 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-blue-800 mb-1">Targeted Sync Strategy</h3>
+              <h3 className="font-semibold text-blue-800 mb-1">Gameweek Progression</h3>
               <ul className="text-sm text-blue-700 space-y-1">
-                <li>• Uses existing fixture database as the source of truth</li>
-                <li>• Only syncs current gameweek data when needed</li>
-                <li>• Updates scores and status for completed matches</li>
-                <li>• Much faster and more reliable than bulk syncing</li>
+                <li>• Calculate scores to automatically check if all fixtures are finished</li>
+                <li>• System will auto-advance when all gameweek fixtures are completed</li>
+                <li>• Manual advance is available for testing or special circumstances</li>
+                <li>• Current gameweek: {currentGameweek?.number || 'Loading...'}</li>
               </ul>
             </div>
           </div>
