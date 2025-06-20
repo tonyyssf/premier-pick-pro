@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Trophy, Medal, Award, Users, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,7 +53,7 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
         .from('league_standings')
         .select('*')
         .eq('league_id', leagueId)
-        .order('current_rank', { ascending: true, nullsLast: true });
+        .order('current_rank', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
       setLeagueStandings(data || []);
@@ -73,7 +72,7 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
       const { data, error } = await supabase
         .from('user_standings')
         .select('*')
-        .order('current_rank', { ascending: true, nullsLast: true })
+        .order('current_rank', { ascending: true, nullsFirst: false })
         .limit(50);
 
       if (error) throw error;
