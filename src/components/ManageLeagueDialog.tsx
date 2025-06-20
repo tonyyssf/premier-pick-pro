@@ -1,10 +1,11 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Settings } from 'lucide-react';
 import { LeagueSettingsTab } from './LeagueSettingsTab';
 import { LeagueMembersTab } from './LeagueMembersTab';
@@ -59,6 +60,7 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
 
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const fetchMembers = async () => {
     setLoadingMembers(true);
@@ -200,52 +202,76 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
     onLeagueUpdated();
   };
 
+  const ContentComponent = ({ className }: { className?: string }) => (
+    <div className={className}>
+      <Tabs defaultValue="settings" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="settings" className="space-y-6 mt-4">
+          <LeagueSettingsTab
+            league={league}
+            leagueName={leagueName}
+            setLeagueName={setLeagueName}
+            leagueDescription={leagueDescription}
+            setLeagueDescription={setLeagueDescription}
+            isPublic={isPublic}
+            setIsPublic={setIsPublic}
+            maxMembers={maxMembers}
+            setMaxMembers={setMaxMembers}
+            isLoading={isLoading}
+            onUpdateLeague={handleUpdateLeague}
+            onLeagueUpdated={handleLeagueUpdatedAfterDelete}
+          />
+        </TabsContent>
+
+        <TabsContent value="members" className="space-y-4 mt-4">
+          <LeagueMembersTab
+            league={league}
+            members={members}
+            loadingMembers={loadingMembers}
+            removingMember={removingMember}
+            onRemoveMember={handleRemoveMember}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={handleOpenChange}>
+        <SheetTrigger asChild>
+          {children}
+        </SheetTrigger>
+        <SheetContent side="bottom" className="h-[90vh] p-4">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="flex items-center space-x-2">
+              <Settings className="h-5 w-5" />
+              <span>Manage: {league.name}</span>
+            </SheetTitle>
+          </SheetHeader>
+          <ContentComponent className="overflow-y-auto h-full pb-4" />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Settings className="h-5 w-5" />
             <span>Manage League: {league.name}</span>
           </DialogTitle>
         </DialogHeader>
-
-        <Tabs defaultValue="settings" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="settings">League Settings</TabsTrigger>
-            <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="settings" className="space-y-6">
-            <LeagueSettingsTab
-              league={league}
-              leagueName={leagueName}
-              setLeagueName={setLeagueName}
-              leagueDescription={leagueDescription}
-              setLeagueDescription={setLeagueDescription}
-              isPublic={isPublic}
-              setIsPublic={setIsPublic}
-              maxMembers={maxMembers}
-              setMaxMembers={setMaxMembers}
-              isLoading={isLoading}
-              onUpdateLeague={handleUpdateLeague}
-              onLeagueUpdated={handleLeagueUpdatedAfterDelete}
-            />
-          </TabsContent>
-
-          <TabsContent value="members" className="space-y-4">
-            <LeagueMembersTab
-              league={league}
-              members={members}
-              loadingMembers={loadingMembers}
-              removingMember={removingMember}
-              onRemoveMember={handleRemoveMember}
-            />
-          </TabsContent>
-        </Tabs>
+        <ContentComponent />
       </DialogContent>
     </Dialog>
   );

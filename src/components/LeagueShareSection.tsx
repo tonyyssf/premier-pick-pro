@@ -59,28 +59,30 @@ export const LeagueShareSection: React.FC<LeagueShareSectionProps> = ({
         Share this link to let people join your league directly during signup
       </p>
       
-      <div className="flex items-center space-x-2 mt-2">
-        <code className="bg-white px-3 py-2 rounded border font-mono text-sm flex-1 text-blue-800 border-blue-300">
+      <div className="space-y-3">
+        <code className="bg-white px-3 py-2 rounded border font-mono text-xs block w-full text-blue-800 border-blue-300 break-all">
           {signupLink}
         </code>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={copySignupLink}
-          className="flex items-center space-x-1 border-blue-300 text-blue-700 hover:bg-blue-100"
-        >
-          <Copy className="h-4 w-4" />
-          <span>Copy</span>
-        </Button>
-        <Button 
-          variant="default" 
-          size="sm" 
-          onClick={shareSignupLink}
-          className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700"
-        >
-          <Share className="h-4 w-4" />
-          <span>Share</span>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={copySignupLink}
+            className="flex items-center justify-center space-x-1 border-blue-300 text-blue-700 hover:bg-blue-100 flex-1"
+          >
+            <Copy className="h-4 w-4" />
+            <span>Copy</span>
+          </Button>
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={shareSignupLink}
+            className="flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 flex-1"
+          >
+            <Share className="h-4 w-4" />
+            <span>Share</span>
+          </Button>
+        </div>
       </div>
     </div>
   );
