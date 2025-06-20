@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -135,15 +134,11 @@ const Leaderboards = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="global" className="w-full">
+          <Tabs defaultValue="leagues" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="global">Global Leaderboard</TabsTrigger>
               <TabsTrigger value="leagues">My League Rankings</TabsTrigger>
+              <TabsTrigger value="global">Global Leaderboard</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="global" className="mt-6">
-              <LeaderboardSection />
-            </TabsContent>
 
             <TabsContent value="leagues" className="mt-6">
               {isLoading ? (
@@ -223,6 +218,10 @@ const Leaderboards = () => {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="global" className="mt-6">
+              <LeaderboardSection />
             </TabsContent>
           </Tabs>
         </div>
