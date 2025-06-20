@@ -27,7 +27,7 @@ interface League {
 const Leaderboards = () => {
   const [myLeagues, setMyLeagues] = useState<League[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('global');
+  const [activeTab, setActiveTab] = useState('leagues');
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -109,13 +109,9 @@ const Leaderboards = () => {
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="global">Global Leaderboard</TabsTrigger>
               <TabsTrigger value="leagues">My League Leaderboards ({myLeagues.length})</TabsTrigger>
+              <TabsTrigger value="global">Global Leaderboard</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="global" className="mt-6">
-              <LeaderboardSection />
-            </TabsContent>
             
             <TabsContent value="leagues" className="mt-6">
               {isLoading ? (
@@ -136,6 +132,10 @@ const Leaderboards = () => {
                   ))}
                 </div>
               )}
+            </TabsContent>
+            
+            <TabsContent value="global" className="mt-6">
+              <LeaderboardSection />
             </TabsContent>
           </Tabs>
         </div>

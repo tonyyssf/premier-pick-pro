@@ -37,6 +37,7 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
 }) => {
   const [leagueStandings, setLeagueStandings] = useState<LeagueStanding[]>([]);
   const [globalStandings, setGlobalStandings] = useState<GlobalStanding[]>([]);
+  const [userLeagueRank, setUserLeagueRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,6 +52,10 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
 
       if (error) throw error;
       setLeagueStandings(data || []);
+
+      // Find current user's rank in this league
+      const userStanding = data?.find(standing => standing.user_id === user?.id);
+      setUserLeagueRank(userStanding?.current_rank || null);
     } catch (error: any) {
       console.error('Error loading league standings:', error);
       toast({
@@ -98,7 +103,16 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       <div className="bg-plpe-gradient px-6 py-4">
-        <h3 className="text-xl font-semibold text-white">{leagueName} Leaderboard</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold text-white">{leagueName} Leaderboard</h3>
+          {userLeagueRank && (
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+              <span className="text-white text-sm font-medium">
+                Your Rank: #{userLeagueRank}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="p-6">
