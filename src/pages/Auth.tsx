@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { validateAndSanitizeUser } from '@/utils/validation';
+import { z } from 'zod';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +16,7 @@ const Auth = () => {
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
@@ -23,9 +26,36 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  const validateSignUpForm = () => {
+    try {
+      validateAndSanitizeUser({ username, name });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path.length > 0) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrors({});
+    
+    if (!email || !password) {
+      setErrors({ general: 'Please fill in all fields' });
+      setLoading(false);
+      return;
+    }
+    
     await signIn(email, password);
     setLoading(false);
   };
@@ -33,8 +63,49 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signUp(email, password, { username, name });
+    setErrors({});
+    
+    if (!email || !password || !username || !name) {
+      setErrors({ general: 'Please fill in all fields' });
+      setLoading(false);
+      return;
+    }
+
+    if (!validateSignUpForm()) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const sanitizedData = validateAndSanitizeUser({ username, name });
+      await signUp(email, password, sanitizedData);
+    } catch (error) {
+      console.error('Sign up error:', error);
+    }
+    
     setLoading(false);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    switch (field) {
+      case 'email':
+        setEmail(value);
+        break;
+      case 'password':
+        setPassword(value);
+        break;
+      case 'username':
+        setUsername(value);
+        break;
+      case 'name':
+        setName(value);
+        break;
+    }
+    
+    // Clear error when user starts typing
+    if (errors[field] || errors.general) {
+      setErrors({ ...errors, [field]: '', general: '' });
+    }
   };
 
   return (
@@ -57,6 +128,12 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {errors.general && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{errors.general}</p>
+              </div>
+            )}
+            
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -71,7 +148,7 @@ const Auth = () => {
                       id="signin-email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
                       placeholder="Enter your email"
                       required
                     />
@@ -82,7 +159,7 @@ const Auth = () => {
                       id="signin-password"
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
                       placeholder="Enter your password"
                       required
                     />
@@ -105,10 +182,12 @@ const Auth = () => {
                       id="signup-name"
                       type="text"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="Enter your full name"
                       required
+                      className={errors.name ? 'border-red-500' : ''}
                     />
+                    {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-username">Username</Label>
@@ -116,10 +195,12 @@ const Auth = () => {
                       id="signup-username"
                       type="text"
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={(e) => handleInputChange('username', e.target.value)}
                       placeholder="Choose a username"
                       required
+                      className={errors.username ? 'border-red-500' : ''}
                     />
+                    {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -127,7 +208,7 @@ const Auth = () => {
                       id="signup-email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
                       placeholder="Enter your email"
                       required
                     />
@@ -138,7 +219,7 @@ const Auth = () => {
                       id="signup-password"
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
                       placeholder="Create a password"
                       required
                     />

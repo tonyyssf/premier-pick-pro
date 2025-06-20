@@ -8,6 +8,8 @@ import { UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { inviteCodeSchema, sanitizeInput } from '@/utils/validation';
+import { z } from 'zod';
 
 interface JoinLeagueDialogProps {
   onLeagueJoined?: () => void;
@@ -17,9 +19,31 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
+  const [error, setError] = useState('');
   
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const validateInviteCode = (code: string) => {
+    try {
+      inviteCodeSchema.parse(code);
+      setError('');
+      return true;
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        setError(validationError.errors[0].message);
+      }
+      return false;
+    }
+  };
+
+  const handleInputChange = (value: string) => {
+    const sanitized = sanitizeInput(value.toUpperCase());
+    setInviteCode(sanitized);
+    if (error) {
+      setError('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,12 +57,9 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       return;
     }
 
-    if (!inviteCode.trim()) {
-      toast({
-        title: "Invalid Code",
-        description: "Please enter a valid invite code.",
-        variant: "destructive",
-      });
+    const trimmedCode = inviteCode.trim();
+    
+    if (!validateInviteCode(trimmedCode)) {
       return;
     }
 
@@ -49,7 +70,7 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       const { data: league, error: leagueError } = await supabase
         .from('leagues')
         .select('id, name, max_members')
-        .eq('invite_code', inviteCode.toUpperCase())
+        .eq('invite_code', trimmedCode)
         .single();
 
       if (leagueError || !league) {
@@ -111,12 +132,14 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       });
 
       setInviteCode('');
+      setError('');
       setOpen(false);
       onLeagueJoined?.();
     } catch (error: any) {
+      console.error('Join league error:', error);
       toast({
         title: "Error Joining League",
-        description: error.message,
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -142,12 +165,13 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
             <Input
               id="inviteCode"
               value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              onChange={(e) => handleInputChange(e.target.value)}
               placeholder="Enter 6-character code"
               maxLength={6}
               required
-              className="font-mono"
+              className={`font-mono ${error ? 'border-red-500' : ''}`}
             />
+            {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
             <p className="text-sm text-gray-600 mt-1">
               Ask your league creator for the invite code
             </p>

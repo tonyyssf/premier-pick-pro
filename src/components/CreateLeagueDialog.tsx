@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,8 @@ import { Plus, Copy, Share2, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { validateAndSanitizeLeague } from '@/utils/validation';
+import { z } from 'zod';
 
 interface CreateLeagueDialogProps {
   onLeagueCreated?: () => void;
@@ -25,6 +26,7 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [createdLeague, setCreatedLeague] = useState<CreatedLeague | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -34,6 +36,25 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
   
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const validateForm = () => {
+    try {
+      validateAndSanitizeLeague(formData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path.length > 0) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,17 +68,28 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
       return;
     }
 
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please correct the errors below.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      const sanitizedData = validateAndSanitizeLeague(formData);
+      
       const { data, error } = await supabase
         .from('leagues')
         .insert({
-          name: formData.name,
-          description: formData.description || null,
+          name: sanitizedData.name,
+          description: sanitizedData.description || null,
           creator_id: user.id,
-          is_public: formData.isPublic,
-          max_members: formData.maxMembers
+          is_public: sanitizedData.isPublic,
+          max_members: sanitizedData.maxMembers
         })
         .select('id, name, invite_code')
         .single();
@@ -68,14 +100,15 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
       
       toast({
         title: "League Created!",
-        description: `Your league "${formData.name}" has been created successfully.`,
+        description: `Your league "${sanitizedData.name}" has been created successfully.`,
       });
 
       onLeagueCreated?.();
     } catch (error: any) {
+      console.error('League creation error:', error);
       toast({
         title: "Error Creating League",
-        description: error.message,
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -83,9 +116,18 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
     }
   };
 
+  const handleInputChange = (field: string, value: any) => {
+    setFormData({ ...formData, [field]: value });
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: '' });
+    }
+  };
+
   const handleClose = () => {
     setOpen(false);
     setCreatedLeague(null);
+    setErrors({});
     setFormData({
       name: '',
       description: '',
@@ -212,10 +254,12 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="Enter league name"
               required
+              className={errors.name ? 'border-red-500' : ''}
             />
+            {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
           </div>
           
           <div>
@@ -223,10 +267,12 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Describe your league..."
               rows={3}
+              className={errors.description ? 'border-red-500' : ''}
             />
+            {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description}</p>}
           </div>
           
           <div>
@@ -237,15 +283,17 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
               min="2"
               max="500"
               value={formData.maxMembers}
-              onChange={(e) => setFormData({ ...formData, maxMembers: parseInt(e.target.value) })}
+              onChange={(e) => handleInputChange('maxMembers', parseInt(e.target.value))}
+              className={errors.maxMembers ? 'border-red-500' : ''}
             />
+            {errors.maxMembers && <p className="text-sm text-red-500 mt-1">{errors.maxMembers}</p>}
           </div>
           
           <div className="flex items-center space-x-2">
             <Switch
               id="isPublic"
               checked={formData.isPublic}
-              onCheckedChange={(checked) => setFormData({ ...formData, isPublic: checked })}
+              onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
             />
             <Label htmlFor="isPublic">Make league public</Label>
           </div>
