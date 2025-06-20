@@ -5,11 +5,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 
 export const Navbar: React.FC = () => {
   const { signOut, user } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -84,7 +86,20 @@ export const Navbar: React.FC = () => {
                     ))}
                     
                     {user && (
-                      <div className="border-t pt-4 mt-6">
+                      <div className="border-t pt-4 mt-6 space-y-2">
+                        <Button 
+                          onClick={() => {
+                            setSettingsOpen(true);
+                            closeMobileMenu();
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
+                        >
+                          <Settings className="h-4 w-4" />
+                          <span>Settings</span>
+                        </Button>
+                        
                         <Button 
                           onClick={() => {
                             handleSignOut();
@@ -105,9 +120,14 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Desktop Settings and Sign Out */}
-            <button className="hidden md:block p-2 text-gray-600 hover:text-plpe-purple transition-colors">
+            <Button 
+              onClick={() => setSettingsOpen(true)}
+              variant="ghost" 
+              size="icon"
+              className="hidden md:block p-2 text-gray-600 hover:text-plpe-purple transition-colors"
+            >
               <Settings className="h-5 w-5" />
-            </button>
+            </Button>
             
             {user && (
               <Button 
@@ -123,6 +143,11 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <UserSettingsDialog 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen} 
+      />
     </nav>
   );
 };
