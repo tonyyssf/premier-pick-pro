@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -6,9 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Settings } from 'lucide-react';
+import { Settings, AlertCircle } from 'lucide-react';
 import { LeagueSettingsTab } from './LeagueSettingsTab';
 import { LeagueMembersTab } from './LeagueMembersTab';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface League {
   id: string;
@@ -61,6 +63,9 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  // Check if current user is the league creator
+  const isCreator = user?.id === league.creator_id;
 
   const fetchMembers = async () => {
     setLoadingMembers(true);
@@ -124,6 +129,15 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
   };
 
   const handleUpdateLeague = async () => {
+    if (!isCreator) {
+      toast({
+        title: "Access Denied",
+        description: "Only the league creator can update settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const updates: any = {
@@ -160,6 +174,15 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
   };
 
   const handleRemoveMember = async (memberId: string, memberUserId: string) => {
+    if (!isCreator) {
+      toast({
+        title: "Access Denied",
+        description: "Only the league creator can remove members.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (memberUserId === user?.id) {
       toast({
         title: "Cannot Remove Yourself",
@@ -202,43 +225,70 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
     onLeagueUpdated();
   };
 
-  const ContentComponent = ({ className }: { className?: string }) => (
-    <div className={className}>
-      <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-          <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
-        </TabsList>
+  const ContentComponent = ({ className }: { className?: string }) => {
+    // If not creator, show access denied message
+    if (!isCreator) {
+      return (
+        <div className={className}>
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              Only the league creator can manage league settings. You can only view the member list.
+            </AlertDescription>
+          </Alert>
+          
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-4">League Members ({members.length})</h3>
+            <LeagueMembersTab
+              league={league}
+              members={members}
+              loadingMembers={loadingMembers}
+              removingMember={removingMember}
+              onRemoveMember={() => {}} // No action for non-creators
+            />
+          </div>
+        </div>
+      );
+    }
 
-        <TabsContent value="settings" className="space-y-6 mt-4">
-          <LeagueSettingsTab
-            league={league}
-            leagueName={leagueName}
-            setLeagueName={setLeagueName}
-            leagueDescription={leagueDescription}
-            setLeagueDescription={setLeagueDescription}
-            isPublic={isPublic}
-            setIsPublic={setIsPublic}
-            maxMembers={maxMembers}
-            setMaxMembers={setMaxMembers}
-            isLoading={isLoading}
-            onUpdateLeague={handleUpdateLeague}
-            onLeagueUpdated={handleLeagueUpdatedAfterDelete}
-          />
-        </TabsContent>
+    return (
+      <div className={className}>
+        <Tabs defaultValue="settings" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="members" className="space-y-4 mt-4">
-          <LeagueMembersTab
-            league={league}
-            members={members}
-            loadingMembers={loadingMembers}
-            removingMember={removingMember}
-            onRemoveMember={handleRemoveMember}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+          <TabsContent value="settings" className="space-y-6 mt-4">
+            <LeagueSettingsTab
+              league={league}
+              leagueName={leagueName}
+              setLeagueName={setLeagueName}
+              leagueDescription={leagueDescription}
+              setLeagueDescription={setLeagueDescription}
+              isPublic={isPublic}
+              setIsPublic={setIsPublic}
+              maxMembers={maxMembers}
+              setMaxMembers={setMaxMembers}
+              isLoading={isLoading}
+              onUpdateLeague={handleUpdateLeague}
+              onLeagueUpdated={handleLeagueUpdatedAfterDelete}
+            />
+          </TabsContent>
+
+          <TabsContent value="members" className="space-y-4 mt-4">
+            <LeagueMembersTab
+              league={league}
+              members={members}
+              loadingMembers={loadingMembers}
+              removingMember={removingMember}
+              onRemoveMember={handleRemoveMember}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  };
 
   if (isMobile) {
     return (
@@ -250,7 +300,7 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
           <SheetHeader className="mb-4">
             <SheetTitle className="flex items-center space-x-2">
               <Settings className="h-5 w-5" />
-              <span>Manage: {league.name}</span>
+              <span>{isCreator ? 'Manage' : 'View'}: {league.name}</span>
             </SheetTitle>
           </SheetHeader>
           <ContentComponent className="overflow-y-auto h-full pb-4" />
@@ -268,7 +318,7 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Settings className="h-5 w-5" />
-            <span>Manage League: {league.name}</span>
+            <span>{isCreator ? 'Manage League' : 'View League'}: {league.name}</span>
           </DialogTitle>
         </DialogHeader>
         <ContentComponent />

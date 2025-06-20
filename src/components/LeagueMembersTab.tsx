@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Trash2, Crown } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LeagueMember {
   id: string;
@@ -35,6 +36,9 @@ export const LeagueMembersTab: React.FC<LeagueMembersTabProps> = ({
   removingMember,
   onRemoveMember
 }) => {
+  const { user } = useAuth();
+  const isCreator = user?.id === league.creator_id;
+
   if (loadingMembers) {
     return (
       <div className="text-center py-8">
@@ -76,7 +80,7 @@ export const LeagueMembersTab: React.FC<LeagueMembersTabProps> = ({
             </div>
           </div>
           
-          {member.user_id !== league.creator_id && (
+          {isCreator && member.user_id !== league.creator_id && (
             <Button
               variant="outline"
               size="sm"
