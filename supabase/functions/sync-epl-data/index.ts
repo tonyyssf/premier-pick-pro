@@ -38,6 +38,13 @@ interface EPLFixture {
 // Add delay between API calls to avoid rate limiting
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper function to generate consistent UUID from integer ID
+function generateUUIDFromId(id: number, prefix: string = 'fixture'): string {
+  // Create a consistent UUID-like string from the integer ID
+  const idStr = id.toString().padStart(8, '0');
+  return `${prefix}-${idStr.slice(0, 4)}-${idStr.slice(4, 8)}-0000-000000000000`;
+}
+
 async function fetchFromRapidAPI(endpoint: string) {
   const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
   
@@ -150,8 +157,8 @@ async function syncTeams() {
         
         console.log(`Upserting team: ${team.name} (ID: ${team.id})`);
         
-        // Use team.id as string for UUID field since the database expects UUID format
-        const teamId = team.id.toString();
+        // Generate consistent UUID for team ID
+        const teamId = generateUUIDFromId(team.id, 'team');
         
         const { error } = await supabase
           .from('teams')
@@ -332,13 +339,18 @@ async function syncGameweeksAndFixtures() {
             
             console.log(`Creating fixture: ${homeTeam.name || homeTeam.displayName} vs ${awayTeam.name || awayTeam.displayName}`);
             
+            // Generate consistent UUIDs for fixture and team IDs
+            const fixtureUuid = generateUUIDFromId(fixtureId, 'fixture');
+            const homeTeamUuid = generateUUIDFromId(homeTeam.id, 'team');
+            const awayTeamUuid = generateUUIDFromId(awayTeam.id, 'team');
+            
             const { error: fixtureError } = await supabase
               .from('fixtures')
               .upsert({
-                id: fixtureId.toString(),
+                id: fixtureUuid,
                 gameweek_id: gameweek.id,
-                home_team_id: homeTeam.id.toString(),
-                away_team_id: awayTeam.id.toString(),
+                home_team_id: homeTeamUuid,
+                away_team_id: awayTeamUuid,
                 kickoff_time: fixture.date || fixture.kickoffTime || fixture.fixture?.date || fixture.startTime,
                 home_score: homeScore,
                 away_score: awayScore,
