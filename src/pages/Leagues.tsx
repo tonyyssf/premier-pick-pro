@@ -7,6 +7,7 @@ import { CreateLeagueDialog } from '@/components/CreateLeagueDialog';
 import { JoinLeagueDialog } from '@/components/JoinLeagueDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -103,6 +104,7 @@ const Leagues = () => {
       setMyLeagues(processedUserLeagues);
       setPublicLeagues(processedPublicLeagues);
     } catch (error: any) {
+      console.error('Error fetching leagues:', error);
       toast({
         title: "Error Loading Leagues",
         description: error.message,
@@ -205,10 +207,7 @@ const Leagues = () => {
             
             <TabsContent value="my-leagues" className="mt-6">
               {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Loading your leagues...</p>
-                </div>
+                <LoadingSpinner message="Loading your leagues..." />
               ) : myLeagues.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-600 mb-4">You haven't joined any leagues yet.</p>
@@ -230,10 +229,7 @@ const Leagues = () => {
             
             <TabsContent value="public-leagues" className="mt-6">
               {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Loading public leagues...</p>
-                </div>
+                <LoadingSpinner message="Loading public leagues..." />
               ) : publicLeagues.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-600 mb-4">No public leagues available.</p>
@@ -255,10 +251,7 @@ const Leagues = () => {
 
             <TabsContent value="leaderboards" className="mt-6">
               {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Loading leaderboards...</p>
-                </div>
+                <LoadingSpinner message="Loading leaderboards..." />
               ) : myLeagues.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-600 mb-4">Join a league to view leaderboards.</p>
