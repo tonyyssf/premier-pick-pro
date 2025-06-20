@@ -1,17 +1,13 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Users, Settings, Trash2, Copy, Crown } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import { LeagueSettingsTab } from './LeagueSettingsTab';
+import { LeagueMembersTab } from './LeagueMembersTab';
 
 interface League {
   id: string;
@@ -51,7 +47,6 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDeletingLeague, setIsDeletingLeague] = useState(false);
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [removingMember, setRemovingMember] = useState<string | null>(null);
@@ -200,58 +195,9 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
     }
   };
 
-  const copyInviteCode = () => {
-    navigator.clipboard.writeText(league.invite_code);
-    toast({
-      title: "Invite Code Copied",
-      description: "The invite code has been copied to your clipboard.",
-    });
-  };
-
-  const handleDeleteLeague = async () => {
-    setIsDeletingLeague(true);
-    try {
-      // First, delete all league members
-      const { error: membersError } = await supabase
-        .from('league_members')
-        .delete()
-        .eq('league_id', league.id);
-
-      if (membersError) throw membersError;
-
-      // Then, delete league standings
-      const { error: standingsError } = await supabase
-        .from('league_standings')
-        .delete()
-        .eq('league_id', league.id);
-
-      if (standingsError) throw standingsError;
-
-      // Finally, delete the league itself
-      const { error: leagueError } = await supabase
-        .from('leagues')
-        .delete()
-        .eq('id', league.id)
-        .eq('creator_id', user?.id);
-
-      if (leagueError) throw leagueError;
-
-      toast({
-        title: "League Deleted",
-        description: "The league has been permanently deleted.",
-      });
-
-      setIsOpen(false);
-      onLeagueUpdated();
-    } catch (error: any) {
-      toast({
-        title: "Error Deleting League",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeletingLeague(false);
-    }
+  const handleLeagueUpdatedAfterDelete = () => {
+    setIsOpen(false);
+    onLeagueUpdated();
   };
 
   return (
@@ -274,168 +220,30 @@ export const ManageLeagueDialog: React.FC<ManageLeagueDialogProps> = ({
           </TabsList>
 
           <TabsContent value="settings" className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="league-name">League Name</Label>
-                <Input
-                  id="league-name"
-                  value={leagueName}
-                  onChange={(e) => setLeagueName(e.target.value)}
-                  placeholder="Enter league name"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="league-description">Description</Label>
-                <Textarea
-                  id="league-description"
-                  value={leagueDescription}
-                  onChange={(e) => setLeagueDescription(e.target.value)}
-                  placeholder="Enter league description (optional)"
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is-public"
-                  checked={isPublic}
-                  onCheckedChange={setIsPublic}
-                />
-                <Label htmlFor="is-public">Make league public</Label>
-              </div>
-
-              <div>
-                <Label htmlFor="max-members">Maximum Members (optional)</Label>
-                <Input
-                  id="max-members"
-                  type="number"
-                  value={maxMembers}
-                  onChange={(e) => setMaxMembers(e.target.value)}
-                  placeholder="Leave empty for unlimited"
-                  min="1"
-                />
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <Label className="text-sm font-medium">Invite Code</Label>
-                <div className="flex items-center space-x-2 mt-2">
-                  <code className="bg-white px-3 py-2 rounded border font-mono text-sm flex-1">
-                    {league.invite_code}
-                  </code>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={copyInviteCode}
-                    className="flex items-center space-x-1"
-                  >
-                    <Copy className="h-4 w-4" />
-                    <span>Copy</span>
-                  </Button>
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleUpdateLeague} 
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? 'Updating...' : 'Update League Settings'}
-              </Button>
-
-              {/* Delete League Section */}
-              <div className="border-t pt-6 mt-6">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-red-800 mb-2">Danger Zone</h3>
-                  <p className="text-sm text-red-600 mb-4">
-                    Once you delete a league, there is no going back. This action will permanently delete the league and all associated data.
-                  </p>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        className="flex items-center space-x-2"
-                        disabled={isDeletingLeague}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span>{isDeletingLeague ? 'Deleting...' : 'Delete League'}</span>
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure you want to delete this league?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the league "{league.name}" 
-                          and remove all members, standings, and associated data.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={handleDeleteLeague}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Yes, delete league
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </div>
+            <LeagueSettingsTab
+              league={league}
+              leagueName={leagueName}
+              setLeagueName={setLeagueName}
+              leagueDescription={leagueDescription}
+              setLeagueDescription={setLeagueDescription}
+              isPublic={isPublic}
+              setIsPublic={setIsPublic}
+              maxMembers={maxMembers}
+              setMaxMembers={setMaxMembers}
+              isLoading={isLoading}
+              onUpdateLeague={handleUpdateLeague}
+              onLeagueUpdated={handleLeagueUpdatedAfterDelete}
+            />
           </TabsContent>
 
           <TabsContent value="members" className="space-y-4">
-            {loadingMembers ? (
-              <div className="text-center py-8">
-                <p>Loading members...</p>
-              </div>
-            ) : members.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600">No members found.</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {members.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Users className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="font-medium">
-                          {member.profiles?.name || member.profiles?.username || 'Unknown User'}
-                          {member.user_id === league.creator_id && (
-                            <Badge variant="secondary" className="ml-2 text-xs">
-                              <Crown className="h-3 w-3 mr-1" />
-                              Creator
-                            </Badge>
-                          )}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {member.profiles?.email}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          Joined: {new Date(member.joined_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {member.user_id !== league.creator_id && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveMember(member.id, member.user_id)}
-                        disabled={removingMember === member.id}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        {removingMember === member.id ? 'Removing...' : 'Remove'}
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <LeagueMembersTab
+              league={league}
+              members={members}
+              loadingMembers={loadingMembers}
+              removingMember={removingMember}
+              onRemoveMember={handleRemoveMember}
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>
