@@ -170,6 +170,50 @@ export type Database = {
           },
         ]
       }
+      league_standings: {
+        Row: {
+          correct_picks: number
+          created_at: string
+          current_rank: number | null
+          id: string
+          league_id: string
+          total_picks: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          correct_picks?: number
+          created_at?: string
+          current_rank?: number | null
+          id?: string
+          league_id: string
+          total_picks?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          correct_picks?: number
+          created_at?: string
+          current_rank?: number | null
+          id?: string
+          league_id?: string
+          total_picks?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "league_standings_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leagues: {
         Row: {
           created_at: string

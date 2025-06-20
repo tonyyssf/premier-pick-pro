@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { LeagueCard } from '@/components/LeagueCard';
+import { LeagueLeaderboard } from '@/components/LeagueLeaderboard';
 import { CreateLeagueDialog } from '@/components/CreateLeagueDialog';
 import { JoinLeagueDialog } from '@/components/JoinLeagueDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -196,9 +197,10 @@ const Leagues = () => {
           </div>
 
           <Tabs defaultValue="my-leagues" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="my-leagues">My Leagues ({myLeagues.length})</TabsTrigger>
               <TabsTrigger value="public-leagues">Public Leagues ({publicLeagues.length})</TabsTrigger>
+              <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
             </TabsList>
             
             <TabsContent value="my-leagues" className="mt-6">
@@ -245,6 +247,30 @@ const Leagues = () => {
                       league={league}
                       onJoin={handleJoinLeague}
                       isJoining={joiningLeague === league.id}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="leaderboards" className="mt-6">
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading leaderboards...</p>
+                </div>
+              ) : myLeagues.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 mb-4">Join a league to view leaderboards.</p>
+                  <p className="text-sm text-gray-500">Create or join a league to see how you rank against other members!</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {myLeagues.map((league) => (
+                    <LeagueLeaderboard
+                      key={league.id}
+                      leagueId={league.id}
+                      leagueName={league.name}
                     />
                   ))}
                 </div>
