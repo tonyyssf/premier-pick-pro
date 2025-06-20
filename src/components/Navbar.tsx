@@ -3,13 +3,17 @@ import React from 'react';
 import { Users, BarChart3, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Link, useLocation } from 'react-router-dom';
 
 export const Navbar: React.FC = () => {
   const { signOut, user } = useAuth();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <nav className="bg-white shadow-lg border-b-4 border-plpe-purple">
@@ -27,12 +31,26 @@ export const Navbar: React.FC = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-gray-700 hover:text-plpe-purple font-medium transition-colors">
+            <Link 
+              to="/" 
+              className={`font-medium transition-colors ${
+                isActive('/') 
+                  ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
+                  : 'text-gray-700 hover:text-plpe-purple'
+              }`}
+            >
               My Picks
-            </a>
-            <a href="#" className="text-gray-700 hover:text-plpe-purple font-medium transition-colors">
+            </Link>
+            <Link 
+              to="/leagues" 
+              className={`font-medium transition-colors ${
+                isActive('/leagues') 
+                  ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
+                  : 'text-gray-700 hover:text-plpe-purple'
+              }`}
+            >
               Leagues
-            </a>
+            </Link>
             <a href="#" className="text-gray-700 hover:text-plpe-purple font-medium transition-colors">
               Leaderboard
             </a>
