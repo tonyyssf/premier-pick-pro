@@ -23,8 +23,7 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: user?.user_metadata?.username || '',
-    firstName: user?.user_metadata?.first_name || '',
-    lastName: user?.user_metadata?.last_name || '',
+    name: user?.user_metadata?.name || '',
     email: user?.email || ''
   });
 
@@ -37,8 +36,7 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
       const { error: authError } = await supabase.auth.updateUser({
         data: {
           username: formData.username,
-          first_name: formData.firstName,
-          last_name: formData.lastName
+          name: formData.name
         }
       });
 
@@ -49,8 +47,7 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
         .from('profiles')
         .update({
           username: formData.username,
-          first_name: formData.firstName,
-          last_name: formData.lastName
+          name: formData.name
         })
         .eq('id', user.id);
 
@@ -111,22 +108,12 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="firstName">First Name</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
-              id="firstName"
-              value={formData.firstName}
-              onChange={(e) => handleInputChange('firstName', e.target.value)}
-              placeholder="Enter first name"
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              id="lastName"
-              value={formData.lastName}
-              onChange={(e) => handleInputChange('lastName', e.target.value)}
-              placeholder="Enter last name"
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Enter your full name"
             />
           </div>
         </div>
