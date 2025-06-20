@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { LeagueCard } from '@/components/LeagueCard';
-import { LeagueLeaderboard } from '@/components/LeagueLeaderboard';
 import { CreateLeagueDialog } from '@/components/CreateLeagueDialog';
 import { JoinLeagueDialog } from '@/components/JoinLeagueDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -189,13 +187,6 @@ const Leagues = () => {
     setActiveTab(value);
   };
 
-  // Log when leaderboards tab is active and we have leagues
-  useEffect(() => {
-    if (activeTab === 'leaderboards') {
-      console.log('Leaderboards tab active, myLeagues:', myLeagues);
-    }
-  }, [activeTab, myLeagues]);
-
   return (
     <ProtectedRoute>
       <Layout>
@@ -213,10 +204,9 @@ const Leagues = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="my-leagues">My Leagues ({myLeagues.length})</TabsTrigger>
               <TabsTrigger value="public-leagues">Public Leagues ({publicLeagues.length})</TabsTrigger>
-              <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
             </TabsList>
             
             <TabsContent value="my-leagues" className="mt-6">
@@ -259,30 +249,6 @@ const Leagues = () => {
                       isJoining={joiningLeague === league.id}
                     />
                   ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="leaderboards" className="mt-6">
-              {isLoading ? (
-                <LoadingSpinner message="Loading leaderboards..." />
-              ) : myLeagues.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-600 mb-4">Join a league to view leaderboards.</p>
-                  <p className="text-sm text-gray-500">Create or join a league to see how you rank against other members!</p>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {myLeagues.map((league) => {
-                    console.log('Rendering leaderboard for league:', league.name);
-                    return (
-                      <LeagueLeaderboard
-                        key={league.id}
-                        leagueId={league.id}
-                        leagueName={league.name}
-                      />
-                    );
-                  })}
                 </div>
               )}
             </TabsContent>

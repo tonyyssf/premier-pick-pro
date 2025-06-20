@@ -51,9 +51,16 @@ export const Navbar: React.FC = () => {
             >
               Leagues
             </Link>
-            <a href="#" className="text-gray-700 hover:text-plpe-purple font-medium transition-colors">
-              Leaderboard
-            </a>
+            <Link 
+              to="/leaderboards" 
+              className={`font-medium transition-colors ${
+                isActive('/leaderboards') 
+                  ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
+                  : 'text-gray-700 hover:text-plpe-purple'
+              }`}
+            >
+              Leaderboards
+            </Link>
           </div>
 
           <div className="flex items-center space-x-4">
