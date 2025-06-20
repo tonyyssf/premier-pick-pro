@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
-import { Calendar, Clock, CheckCircle, Undo } from 'lucide-react';
+import { GameweekHeader } from './GameweekHeader';
+import { PickConfirmationCard } from './PickConfirmationCard';
+import { PickSelectionCard } from './PickSelectionCard';
 import { usePicks } from '../contexts/PicksContext';
-import { Button } from './ui/button';
 
 export const WeeklyPicks: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -47,6 +49,11 @@ export const WeeklyPicks: React.FC = () => {
     setUndoing(true);
     await undoPick();
     setUndoing(false);
+  };
+
+  const handleCancel = () => {
+    setSelectedTeam(null);
+    setSelectedFixture(null);
   };
 
   const getSelectedTeamInfo = () => {
@@ -97,156 +104,46 @@ export const WeeklyPicks: React.FC = () => {
     );
   }
 
-  if (hasAlreadyPicked && currentPick) {
-    const pickInfo = getCurrentPickInfo();
-    
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 text-plpe-purple mb-2">
-            <Calendar className="h-5 w-5" />
-            <span className="font-semibold">Gameweek {currentGameweek.number}</span>
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Pick</h2>
-          <div className="flex items-center space-x-2 text-gray-600">
-            <Clock className="h-4 w-4" />
-            <span>Deadline: {currentGameweek.deadline.toLocaleDateString('en-GB', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="h-8 w-8 text-green-500" />
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Pick Confirmed</h3>
-                <p className="text-gray-600">You've made your pick for this gameweek</p>
-              </div>
-            </div>
-            {canUndo && (
-              <Button
-                onClick={handleUndoPick}
-                variant="outline"
-                disabled={undoing}
-                className="flex items-center space-x-2"
-              >
-                <Undo className="h-4 w-4" />
-                <span>{undoing ? 'Undoing...' : 'Undo Pick'}</span>
-              </Button>
-            )}
-          </div>
-          
-          {pickInfo && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-900">{pickInfo.team.name}</h4>
-                  <p className="text-sm text-gray-600">
-                    {pickInfo.venue} vs {pickInfo.opponent.name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {pickInfo.fixture.kickoffTime.toLocaleDateString('en-GB', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Picked on</p>
-                  <p className="text-sm font-medium">
-                    {currentPick.timestamp.toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!canUndo && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> You can no longer change your pick as the first match of this gameweek has started.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
-      <div className="mb-8">
-        <div className="flex items-center space-x-2 text-plpe-purple mb-2">
-          <Calendar className="h-5 w-5" />
-          <span className="font-semibold">Gameweek {currentGameweek.number}</span>
-        </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Make Your Pick</h2>
-        <div className="flex items-center space-x-2 text-gray-600">
-          <Clock className="h-4 w-4" />
-          <span>Deadline: {currentGameweek.deadline.toLocaleDateString('en-GB', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}</span>
-        </div>
-      </div>
+      <GameweekHeader 
+        gameweek={currentGameweek} 
+        title={hasAlreadyPicked ? "Your Pick" : "Make Your Pick"} 
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {fixtures.map((fixture) => (
-          <FixtureCard
-            key={fixture.id}
-            fixture={fixture}
-            homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
-            awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
-            maxUses={2}
-            selectedTeam={selectedTeam}
-            onTeamSelect={handleTeamSelect}
-          />
-        ))}
-      </div>
-
-      {selectedTeam && selectedFixture && (
-        <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-plpe-purple">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Your Pick</h3>
-          {(() => {
-            const teamInfo = getSelectedTeamInfo();
-            return teamInfo ? (
-              <p className="text-gray-600 mb-4">
-                You've selected {teamInfo.team.name} to win their {teamInfo.venue.toLowerCase()} match against {teamInfo.opponent.name}.
-              </p>
-            ) : null;
-          })()}
-          <div className="flex space-x-4">
-            <Button 
-              onClick={handleSubmitPick}
-              className="bg-plpe-purple hover:bg-purple-700"
-              disabled={submitting}
-            >
-              {submitting ? 'Submitting...' : 'Submit Pick'}
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => {
-                setSelectedTeam(null);
-                setSelectedFixture(null);
-              }}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
+      {hasAlreadyPicked && currentPick ? (
+        <PickConfirmationCard
+          currentPick={currentPick}
+          pickInfo={getCurrentPickInfo()}
+          canUndo={canUndo}
+          undoing={undoing}
+          onUndoPick={handleUndoPick}
+        />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {fixtures.map((fixture) => (
+              <FixtureCard
+                key={fixture.id}
+                fixture={fixture}
+                homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
+                awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
+                maxUses={2}
+                selectedTeam={selectedTeam}
+                onTeamSelect={handleTeamSelect}
+              />
+            ))}
           </div>
-        </div>
+
+          <PickSelectionCard
+            selectedTeam={selectedTeam}
+            selectedFixture={selectedFixture}
+            teamInfo={getSelectedTeamInfo()}
+            submitting={submitting}
+            onSubmitPick={handleSubmitPick}
+            onCancel={handleCancel}
+          />
+        </>
       )}
     </div>
   );
