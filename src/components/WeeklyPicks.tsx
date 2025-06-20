@@ -15,7 +15,8 @@ interface Team {
 
 export const WeeklyPicks: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-  const { submitPick, getTeamUsedCount, hasPickForGameweek, getCurrentPick, currentGameweek } = usePicks();
+  const [submitting, setSubmitting] = useState(false);
+  const { submitPick, getTeamUsedCount, hasPickForGameweek, getCurrentPick, currentGameweek, loading } = usePicks();
   
   const teams: Team[] = [
     { id: '1', name: 'Arsenal', opponent: 'Chelsea', venue: 'H' as const, usedCount: 0 },
@@ -34,15 +35,28 @@ export const WeeklyPicks: React.FC = () => {
   const currentPick = getCurrentPick();
   const hasAlreadyPicked = hasPickForGameweek(currentGameweek);
 
-  const handleSubmitPick = () => {
+  const handleSubmitPick = async () => {
     const team = teams.find(t => t.id === selectedTeam);
     if (team) {
-      const success = submitPick(team);
+      setSubmitting(true);
+      const success = await submitPick(team);
       if (success) {
         setSelectedTeam(null);
       }
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple"></div>
+          <span className="ml-3 text-gray-600">Loading your picks...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (hasAlreadyPicked && currentPick) {
     return (
@@ -129,12 +143,14 @@ export const WeeklyPicks: React.FC = () => {
             <Button 
               onClick={handleSubmitPick}
               className="bg-plpe-purple hover:bg-purple-700"
+              disabled={submitting}
             >
-              Submit Pick
+              {submitting ? 'Submitting...' : 'Submit Pick'}
             </Button>
             <Button 
               variant="outline"
               onClick={() => setSelectedTeam(null)}
+              disabled={submitting}
             >
               Cancel
             </Button>
