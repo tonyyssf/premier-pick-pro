@@ -70,6 +70,44 @@ export type Database = {
           },
         ]
       }
+      gameweek_scores: {
+        Row: {
+          created_at: string
+          gameweek_id: string
+          id: string
+          is_correct: boolean
+          points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gameweek_id: string
+          id?: string
+          is_correct?: boolean
+          points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gameweek_id?: string
+          id?: string
+          is_correct?: boolean
+          points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gameweek_scores_gameweek_id_fkey"
+            columns: ["gameweek_id"]
+            isOneToOne: false
+            referencedRelation: "gameweeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gameweeks: {
         Row: {
           created_at: string
@@ -200,12 +238,52 @@ export type Database = {
           },
         ]
       }
+      user_standings: {
+        Row: {
+          correct_picks: number
+          created_at: string
+          current_rank: number | null
+          id: string
+          total_picks: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          correct_picks?: number
+          created_at?: string
+          current_rank?: number | null
+          id?: string
+          total_picks?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          correct_picks?: number
+          created_at?: string
+          current_rank?: number | null
+          id?: string
+          total_picks?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_gameweek_scores: {
+        Args: { gameweek_uuid: string }
+        Returns: undefined
+      }
+      update_all_scores: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

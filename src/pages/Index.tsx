@@ -4,6 +4,7 @@ import { Layout } from '../components/Layout';
 import { HeroSection } from '../components/HeroSection';
 import { WeeklyPicks } from '../components/WeeklyPicks';
 import { LeaderboardSection } from '../components/LeaderboardSection';
+import { UserScoreDisplay } from '../components/UserScoreDisplay';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
 const Index = () => {
@@ -11,6 +12,9 @@ const Index = () => {
     <ProtectedRoute>
       <Layout>
         <HeroSection />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <UserScoreDisplay />
+        </div>
         <WeeklyPicks />
         <LeaderboardSection />
       </Layout>

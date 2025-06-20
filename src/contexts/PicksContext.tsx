@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
@@ -35,16 +34,37 @@ interface Gameweek {
   isCurrent: boolean;
 }
 
+interface GameweekScore {
+  id: string;
+  userId: string;
+  gameweekId: string;
+  points: number;
+  isCorrect: boolean;
+}
+
+interface UserStanding {
+  id: string;
+  userId: string;
+  totalPoints: number;
+  correctPicks: number;
+  totalPicks: number;
+  currentRank: number | null;
+}
+
 interface PicksContextType {
   picks: Pick[];
   fixtures: Fixture[];
   currentGameweek: Gameweek | null;
+  gameweekScores: GameweekScore[];
+  userStandings: UserStanding[];
   submitPick: (fixtureId: string, teamId: string) => Promise<boolean>;
   getTeamUsedCount: (teamId: string) => number;
   hasPickForGameweek: (gameweekId: string) => boolean;
   getCurrentPick: () => Pick | null;
+  calculateScores: (gameweekId?: string) => Promise<void>;
   loading: boolean;
   fixturesLoading: boolean;
+  scoresLoading: boolean;
 }
 
 const PicksContext = createContext<PicksContextType | undefined>(undefined);
@@ -53,8 +73,11 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [picks, setPicks] = useState<Pick[]>([]);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [currentGameweek, setCurrentGameweek] = useState<Gameweek | null>(null);
+  const [gameweekScores, setGameweekScores] = useState<GameweekScore[]>([]);
+  const [userStandings, setUserStandings] = useState<UserStanding[]>([]);
   const [loading, setLoading] = useState(true);
   const [fixturesLoading, setFixturesLoading] = useState(true);
+  const [scoresLoading, setScoresLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -67,8 +90,11 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     if (user) {
       loadUserPicks();
+      loadScoresAndStandings();
     } else {
       setPicks([]);
+      setGameweekScores([]);
+      setUserStandings([]);
       setLoading(false);
     }
   }, [user]);
@@ -167,6 +193,105 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       console.error('Error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadScoresAndStandings = async () => {
+    setScoresLoading(true);
+    try {
+      // Load gameweek scores
+      const { data: scoresData, error: scoresError } = await supabase
+        .from('gameweek_scores')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (scoresError) {
+        console.error('Error loading scores:', scoresError);
+      } else {
+        const formattedScores: GameweekScore[] = scoresData.map(score => ({
+          id: score.id,
+          userId: score.user_id,
+          gameweekId: score.gameweek_id,
+          points: score.points,
+          isCorrect: score.is_correct,
+        }));
+        setGameweekScores(formattedScores);
+      }
+
+      // Load user standings
+      const { data: standingsData, error: standingsError } = await supabase
+        .from('user_standings')
+        .select('*')
+        .order('current_rank', { ascending: true, nullsLast: true });
+
+      if (standingsError) {
+        console.error('Error loading standings:', standingsError);
+      } else {
+        const formattedStandings: UserStanding[] = standingsData.map(standing => ({
+          id: standing.id,
+          userId: standing.user_id,
+          totalPoints: standing.total_points,
+          correctPicks: standing.correct_picks,
+          totalPicks: standing.total_picks,
+          currentRank: standing.current_rank,
+        }));
+        setUserStandings(formattedStandings);
+      }
+    } catch (error) {
+      console.error('Error loading scores and standings:', error);
+    } finally {
+      setScoresLoading(false);
+    }
+  };
+
+  const calculateScores = async (gameweekId?: string) => {
+    try {
+      setScoresLoading(true);
+      
+      if (gameweekId) {
+        const { error } = await supabase.rpc('calculate_gameweek_scores', {
+          gameweek_uuid: gameweekId
+        });
+        
+        if (error) {
+          console.error('Error calculating scores:', error);
+          toast({
+            title: "Error Calculating Scores",
+            description: "Could not calculate scores for this gameweek.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else {
+        const { error } = await supabase.rpc('update_all_scores');
+        
+        if (error) {
+          console.error('Error updating all scores:', error);
+          toast({
+            title: "Error Updating Scores",
+            description: "Could not update all scores.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Reload scores and standings after calculation
+      await loadScoresAndStandings();
+      
+      toast({
+        title: "Scores Updated",
+        description: "All scores have been calculated and updated.",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while calculating scores.",
+        variant: "destructive",
+      });
+    } finally {
+      setScoresLoading(false);
     }
   };
 
@@ -272,12 +397,16 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       picks,
       fixtures,
       currentGameweek,
+      gameweekScores,
+      userStandings,
       submitPick,
       getTeamUsedCount,
       hasPickForGameweek,
       getCurrentPick,
+      calculateScores,
       loading,
       fixturesLoading,
+      scoresLoading,
     }}>
       {children}
     </PicksContext.Provider>
