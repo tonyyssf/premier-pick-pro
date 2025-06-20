@@ -1,558 +1,41 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-
-interface Pick {
-  id: string;
-  gameweekId: string;
-  fixtureId: string;
-  pickedTeamId: string;
-  timestamp: Date;
-}
-
-interface Fixture {
-  id: string;
-  homeTeam: {
-    id: string;
-    name: string;
-    shortName: string;
-    teamColor?: string;
-  };
-  awayTeam: {
-    id: string;
-    name: string;
-    shortName: string;
-    teamColor?: string;
-  };
-  kickoffTime: Date;
-  status: string;
-}
-
-interface Gameweek {
-  id: string;
-  number: number;
-  deadline: Date;
-  isCurrent: boolean;
-}
-
-interface GameweekScore {
-  id: string;
-  userId: string;
-  gameweekId: string;
-  points: number;
-  isCorrect: boolean;
-}
-
-interface UserStanding {
-  id: string;
-  userId: string;
-  totalPoints: number;
-  correctPicks: number;
-  totalPicks: number;
-  currentRank: number | null;
-}
-
-interface PicksContextType {
-  picks: Pick[];
-  fixtures: Fixture[];
-  currentGameweek: Gameweek | null;
-  gameweekScores: GameweekScore[];
-  userStandings: UserStanding[];
-  submitPick: (fixtureId: string, teamId: string) => Promise<boolean>;
-  undoPick: () => Promise<boolean>;
-  canUndoPick: () => boolean;
-  getTeamUsedCount: (teamId: string) => number;
-  hasPickForGameweek: (gameweekId: string) => boolean;
-  getCurrentPick: () => Pick | null;
-  calculateScores: (gameweekId?: string) => Promise<void>;
-  advanceToNextGameweek: () => Promise<boolean>;
-  loading: boolean;
-  fixturesLoading: boolean;
-  scoresLoading: boolean;
-}
+import { PicksContextType } from '@/types/picks';
+import { useGameweekData } from '@/hooks/useGameweekData';
+import { usePicksData } from '@/hooks/usePicksData';
+import { useScoresAndStandings } from '@/hooks/useScoresAndStandings';
+import { usePickActions } from '@/hooks/usePickActions';
+import { useGameweekManagement } from '@/hooks/useGameweekManagement';
 
 const PicksContext = createContext<PicksContextType | undefined>(undefined);
 
 export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [picks, setPicks] = useState<Pick[]>([]);
-  const [fixtures, setFixtures] = useState<Fixture[]>([]);
-  const [currentGameweek, setCurrentGameweek] = useState<Gameweek | null>(null);
-  const [gameweekScores, setGameweekScores] = useState<GameweekScore[]>([]);
-  const [userStandings, setUserStandings] = useState<UserStanding[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [fixturesLoading, setFixturesLoading] = useState(true);
-  const [scoresLoading, setScoresLoading] = useState(false);
-  const { toast } = useToast();
   const { user } = useAuth();
+  
+  const {
+    currentGameweek,
+    fixtures,
+    fixturesLoading,
+    loadCurrentGameweek
+  } = useGameweekData();
 
-  // Load current gameweek and fixtures
-  useEffect(() => {
-    loadCurrentGameweek();
-  }, []);
+  const {
+    picks,
+    loading,
+    setPicks,
+    loadUserPicks
+  } = usePicksData(user);
 
-  // Load user's picks when user is authenticated
-  useEffect(() => {
-    if (user) {
-      loadUserPicks();
-      loadScoresAndStandings();
-    } else {
-      setPicks([]);
-      setGameweekScores([]);
-      setUserStandings([]);
-      setLoading(false);
-    }
-  }, [user]);
+  const {
+    gameweekScores,
+    userStandings,
+    scoresLoading,
+    setScoresLoading,
+    loadScoresAndStandings
+  } = useScoresAndStandings(user);
 
-  const loadCurrentGameweek = async () => {
-    try {
-      console.log('Loading current gameweek...');
-      
-      // First, try to get the current gameweek (marked as is_current = true)
-      let { data: gameweekData, error: gameweekError } = await supabase
-        .from('gameweeks')
-        .select('*')
-        .eq('is_current', true)
-        .single();
-
-      // If no current gameweek is found, default to gameweek 1
-      if (gameweekError || !gameweekData) {
-        console.log('No current gameweek found, defaulting to gameweek 1');
-        const { data: gw1Data, error: gw1Error } = await supabase
-          .from('gameweeks')
-          .select('*')
-          .eq('number', 1)
-          .single();
-          
-        if (gw1Error) {
-          console.error('Error loading gameweek 1:', gw1Error);
-          return;
-        }
-        
-        // Set gameweek 1 as current
-        const { error: updateError } = await supabase
-          .from('gameweeks')
-          .update({ is_current: true })
-          .eq('id', gw1Data.id);
-          
-        if (updateError) {
-          console.error('Error setting gameweek 1 as current:', updateError);
-        }
-        
-        gameweekData = gw1Data;
-      }
-
-      const gameweek: Gameweek = {
-        id: gameweekData.id,
-        number: gameweekData.number,
-        deadline: new Date(gameweekData.deadline),
-        isCurrent: gameweekData.is_current,
-      };
-
-      console.log('Current gameweek loaded:', gameweek);
-      setCurrentGameweek(gameweek);
-
-      // Load fixtures for current gameweek - UPDATED to include team_color and order by kickoff_time
-      const { data: fixturesData, error: fixturesError } = await supabase
-        .from('fixtures')
-        .select(`
-          *,
-          home_team:teams!fixtures_home_team_id_fkey(id, name, short_name, team_color),
-          away_team:teams!fixtures_away_team_id_fkey(id, name, short_name, team_color)
-        `)
-        .eq('gameweek_id', gameweek.id)
-        .order('kickoff_time', { ascending: true });
-
-      if (fixturesError) {
-        console.error('Error loading fixtures:', fixturesError);
-        return;
-      }
-
-      console.log('Fixtures loaded:', fixturesData?.length || 0, 'fixtures');
-
-      const formattedFixtures: Fixture[] = fixturesData.map(fixture => ({
-        id: fixture.id,
-        homeTeam: {
-          id: fixture.home_team.id,
-          name: fixture.home_team.name,
-          shortName: fixture.home_team.short_name,
-          teamColor: fixture.home_team.team_color,
-        },
-        awayTeam: {
-          id: fixture.away_team.id,
-          name: fixture.away_team.name,
-          shortName: fixture.away_team.short_name,
-          teamColor: fixture.away_team.team_color,
-        },
-        kickoffTime: new Date(fixture.kickoff_time),
-        status: fixture.status,
-      }));
-
-      setFixtures(formattedFixtures);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setFixturesLoading(false);
-    }
-  };
-
-  const loadUserPicks = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('user_picks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error loading picks:', error);
-        toast({
-          title: "Error Loading Picks",
-          description: "Could not load your previous picks.",
-          variant: "destructive",
-        });
-      } else {
-        const formattedPicks: Pick[] = data.map(pick => ({
-          id: pick.id,
-          gameweekId: pick.gameweek_id,
-          fixtureId: pick.fixture_id,
-          pickedTeamId: pick.picked_team_id,
-          timestamp: new Date(pick.created_at),
-        }));
-        setPicks(formattedPicks);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadScoresAndStandings = async () => {
-    setScoresLoading(true);
-    try {
-      // Load gameweek scores
-      const { data: scoresData, error: scoresError } = await supabase
-        .from('gameweek_scores')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (scoresError) {
-        console.error('Error loading scores:', scoresError);
-      } else {
-        const formattedScores: GameweekScore[] = scoresData.map(score => ({
-          id: score.id,
-          userId: score.user_id,
-          gameweekId: score.gameweek_id,
-          points: score.points,
-          isCorrect: score.is_correct,
-        }));
-        setGameweekScores(formattedScores);
-      }
-
-      // Load user standings
-      const { data: standingsData, error: standingsError } = await supabase
-        .from('user_standings')
-        .select('*')
-        .order('current_rank', { ascending: true, nullsFirst: false });
-
-      if (standingsError) {
-        console.error('Error loading standings:', standingsError);
-      } else {
-        const formattedStandings: UserStanding[] = standingsData.map(standing => ({
-          id: standing.id,
-          userId: standing.user_id,
-          totalPoints: standing.total_points,
-          correctPicks: standing.correct_picks,
-          totalPicks: standing.total_picks,
-          currentRank: standing.current_rank,
-        }));
-        setUserStandings(formattedStandings);
-      }
-    } catch (error) {
-      console.error('Error loading scores and standings:', error);
-    } finally {
-      setScoresLoading(false);
-    }
-  };
-
-  const advanceToNextGameweek = async (): Promise<boolean> => {
-    try {
-      setScoresLoading(true);
-      
-      const { error } = await supabase.rpc('advance_to_next_gameweek');
-      
-      if (error) {
-        console.error('Error advancing to next gameweek:', error);
-        toast({
-          title: "Error Advancing Gameweek",
-          description: error.message || "Could not advance to the next gameweek.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Reload current gameweek and fixtures after advancement
-      await loadCurrentGameweek();
-      
-      // Reload user picks for the new gameweek
-      if (user) {
-        await loadUserPicks();
-      }
-      
-      toast({
-        title: "Gameweek Advanced",
-        description: "Successfully advanced to the next gameweek.",
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while advancing the gameweek.",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setScoresLoading(false);
-    }
-  };
-
-  const calculateScores = async (gameweekId?: string) => {
-    try {
-      setScoresLoading(true);
-      
-      if (gameweekId) {
-        const { error } = await supabase.rpc('calculate_gameweek_scores', {
-          gameweek_uuid: gameweekId
-        });
-        
-        if (error) {
-          console.error('Error calculating scores:', error);
-          toast({
-            title: "Error Calculating Scores",
-            description: "Could not calculate scores for this gameweek.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // After calculating scores, check if we can advance to the next gameweek
-        const { data: isComplete, error: checkError } = await supabase.rpc('check_gameweek_completion', {
-          gameweek_uuid: gameweekId
-        });
-
-        if (checkError) {
-          console.error('Error checking gameweek completion:', checkError);
-        } else if (isComplete && currentGameweek?.id === gameweekId) {
-          // Automatically advance to next gameweek if all fixtures are finished
-          console.log('All fixtures finished, attempting to advance gameweek...');
-          await advanceToNextGameweek();
-        }
-      } else {
-        const { error } = await supabase.rpc('update_all_scores');
-        
-        if (error) {
-          console.error('Error updating all scores:', error);
-          toast({
-            title: "Error Updating Scores",
-            description: "Could not update all scores.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
-      // Reload scores and standings after calculation
-      await loadScoresAndStandings();
-      
-      toast({
-        title: "Scores Updated",
-        description: "All scores have been calculated and updated.",
-      });
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while calculating scores.",
-        variant: "destructive",
-      });
-    } finally {
-      setScoresLoading(false);
-    }
-  };
-
-  const submitPick = async (fixtureId: string, teamId: string): Promise<boolean> => {
-    if (!user || !currentGameweek) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to make picks.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    // Check if already has pick for current gameweek
-    if (hasPickForGameweek(currentGameweek.id)) {
-      toast({
-        title: "Pick Already Made",
-        description: "You've already made a pick for this gameweek.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    // Check if team has been used too many times
-    if (getTeamUsedCount(teamId) >= 2) {
-      const fixture = fixtures.find(f => f.id === fixtureId);
-      const team = fixture?.homeTeam.id === teamId ? fixture.homeTeam : fixture?.awayTeam;
-      
-      toast({
-        title: "Team Used Too Many Times",
-        description: `You've already used ${team?.name} 2 times this season.`,
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('user_picks')
-        .insert({
-          user_id: user.id,
-          gameweek_id: currentGameweek.id,
-          fixture_id: fixtureId,
-          picked_team_id: teamId,
-        });
-
-      if (error) {
-        console.error('Error submitting pick:', error);
-        toast({
-          title: "Error Submitting Pick",
-          description: "Could not save your pick. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      const newPick: Pick = {
-        id: crypto.randomUUID(),
-        gameweekId: currentGameweek.id,
-        fixtureId,
-        pickedTeamId: teamId,
-        timestamp: new Date(),
-      };
-
-      setPicks(prevPicks => [...prevPicks, newPick]);
-      
-      const fixture = fixtures.find(f => f.id === fixtureId);
-      const team = fixture?.homeTeam.id === teamId ? fixture.homeTeam : fixture?.awayTeam;
-      const opponent = fixture?.homeTeam.id === teamId ? fixture.awayTeam : fixture?.homeTeam;
-      
-      toast({
-        title: "Pick Submitted!",
-        description: `You've picked ${team?.name} to win their match against ${opponent?.name}.`,
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
-  const canUndoPick = (): boolean => {
-    if (!currentGameweek || !hasPickForGameweek(currentGameweek.id)) {
-      return false;
-    }
-
-    // Check if any fixture in the current gameweek has started
-    const now = new Date();
-    const hasStartedFixture = fixtures.some(fixture => 
-      fixture.kickoffTime <= now
-    );
-
-    return !hasStartedFixture;
-  };
-
-  const undoPick = async (): Promise<boolean> => {
-    if (!user || !currentGameweek) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to undo picks.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (!canUndoPick()) {
-      toast({
-        title: "Cannot Undo Pick",
-        description: "You can only undo your pick before the first match starts.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    const currentPick = getCurrentPick();
-    if (!currentPick) {
-      toast({
-        title: "No Pick to Undo",
-        description: "You haven't made a pick for this gameweek yet.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('user_picks')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('gameweek_id', currentGameweek.id);
-
-      if (error) {
-        console.error('Error undoing pick:', error);
-        toast({
-          title: "Error Undoing Pick",
-          description: "Could not undo your pick. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Remove the pick from local state
-      setPicks(prevPicks => 
-        prevPicks.filter(pick => pick.gameweekId !== currentGameweek.id)
-      );
-      
-      toast({
-        title: "Pick Undone",
-        description: "Your pick has been removed. You can now make a new selection.",
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
+  // Helper functions
   const getTeamUsedCount = (teamId: string): number => {
     return picks.filter(pick => pick.pickedTeamId === teamId).length;
   };
@@ -561,10 +44,31 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return picks.some(pick => pick.gameweekId === gameweekId);
   };
 
-  const getCurrentPick = (): Pick | null => {
-    if (!currentGameweek) return null;
-    return picks.find(pick => pick.gameweekId === currentGameweek.id) || null;
-  };
+  const {
+    submitPick,
+    undoPick,
+    canUndoPick,
+    getCurrentPick
+  } = usePickActions(
+    user,
+    currentGameweek,
+    picks,
+    fixtures,
+    setPicks,
+    getTeamUsedCount,
+    hasPickForGameweek
+  );
+
+  const {
+    advanceToNextGameweek,
+    calculateScores
+  } = useGameweekManagement(
+    loadCurrentGameweek,
+    loadUserPicks,
+    loadScoresAndStandings,
+    setScoresLoading,
+    user
+  );
 
   return (
     <PicksContext.Provider value={{
