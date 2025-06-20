@@ -29,10 +29,10 @@ export const TeamCard: React.FC<TeamCardProps> = ({
       className={`
         relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 transform hover:scale-105
         ${isSelected 
-          ? 'border-emerald-500 bg-emerald-50 shadow-lg' 
+          ? 'border-plpe-purple bg-purple-50 shadow-lg' 
           : isDisabled
             ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
-            : 'border-gray-200 bg-white hover:border-emerald-300 hover:shadow-md'
+            : 'border-gray-200 bg-white hover:border-plpe-purple hover:shadow-md'
         }
       `}
       onClick={!isDisabled ? onSelect : undefined}
@@ -63,7 +63,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
             <div
               key={i}
               className={`w-3 h-3 rounded-full ${
-                i < usedCount ? 'bg-emerald-500' : 'bg-gray-300'
+                i < usedCount ? 'bg-plpe-purple' : 'bg-gray-300'
               }`}
             />
           ))}

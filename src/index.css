@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 259 100% 35%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -37,20 +38,18 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom PLPE brand colors from logo */
+    --plpe-purple: 259 100% 35%;
+    --plpe-blue: 207 100% 50%;
+    --plpe-gradient: linear-gradient(135deg, hsl(259 100% 35%) 0%, hsl(207 100% 50%) 100%);
   }
 
   .dark {
@@ -99,5 +98,35 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .bg-plpe-gradient {
+    background: linear-gradient(135deg, hsl(259 100% 35%) 0%, hsl(207 100% 50%) 100%);
+  }
+  
+  .text-plpe-purple {
+    color: hsl(259 100% 35%);
+  }
+  
+  .text-plpe-blue {
+    color: hsl(207 100% 50%);
+  }
+  
+  .bg-plpe-purple {
+    background-color: hsl(259 100% 35%);
+  }
+  
+  .bg-plpe-blue {
+    background-color: hsl(207 100% 50%);
+  }
+  
+  .border-plpe-purple {
+    border-color: hsl(259 100% 35%);
+  }
+  
+  .border-plpe-blue {
+    border-color: hsl(207 100% 50%);
   }
 }

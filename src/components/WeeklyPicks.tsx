@@ -28,7 +28,7 @@ export const WeeklyPicks: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
-        <div className="flex items-center space-x-2 text-emerald-600 mb-2">
+        <div className="flex items-center space-x-2 text-plpe-purple mb-2">
           <Calendar className="h-5 w-5" />
           <span className="font-semibold">Gameweek 15</span>
         </div>
@@ -56,13 +56,13 @@ export const WeeklyPicks: React.FC = () => {
       </div>
 
       {selectedTeam && (
-        <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-emerald-500">
+        <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-plpe-purple">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Your Pick</h3>
           <p className="text-gray-600 mb-4">
             You've selected {teams.find(t => t.id === selectedTeam)?.name} to win their match this week.
           </p>
           <div className="flex space-x-4">
-            <button className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition-colors">
+            <button className="bg-plpe-purple text-white px-6 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
               Submit Pick
             </button>
             <button 
