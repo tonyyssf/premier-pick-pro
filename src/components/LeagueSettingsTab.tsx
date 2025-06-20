@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { LeagueInviteCodeSection } from './LeagueInviteCodeSection';
+import { LeagueShareSection } from './LeagueShareSection';
 import { LeagueDeleteSection } from './LeagueDeleteSection';
 
 interface League {
@@ -93,6 +94,8 @@ export const LeagueSettingsTab: React.FC<LeagueSettingsTabProps> = ({
         </div>
 
         <LeagueInviteCodeSection inviteCode={league.invite_code} />
+
+        <LeagueShareSection leagueId={league.id} leagueName={league.name} />
 
         <Button 
           onClick={onUpdateLeague} 
