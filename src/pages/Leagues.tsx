@@ -32,6 +32,7 @@ const Leagues = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [joiningLeague, setJoiningLeague] = useState<string | null>(null);
   const [leavingLeague, setLeavingLeague] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('my-leagues');
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -103,6 +104,7 @@ const Leagues = () => {
 
       setMyLeagues(processedUserLeagues);
       setPublicLeagues(processedPublicLeagues);
+      console.log('Fetched leagues:', { userLeagues: processedUserLeagues, publicLeagues: processedPublicLeagues });
     } catch (error: any) {
       console.error('Error fetching leagues:', error);
       toast({
@@ -182,6 +184,11 @@ const Leagues = () => {
     fetchLeagues();
   }, [user]);
 
+  const handleTabChange = (value: string) => {
+    console.log('Tab changed to:', value);
+    setActiveTab(value);
+  };
+
   return (
     <ProtectedRoute>
       <Layout>
@@ -198,7 +205,7 @@ const Leagues = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="my-leagues" className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="my-leagues">My Leagues ({myLeagues.length})</TabsTrigger>
               <TabsTrigger value="public-leagues">Public Leagues ({publicLeagues.length})</TabsTrigger>
@@ -250,6 +257,7 @@ const Leagues = () => {
             </TabsContent>
 
             <TabsContent value="leaderboards" className="mt-6">
+              {console.log('Leaderboards tab active, myLeagues:', myLeagues)}
               {isLoading ? (
                 <LoadingSpinner message="Loading leaderboards..." />
               ) : myLeagues.length === 0 ? (
@@ -259,13 +267,16 @@ const Leagues = () => {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  {myLeagues.map((league) => (
-                    <LeagueLeaderboard
-                      key={league.id}
-                      leagueId={league.id}
-                      leagueName={league.name}
-                    />
-                  ))}
+                  {myLeagues.map((league) => {
+                    console.log('Rendering leaderboard for league:', league.name);
+                    return (
+                      <LeagueLeaderboard
+                        key={league.id}
+                        leagueId={league.id}
+                        leagueName={league.name}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>
