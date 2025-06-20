@@ -10,6 +10,7 @@ interface TeamCardProps {
   maxUses: number;
   isSelected: boolean;
   onSelect: () => void;
+  teamColor?: string;
 }
 
 export const TeamCard: React.FC<TeamCardProps> = ({
@@ -20,7 +21,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   usedCount,
   maxUses,
   isSelected,
-  onSelect
+  onSelect,
+  teamColor
 }) => {
   const isDisabled = usedCount >= maxUses;
   
@@ -46,8 +48,11 @@ export const TeamCard: React.FC<TeamCardProps> = ({
       )}
       
       <div className="flex items-center space-x-3 mb-3">
-        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-          <span className="text-lg font-bold text-gray-600">{name.slice(0, 3).toUpperCase()}</span>
+        <div 
+          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-sm"
+          style={{ backgroundColor: teamColor || '#6B7280' }}
+        >
+          <span className="text-sm">{name.slice(0, 3).toUpperCase()}</span>
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900">{name}</h3>

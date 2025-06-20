@@ -284,6 +284,7 @@ export type Database = {
           logo_url: string | null
           name: string
           short_name: string
+          team_color: string | null
           updated_at: string
         }
         Insert: {
@@ -292,6 +293,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           short_name: string
+          team_color?: string | null
           updated_at?: string
         }
         Update: {
@@ -300,6 +302,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           short_name?: string
+          team_color?: string | null
           updated_at?: string
         }
         Relationships: []

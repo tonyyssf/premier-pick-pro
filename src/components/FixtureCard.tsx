@@ -5,6 +5,7 @@ interface Team {
   id: string;
   name: string;
   shortName: string;
+  teamColor?: string;
 }
 
 interface FixtureCardProps {
@@ -73,8 +74,11 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
       )}
       
       <div className="text-center">
-        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
-          <span className="text-xs font-bold text-gray-600">{team.shortName}</span>
+        <div 
+          className="w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 text-white font-bold text-xs shadow-sm"
+          style={{ backgroundColor: team.teamColor || '#6B7280' }}
+        >
+          {team.shortName}
         </div>
         <h4 className="font-semibold text-gray-900 text-sm mb-1">{team.name}</h4>
         <p className="text-xs text-gray-600">{isHome ? 'Home' : 'Away'}</p>
