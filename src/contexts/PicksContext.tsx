@@ -153,7 +153,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       console.log('Current gameweek loaded:', gameweek);
       setCurrentGameweek(gameweek);
 
-      // Load fixtures for current gameweek - UPDATED to include team_color
+      // Load fixtures for current gameweek - UPDATED to include team_color and order by kickoff_time
       const { data: fixturesData, error: fixturesError } = await supabase
         .from('fixtures')
         .select(`
@@ -161,7 +161,8 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           home_team:teams!fixtures_home_team_id_fkey(id, name, short_name, team_color),
           away_team:teams!fixtures_away_team_id_fkey(id, name, short_name, team_color)
         `)
-        .eq('gameweek_id', gameweek.id);
+        .eq('gameweek_id', gameweek.id)
+        .order('kickoff_time', { ascending: true });
 
       if (fixturesError) {
         console.error('Error loading fixtures:', fixturesError);
