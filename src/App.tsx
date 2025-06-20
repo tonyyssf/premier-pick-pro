@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Leagues from "./pages/Leagues";
 import Leaderboards from "./pages/Leaderboards";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App: React.FC = () => {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/leagues" element={<Leagues />} />
                 <Route path="/leaderboards" element={<Leaderboards />} />
+                <Route path="/admin" element={<Admin />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,6 +58,16 @@ export const Navbar: React.FC = () => {
               }`}
             >
               Leaderboards
+            </Link>
+            <Link 
+              to="/admin" 
+              className={`font-medium transition-colors ${
+                isActive('/admin') 
+                  ? 'text-plpe-purple border-b-2 border-plpe-purple pb-1' 
+                  : 'text-gray-700 hover:text-plpe-purple'
+              }`}
+            >
+              Admin
             </Link>
           </div>
 
