@@ -86,9 +86,9 @@ async function syncTeams() {
     // Try to fetch teams using the likely endpoints for this API
     let teamsData;
     const possibleEndpoints = [
-      'clubs',  // Most likely based on other Premier League APIs
-      'teams',
-      'team/list'
+      'team/list',  // Most likely based on successful team sync
+      'clubs',
+      'teams'
     ];
     
     for (const endpoint of possibleEndpoints) {
@@ -150,13 +150,16 @@ async function syncTeams() {
         
         console.log(`Upserting team: ${team.name} (ID: ${team.id})`);
         
+        // Use team.id as string for UUID field since the database expects UUID format
+        const teamId = team.id.toString();
+        
         const { error } = await supabase
           .from('teams')
           .upsert({
-            id: team.id.toString(),
-            name: team.name,
-            short_name: team.shortName || team.short_name || team.code || team.name.slice(0, 3).toUpperCase(),
-            logo_url: team.logo || team.logo_url || team.logoUrl || ''
+            id: teamId,
+            name: team.name || team.displayName,
+            short_name: team.shortName || team.short_name || team.abbreviation || team.code || team.name.slice(0, 3).toUpperCase(),
+            logo_url: team.logo || team.logo_url || team.logoUrl || (team.logos && team.logos[0]) || ''
           }, {
             onConflict: 'id'
           });
@@ -186,53 +189,30 @@ async function syncGameweeksAndFixtures() {
   console.log('Starting gameweeks and fixtures sync...');
   
   try {
-    // Try to fetch fixtures using likely endpoints
-    let fixturesData;
-    const possibleEndpoints = [
-      'fixtures', 
-      'matches',
-      'match/list',
-      'fixture/list'
-    ];
+    // Use the correct schedule endpoint with the current year
+    const currentYear = new Date().getFullYear();
+    console.log(`Fetching schedule for year: ${currentYear}`);
     
-    for (const endpoint of possibleEndpoints) {
-      try {
-        console.log(`Trying fixtures endpoint: ${endpoint}`);
-        fixturesData = await fetchFromRapidAPI(endpoint);
-        
-        // Add delay between API calls
-        await delay(1000);
-        
-        if (fixturesData && (Array.isArray(fixturesData) || fixturesData.fixtures || fixturesData.matches || fixturesData.data)) {
-          console.log(`Successfully fetched fixtures from ${endpoint}`);
-          break;
-        }
-      } catch (error) {
-        console.log(`Failed to fetch fixtures from ${endpoint}:`, error.message);
-        
-        // Add delay even on errors
-        await delay(1000);
-        
-        if (endpoint === possibleEndpoints[possibleEndpoints.length - 1]) {
-          throw new Error(`All fixture endpoints failed. The API structure may be different than expected. Last error: ${error.message}`);
-        }
-      }
+    const scheduleData = await fetchFromRapidAPI(`schedule?year=${currentYear}`);
+    
+    if (!scheduleData) {
+      throw new Error('No schedule data received from API');
     }
     
-    if (!fixturesData) {
-      throw new Error('No fixture data received from any endpoint');
-    }
+    console.log(`Received schedule data structure:`, JSON.stringify(scheduleData, null, 2));
     
-    // Parse fixtures data
+    // Parse fixtures data based on the actual API response structure
     let fixtures = [];
-    if (Array.isArray(fixturesData)) {
-      fixtures = fixturesData;
-    } else if (fixturesData.fixtures) {
-      fixtures = fixturesData.fixtures;
-    } else if (fixturesData.matches) {
-      fixtures = fixturesData.matches;
-    } else if (fixturesData.data) {
-      fixtures = Array.isArray(fixturesData.data) ? fixturesData.data : [fixturesData.data];
+    if (Array.isArray(scheduleData)) {
+      fixtures = scheduleData;
+    } else if (scheduleData.fixtures) {
+      fixtures = scheduleData.fixtures;
+    } else if (scheduleData.matches) {
+      fixtures = scheduleData.matches;
+    } else if (scheduleData.data) {
+      fixtures = Array.isArray(scheduleData.data) ? scheduleData.data : [scheduleData.data];
+    } else if (scheduleData.schedule) {
+      fixtures = scheduleData.schedule;
     }
     
     console.log(`Parsed ${fixtures.length} fixtures from response`);
@@ -247,8 +227,8 @@ async function syncGameweeksAndFixtures() {
     for (const fixture of fixtures) {
       try {
         // Adapt to different fixture data structures
-        const fixtureDate = new Date(fixture.date || fixture.kickoffTime || fixture.fixture?.date);
-        const weekNumber = Math.ceil((fixtureDate.getTime() - new Date('2024-08-01').getTime()) / (7 * 24 * 60 * 60 * 1000));
+        const fixtureDate = new Date(fixture.date || fixture.kickoffTime || fixture.fixture?.date || fixture.startTime);
+        const weekNumber = Math.ceil((fixtureDate.getTime() - new Date(`${currentYear}-08-01`).getTime()) / (7 * 24 * 60 * 60 * 1000));
         const gameweekKey = `Gameweek ${Math.max(1, Math.min(38, weekNumber))}`;
         
         if (!gameweeksMap.has(gameweekKey)) {
@@ -267,16 +247,16 @@ async function syncGameweeksAndFixtures() {
       if (gameweekNumber > 38) break;
       
       const sortedFixtures = gameweekFixtures.sort((a, b) => {
-        const dateA = new Date(a.date || a.kickoffTime || a.fixture?.date);
-        const dateB = new Date(b.date || b.kickoffTime || b.fixture?.date);
+        const dateA = new Date(a.date || a.kickoffTime || a.fixture?.date || a.startTime);
+        const dateB = new Date(b.date || b.kickoffTime || b.fixture?.date || b.startTime);
         return dateA.getTime() - dateB.getTime();
       });
       
       if (sortedFixtures.length === 0) continue;
       
       try {
-        const startDate = new Date(sortedFixtures[0].date || sortedFixtures[0].kickoffTime || sortedFixtures[0].fixture?.date);
-        const endDate = new Date(sortedFixtures[sortedFixtures.length - 1].date || sortedFixtures[sortedFixtures.length - 1].kickoffTime || sortedFixtures[sortedFixtures.length - 1].fixture?.date);
+        const startDate = new Date(sortedFixtures[0].date || sortedFixtures[0].kickoffTime || sortedFixtures[0].fixture?.date || sortedFixtures[0].startTime);
+        const endDate = new Date(sortedFixtures[sortedFixtures.length - 1].date || sortedFixtures[sortedFixtures.length - 1].kickoffTime || sortedFixtures[sortedFixtures.length - 1].fixture?.date || sortedFixtures[sortedFixtures.length - 1].startTime);
         const deadline = new Date(startDate.getTime() - 2 * 60 * 60 * 1000);
         
         console.log(`Creating gameweek ${gameweekNumber} with ${sortedFixtures.length} fixtures`);
@@ -304,8 +284,8 @@ async function syncGameweeksAndFixtures() {
         for (const fixture of sortedFixtures) {
           try {
             const fixtureId = fixture.id || fixture.fixture?.id;
-            const homeTeam = fixture.homeTeam || fixture.teams?.home;
-            const awayTeam = fixture.awayTeam || fixture.teams?.away;
+            const homeTeam = fixture.homeTeam || fixture.teams?.home || fixture.home;
+            const awayTeam = fixture.awayTeam || fixture.teams?.away || fixture.away;
             const homeScore = fixture.homeScore || fixture.goals?.home || fixture.score?.home;
             const awayScore = fixture.awayScore || fixture.goals?.away || fixture.score?.away;
             const status = fixture.status || fixture.fixture?.status?.short || 'scheduled';
@@ -327,7 +307,7 @@ async function syncGameweeksAndFixtures() {
                 gameweek_id: gameweek.id,
                 home_team_id: homeTeam.id.toString(),
                 away_team_id: awayTeam.id.toString(),
-                kickoff_time: fixture.date || fixture.kickoffTime || fixture.fixture?.date,
+                kickoff_time: fixture.date || fixture.kickoffTime || fixture.fixture?.date || fixture.startTime,
                 home_score: homeScore,
                 away_score: awayScore,
                 status: fixtureStatus
