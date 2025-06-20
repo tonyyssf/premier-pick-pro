@@ -5,42 +5,65 @@ import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Pick {
-  gameweek: number;
-  teamId: string;
-  teamName: string;
-  opponent: string;
-  venue: 'H' | 'A';
+  id: string;
+  gameweekId: string;
+  fixtureId: string;
+  pickedTeamId: string;
   timestamp: Date;
 }
 
-interface Team {
+interface Fixture {
   id: string;
-  name: string;
-  opponent: string;
-  venue: 'H' | 'A';
-  usedCount: number;
+  homeTeam: {
+    id: string;
+    name: string;
+    shortName: string;
+  };
+  awayTeam: {
+    id: string;
+    name: string;
+    shortName: string;
+  };
+  kickoffTime: Date;
+  status: string;
+}
+
+interface Gameweek {
+  id: string;
+  number: number;
+  deadline: Date;
+  isCurrent: boolean;
 }
 
 interface PicksContextType {
   picks: Pick[];
-  currentGameweek: number;
-  submitPick: (team: Team) => Promise<boolean>;
+  fixtures: Fixture[];
+  currentGameweek: Gameweek | null;
+  submitPick: (fixtureId: string, teamId: string) => Promise<boolean>;
   getTeamUsedCount: (teamId: string) => number;
-  hasPickForGameweek: (gameweek: number) => boolean;
+  hasPickForGameweek: (gameweekId: string) => boolean;
   getCurrentPick: () => Pick | null;
   loading: boolean;
+  fixturesLoading: boolean;
 }
 
 const PicksContext = createContext<PicksContextType | undefined>(undefined);
 
 export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [picks, setPicks] = useState<Pick[]>([]);
-  const [currentGameweek] = useState(15);
+  const [fixtures, setFixtures] = useState<Fixture[]>([]);
+  const [currentGameweek, setCurrentGameweek] = useState<Gameweek | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fixturesLoading, setFixturesLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Load user's picks from Supabase when user is authenticated
+  // Load current gameweek and fixtures
+  useEffect(() => {
+    loadCurrentGameweek();
+  }, []);
+
+  // Load user's picks when user is authenticated
   useEffect(() => {
     if (user) {
       loadUserPicks();
@@ -49,6 +72,68 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setLoading(false);
     }
   }, [user]);
+
+  const loadCurrentGameweek = async () => {
+    try {
+      // Get current gameweek
+      const { data: gameweekData, error: gameweekError } = await supabase
+        .from('gameweeks')
+        .select('*')
+        .eq('is_current', true)
+        .single();
+
+      if (gameweekError) {
+        console.error('Error loading current gameweek:', gameweekError);
+        return;
+      }
+
+      const gameweek: Gameweek = {
+        id: gameweekData.id,
+        number: gameweekData.number,
+        deadline: new Date(gameweekData.deadline),
+        isCurrent: gameweekData.is_current,
+      };
+
+      setCurrentGameweek(gameweek);
+
+      // Load fixtures for current gameweek
+      const { data: fixturesData, error: fixturesError } = await supabase
+        .from('fixtures')
+        .select(`
+          *,
+          home_team:teams!fixtures_home_team_id_fkey(*),
+          away_team:teams!fixtures_away_team_id_fkey(*)
+        `)
+        .eq('gameweek_id', gameweek.id);
+
+      if (fixturesError) {
+        console.error('Error loading fixtures:', fixturesError);
+        return;
+      }
+
+      const formattedFixtures: Fixture[] = fixturesData.map(fixture => ({
+        id: fixture.id,
+        homeTeam: {
+          id: fixture.home_team.id,
+          name: fixture.home_team.name,
+          shortName: fixture.home_team.short_name,
+        },
+        awayTeam: {
+          id: fixture.away_team.id,
+          name: fixture.away_team.name,
+          shortName: fixture.away_team.short_name,
+        },
+        kickoffTime: new Date(fixture.kickoff_time),
+        status: fixture.status,
+      }));
+
+      setFixtures(formattedFixtures);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setFixturesLoading(false);
+    }
+  };
 
   const loadUserPicks = async () => {
     if (!user) return;
@@ -59,7 +144,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         .from('user_picks')
         .select('*')
         .eq('user_id', user.id)
-        .order('gameweek', { ascending: true });
+        .order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error loading picks:', error);
@@ -69,12 +154,11 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           variant: "destructive",
         });
       } else {
-        const formattedPicks = data.map(pick => ({
-          gameweek: pick.gameweek,
-          teamId: pick.team_id,
-          teamName: pick.team_name,
-          opponent: pick.opponent,
-          venue: pick.venue as 'H' | 'A',
+        const formattedPicks: Pick[] = data.map(pick => ({
+          id: pick.id,
+          gameweekId: pick.gameweek_id,
+          fixtureId: pick.fixture_id,
+          pickedTeamId: pick.picked_team_id,
           timestamp: new Date(pick.created_at),
         }));
         setPicks(formattedPicks);
@@ -86,8 +170,8 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  const submitPick = async (team: Team): Promise<boolean> => {
-    if (!user) {
+  const submitPick = async (fixtureId: string, teamId: string): Promise<boolean> => {
+    if (!user || !currentGameweek) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to make picks.",
@@ -97,7 +181,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
 
     // Check if already has pick for current gameweek
-    if (hasPickForGameweek(currentGameweek)) {
+    if (hasPickForGameweek(currentGameweek.id)) {
       toast({
         title: "Pick Already Made",
         description: "You've already made a pick for this gameweek.",
@@ -107,10 +191,13 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
 
     // Check if team has been used too many times
-    if (getTeamUsedCount(team.id) >= 2) {
+    if (getTeamUsedCount(teamId) >= 2) {
+      const fixture = fixtures.find(f => f.id === fixtureId);
+      const team = fixture?.homeTeam.id === teamId ? fixture.homeTeam : fixture?.awayTeam;
+      
       toast({
         title: "Team Used Too Many Times",
-        description: `You've already used ${team.name} 2 times this season.`,
+        description: `You've already used ${team?.name} 2 times this season.`,
         variant: "destructive",
       });
       return false;
@@ -121,11 +208,9 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         .from('user_picks')
         .insert({
           user_id: user.id,
-          gameweek: currentGameweek,
-          team_id: team.id,
-          team_name: team.name,
-          opponent: team.opponent,
-          venue: team.venue,
+          gameweek_id: currentGameweek.id,
+          fixture_id: fixtureId,
+          picked_team_id: teamId,
         });
 
       if (error) {
@@ -139,19 +224,22 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
 
       const newPick: Pick = {
-        gameweek: currentGameweek,
-        teamId: team.id,
-        teamName: team.name,
-        opponent: team.opponent,
-        venue: team.venue,
+        id: crypto.randomUUID(),
+        gameweekId: currentGameweek.id,
+        fixtureId,
+        pickedTeamId: teamId,
         timestamp: new Date(),
       };
 
       setPicks(prevPicks => [...prevPicks, newPick]);
       
+      const fixture = fixtures.find(f => f.id === fixtureId);
+      const team = fixture?.homeTeam.id === teamId ? fixture.homeTeam : fixture?.awayTeam;
+      const opponent = fixture?.homeTeam.id === teamId ? fixture.awayTeam : fixture?.homeTeam;
+      
       toast({
         title: "Pick Submitted!",
-        description: `You've picked ${team.name} to win their match against ${team.opponent}.`,
+        description: `You've picked ${team?.name} to win their match against ${opponent?.name}.`,
       });
 
       return true;
@@ -167,26 +255,29 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const getTeamUsedCount = (teamId: string): number => {
-    return picks.filter(pick => pick.teamId === teamId).length;
+    return picks.filter(pick => pick.pickedTeamId === teamId).length;
   };
 
-  const hasPickForGameweek = (gameweek: number): boolean => {
-    return picks.some(pick => pick.gameweek === gameweek);
+  const hasPickForGameweek = (gameweekId: string): boolean => {
+    return picks.some(pick => pick.gameweekId === gameweekId);
   };
 
   const getCurrentPick = (): Pick | null => {
-    return picks.find(pick => pick.gameweek === currentGameweek) || null;
+    if (!currentGameweek) return null;
+    return picks.find(pick => pick.gameweekId === currentGameweek.id) || null;
   };
 
   return (
     <PicksContext.Provider value={{
       picks,
+      fixtures,
       currentGameweek,
       submitPick,
       getTeamUsedCount,
       hasPickForGameweek,
       getCurrentPick,
       loading,
+      fixturesLoading,
     }}>
       {children}
     </PicksContext.Provider>

@@ -9,6 +9,100 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      fixtures: {
+        Row: {
+          away_score: number | null
+          away_team_id: string
+          created_at: string
+          gameweek_id: string
+          home_score: number | null
+          home_team_id: string
+          id: string
+          kickoff_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          away_score?: number | null
+          away_team_id: string
+          created_at?: string
+          gameweek_id: string
+          home_score?: number | null
+          home_team_id: string
+          id?: string
+          kickoff_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          away_score?: number | null
+          away_team_id?: string
+          created_at?: string
+          gameweek_id?: string
+          home_score?: number | null
+          home_team_id?: string
+          id?: string
+          kickoff_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixtures_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixtures_gameweek_id_fkey"
+            columns: ["gameweek_id"]
+            isOneToOne: false
+            referencedRelation: "gameweeks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixtures_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gameweeks: {
+        Row: {
+          created_at: string
+          deadline: string
+          end_date: string
+          id: string
+          is_current: boolean
+          number: number
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deadline: string
+          end_date: string
+          id?: string
+          is_current?: boolean
+          number: number
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deadline?: string
+          end_date?: string
+          id?: string
+          is_current?: boolean
+          number?: number
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -30,38 +124,81 @@ export type Database = {
         }
         Relationships: []
       }
-      user_picks: {
+      teams: {
         Row: {
           created_at: string
-          gameweek: number
           id: string
-          opponent: string
-          team_id: string
-          team_name: string
-          user_id: string
-          venue: string
+          logo_url: string | null
+          name: string
+          short_name: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
-          gameweek: number
           id?: string
-          opponent: string
-          team_id: string
-          team_name: string
-          user_id: string
-          venue: string
+          logo_url?: string | null
+          name: string
+          short_name: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
-          gameweek?: number
           id?: string
-          opponent?: string
-          team_id?: string
-          team_name?: string
-          user_id?: string
-          venue?: string
+          logo_url?: string | null
+          name?: string
+          short_name?: string
+          updated_at?: string
         }
         Relationships: []
+      }
+      user_picks: {
+        Row: {
+          created_at: string
+          fixture_id: string
+          gameweek_id: string
+          id: string
+          picked_team_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fixture_id: string
+          gameweek_id: string
+          id?: string
+          picked_team_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fixture_id?: string
+          gameweek_id?: string
+          id?: string
+          picked_team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_picks_fixture_id_fkey"
+            columns: ["fixture_id"]
+            isOneToOne: false
+            referencedRelation: "fixtures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_picks_gameweek_id_fkey"
+            columns: ["gameweek_id"]
+            isOneToOne: false
+            referencedRelation: "gameweeks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_picks_picked_team_id_fkey"
+            columns: ["picked_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

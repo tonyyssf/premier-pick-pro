@@ -1,53 +1,72 @@
 
 import React, { useState } from 'react';
-import { TeamCard } from './TeamCard';
+import { FixtureCard } from './FixtureCard';
 import { Calendar, Clock, CheckCircle } from 'lucide-react';
 import { usePicks } from '../contexts/PicksContext';
 import { Button } from './ui/button';
 
-interface Team {
-  id: string;
-  name: string;
-  opponent: string;
-  venue: 'H' | 'A';
-  usedCount: number;
-}
-
 export const WeeklyPicks: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [selectedFixture, setSelectedFixture] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const { submitPick, getTeamUsedCount, hasPickForGameweek, getCurrentPick, currentGameweek, loading } = usePicks();
-  
-  const teams: Team[] = [
-    { id: '1', name: 'Arsenal', opponent: 'Chelsea', venue: 'H' as const, usedCount: 0 },
-    { id: '2', name: 'Manchester City', opponent: 'Liverpool', venue: 'A' as const, usedCount: 0 },
-    { id: '3', name: 'Manchester United', opponent: 'Tottenham', venue: 'H' as const, usedCount: 0 },
-    { id: '4', name: 'Liverpool', opponent: 'Manchester City', venue: 'H' as const, usedCount: 0 },
-    { id: '5', name: 'Chelsea', opponent: 'Arsenal', venue: 'A' as const, usedCount: 0 },
-    { id: '6', name: 'Tottenham', opponent: 'Manchester United', venue: 'A' as const, usedCount: 0 },
-    { id: '7', name: 'Newcastle', opponent: 'Brighton', venue: 'H' as const, usedCount: 0 },
-    { id: '8', name: 'Brighton', opponent: 'Newcastle', venue: 'A' as const, usedCount: 0 },
-  ].map(team => ({
-    ...team,
-    usedCount: getTeamUsedCount(team.id)
-  }));
+  const { 
+    fixtures, 
+    currentGameweek, 
+    submitPick, 
+    getTeamUsedCount, 
+    hasPickForGameweek, 
+    getCurrentPick, 
+    loading, 
+    fixturesLoading 
+  } = usePicks();
 
   const currentPick = getCurrentPick();
-  const hasAlreadyPicked = hasPickForGameweek(currentGameweek);
+  const hasAlreadyPicked = currentGameweek ? hasPickForGameweek(currentGameweek.id) : false;
+
+  const handleTeamSelect = (fixtureId: string, teamId: string) => {
+    setSelectedFixture(fixtureId);
+    setSelectedTeam(teamId);
+  };
 
   const handleSubmitPick = async () => {
-    const team = teams.find(t => t.id === selectedTeam);
-    if (team) {
+    if (selectedFixture && selectedTeam) {
       setSubmitting(true);
-      const success = await submitPick(team);
+      const success = await submitPick(selectedFixture, selectedTeam);
       if (success) {
         setSelectedTeam(null);
+        setSelectedFixture(null);
       }
       setSubmitting(false);
     }
   };
 
-  if (loading) {
+  const getSelectedTeamInfo = () => {
+    if (!selectedFixture || !selectedTeam) return null;
+    
+    const fixture = fixtures.find(f => f.id === selectedFixture);
+    if (!fixture) return null;
+    
+    const team = fixture.homeTeam.id === selectedTeam ? fixture.homeTeam : fixture.awayTeam;
+    const opponent = fixture.homeTeam.id === selectedTeam ? fixture.awayTeam : fixture.homeTeam;
+    const venue = fixture.homeTeam.id === selectedTeam ? 'Home' : 'Away';
+    
+    return { team, opponent, venue };
+  };
+
+  const getCurrentPickInfo = () => {
+    if (!currentPick) return null;
+    
+    const fixture = fixtures.find(f => f.id === currentPick.fixtureId);
+    if (!fixture) return null;
+    
+    const team = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.homeTeam : fixture.awayTeam;
+    const opponent = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.awayTeam : fixture.homeTeam;
+    const venue = fixture.homeTeam.id === currentPick.pickedTeamId ? 'Home' : 'Away';
+    
+    return { team, opponent, venue, fixture };
+  };
+
+  if (loading || fixturesLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-center">
@@ -58,18 +77,37 @@ export const WeeklyPicks: React.FC = () => {
     );
   }
 
+  if (!currentGameweek) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">No Active Gameweek</h2>
+          <p className="text-gray-600">There's currently no active gameweek to make picks for.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (hasAlreadyPicked && currentPick) {
+    const pickInfo = getCurrentPickInfo();
+    
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
           <div className="flex items-center space-x-2 text-plpe-purple mb-2">
             <Calendar className="h-5 w-5" />
-            <span className="font-semibold">Gameweek {currentGameweek}</span>
+            <span className="font-semibold">Gameweek {currentGameweek.number}</span>
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Pick</h2>
           <div className="flex items-center space-x-2 text-gray-600">
             <Clock className="h-4 w-4" />
-            <span>Deadline: Saturday, 12:30 PM GMT</span>
+            <span>Deadline: {currentGameweek.deadline.toLocaleDateString('en-GB', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</span>
           </div>
         </div>
 
@@ -82,22 +120,33 @@ export const WeeklyPicks: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-semibold text-gray-900">{currentPick.teamName}</h4>
-                <p className="text-sm text-gray-600">
-                  {currentPick.venue === 'H' ? 'vs' : '@'} {currentPick.opponent}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Picked on</p>
-                <p className="text-sm font-medium">
-                  {currentPick.timestamp.toLocaleDateString()}
-                </p>
+          {pickInfo && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-gray-900">{pickInfo.team.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {pickInfo.venue} vs {pickInfo.opponent.name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {pickInfo.fixture.kickoffTime.toLocaleDateString('en-GB', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Picked on</p>
+                  <p className="text-sm font-medium">
+                    {currentPick.timestamp.toLocaleDateString()}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -108,37 +157,46 @@ export const WeeklyPicks: React.FC = () => {
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-plpe-purple mb-2">
           <Calendar className="h-5 w-5" />
-          <span className="font-semibold">Gameweek {currentGameweek}</span>
+          <span className="font-semibold">Gameweek {currentGameweek.number}</span>
         </div>
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Make Your Pick</h2>
         <div className="flex items-center space-x-2 text-gray-600">
           <Clock className="h-4 w-4" />
-          <span>Deadline: Saturday, 12:30 PM GMT</span>
+          <span>Deadline: {currentGameweek.deadline.toLocaleDateString('en-GB', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {teams.map((team) => (
-          <TeamCard
-            key={team.id}
-            name={team.name}
-            logo=""
-            opponent={team.opponent}
-            venue={team.venue}
-            usedCount={team.usedCount}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {fixtures.map((fixture) => (
+          <FixtureCard
+            key={fixture.id}
+            fixture={fixture}
+            homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
+            awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
             maxUses={2}
-            isSelected={selectedTeam === team.id}
-            onSelect={() => setSelectedTeam(team.id)}
+            selectedTeam={selectedTeam}
+            onTeamSelect={handleTeamSelect}
           />
         ))}
       </div>
 
-      {selectedTeam && (
+      {selectedTeam && selectedFixture && (
         <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-plpe-purple">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Your Pick</h3>
-          <p className="text-gray-600 mb-4">
-            You've selected {teams.find(t => t.id === selectedTeam)?.name} to win their match this week.
-          </p>
+          {(() => {
+            const teamInfo = getSelectedTeamInfo();
+            return teamInfo ? (
+              <p className="text-gray-600 mb-4">
+                You've selected {teamInfo.team.name} to win their {teamInfo.venue.toLowerCase()} match against {teamInfo.opponent.name}.
+              </p>
+            ) : null;
+          })()}
           <div className="flex space-x-4">
             <Button 
               onClick={handleSubmitPick}
@@ -149,7 +207,10 @@ export const WeeklyPicks: React.FC = () => {
             </Button>
             <Button 
               variant="outline"
-              onClick={() => setSelectedTeam(null)}
+              onClick={() => {
+                setSelectedTeam(null);
+                setSelectedFixture(null);
+              }}
               disabled={submitting}
             >
               Cancel
