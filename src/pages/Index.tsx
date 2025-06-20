@@ -3,7 +3,6 @@ import React from 'react';
 import { Layout } from '../components/Layout';
 import { HeroSection } from '../components/HeroSection';
 import { WeeklyPicks } from '../components/WeeklyPicks';
-import { LeaderboardSection } from '../components/LeaderboardSection';
 import { UserScoreDisplay } from '../components/UserScoreDisplay';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
@@ -16,7 +15,6 @@ const Index = () => {
           <UserScoreDisplay />
         </div>
         <WeeklyPicks />
-        <LeaderboardSection />
       </Layout>
     </ProtectedRoute>
   );
