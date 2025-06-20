@@ -189,6 +189,13 @@ const Leagues = () => {
     setActiveTab(value);
   };
 
+  // Log when leaderboards tab is active and we have leagues
+  useEffect(() => {
+    if (activeTab === 'leaderboards') {
+      console.log('Leaderboards tab active, myLeagues:', myLeagues);
+    }
+  }, [activeTab, myLeagues]);
+
   return (
     <ProtectedRoute>
       <Layout>
@@ -257,7 +264,6 @@ const Leagues = () => {
             </TabsContent>
 
             <TabsContent value="leaderboards" className="mt-6">
-              {console.log('Leaderboards tab active, myLeagues:', myLeagues)}
               {isLoading ? (
                 <LoadingSpinner message="Loading leaderboards..." />
               ) : myLeagues.length === 0 ? (
