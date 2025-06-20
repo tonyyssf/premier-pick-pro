@@ -35,6 +35,14 @@ interface EPLFixture {
   status: string;
 }
 
+// Current 2025/26 Premier League teams (official 20 teams)
+const PREMIER_LEAGUE_TEAMS_2025_26 = [
+  'Arsenal', 'Aston Villa', 'AFC Bournemouth', 'Brentford', 'Brighton & Hove Albion',
+  'Burnley', 'Chelsea', 'Crystal Palace', 'Everton', 'Fulham',
+  'Liverpool', 'Luton Town', 'Manchester City', 'Manchester United', 'Newcastle United',
+  'Nottingham Forest', 'Sheffield United', 'Tottenham Hotspur', 'West Ham United', 'Wolverhampton Wanderers'
+];
+
 // Add delay between API calls to avoid rate limiting
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -61,6 +69,14 @@ function generateUUIDFromId(id: number, prefix: string = 'fixture'): string {
   const uuid = `${hashStr.slice(0, 8)}-${hashStr.slice(0, 4)}-4${hashStr.slice(1, 4)}-8${hashStr.slice(4, 7)}-${hashStr.padEnd(12, '0').slice(0, 12)}`;
   
   return uuid;
+}
+
+// Helper function to check if a team name is a Premier League team
+function isPremierLeagueTeam(teamName: string): boolean {
+  return PREMIER_LEAGUE_TEAMS_2025_26.some(plTeam => 
+    teamName.toLowerCase().includes(plTeam.toLowerCase()) || 
+    plTeam.toLowerCase().includes(teamName.toLowerCase())
+  );
 }
 
 async function fetchFromRapidAPI(endpoint: string) {
@@ -105,9 +121,20 @@ async function fetchFromRapidAPI(endpoint: string) {
 }
 
 async function syncTeams() {
-  console.log('Starting teams sync...');
+  console.log('Starting teams sync for 2025/26 Premier League season...');
   
   try {
+    // First, clear existing teams to avoid duplicates
+    console.log('Clearing existing teams...');
+    const { error: clearError } = await supabase
+      .from('teams')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all teams
+    
+    if (clearError) {
+      console.error('Error clearing teams:', clearError);
+    }
+    
     // Try to fetch teams using the likely endpoints for this API
     let teamsData;
     const possibleEndpoints = [
@@ -162,8 +189,29 @@ async function syncTeams() {
       throw new Error('No teams found in API response. The API may return data in a different format.');
     }
     
+    // Filter to only include Premier League teams
+    const premierLeagueTeams = teams.filter(teamData => {
+      const team = teamData.team || teamData;
+      const teamName = team.name || team.displayName || '';
+      const isPL = isPremierLeagueTeam(teamName);
+      
+      if (isPL) {
+        console.log(`Including Premier League team: ${teamName}`);
+      } else {
+        console.log(`Excluding non-Premier League team: ${teamName}`);
+      }
+      
+      return isPL;
+    });
+    
+    console.log(`Filtered to ${premierLeagueTeams.length} Premier League teams`);
+    
+    if (premierLeagueTeams.length === 0) {
+      throw new Error('No Premier League teams found in API response after filtering.');
+    }
+    
     let successCount = 0;
-    for (const teamData of teams) {
+    for (const teamData of premierLeagueTeams) {
       try {
         // Adapt to different team data structures
         const team = teamData.team || teamData;
@@ -173,7 +221,7 @@ async function syncTeams() {
           continue;
         }
         
-        console.log(`Upserting team: ${team.name} (ID: ${team.id})`);
+        console.log(`Upserting Premier League team: ${team.name} (ID: ${team.id})`);
         
         // Generate consistent UUID for team ID
         const teamId = generateUUIDFromId(team.id, 'team');
@@ -202,8 +250,8 @@ async function syncTeams() {
       }
     }
     
-    console.log(`Teams sync completed: ${successCount} teams synced successfully`);
-    return { message: `Successfully synced ${successCount} teams`, count: successCount };
+    console.log(`Teams sync completed: ${successCount} Premier League teams synced successfully`);
+    return { message: `Successfully synced ${successCount} Premier League teams`, count: successCount };
   } catch (error) {
     console.error('Error in syncTeams:', error);
     throw error;
@@ -211,11 +259,16 @@ async function syncTeams() {
 }
 
 async function syncGameweeksAndFixtures() {
-  console.log('Starting gameweeks and fixtures sync...');
+  console.log('Starting gameweeks and fixtures sync for 2025/26 Premier League season...');
   
   try {
-    // Fetch schedule for 2025/26 season (try both 2025 and 2026 to be sure)
-    console.log(`Fetching schedule for 2025/26 season...`);
+    // First, clear existing gameweeks and fixtures
+    console.log('Clearing existing fixtures and gameweeks...');
+    await supabase.from('fixtures').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('gameweeks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    
+    // Fetch schedule for 2025/26 season
+    console.log(`Fetching schedule for 2025/26 Premier League season...`);
     
     let scheduleData;
     const possibleYears = [2025, 2026];
@@ -270,10 +323,53 @@ async function syncGameweeksAndFixtures() {
       throw new Error('No fixtures found in API response. The API may return data in a different format.');
     }
     
+    // Filter fixtures to only include Premier League teams
+    const premierLeagueFixtures = allFixtures.filter(fixture => {
+      try {
+        // Handle different team data structures
+        let homeTeam, awayTeam;
+        if (fixture.competitors && Array.isArray(fixture.competitors)) {
+          homeTeam = fixture.competitors.find(team => team.isHome === true);
+          awayTeam = fixture.competitors.find(team => team.isHome === false);
+        } else if (fixture.teams) {
+          homeTeam = fixture.teams.home || fixture.teams[1];
+          awayTeam = fixture.teams.away || fixture.teams[0];
+        } else {
+          homeTeam = fixture.homeTeam;
+          awayTeam = fixture.awayTeam;
+        }
+        
+        const homeTeamName = homeTeam?.name || homeTeam?.displayName || '';
+        const awayTeamName = awayTeam?.name || awayTeam?.displayName || '';
+        
+        const isHomeTeamPL = isPremierLeagueTeam(homeTeamName);
+        const isAwayTeamPL = isPremierLeagueTeam(awayTeamName);
+        
+        const isValidPLFixture = isHomeTeamPL && isAwayTeamPL;
+        
+        if (isValidPLFixture) {
+          console.log(`Including Premier League fixture: ${homeTeamName} vs ${awayTeamName}`);
+        } else {
+          console.log(`Excluding non-Premier League fixture: ${homeTeamName} vs ${awayTeamName}`);
+        }
+        
+        return isValidPLFixture;
+      } catch (error) {
+        console.log(`Error filtering fixture:`, fixture, error);
+        return false;
+      }
+    });
+    
+    console.log(`Filtered to ${premierLeagueFixtures.length} Premier League fixtures`);
+    
+    if (premierLeagueFixtures.length === 0) {
+      throw new Error('No Premier League fixtures found after filtering.');
+    }
+    
     // Group fixtures by rounds (gameweeks) based on date
     const gameweeksMap = new Map<string, any[]>();
     
-    for (const fixture of allFixtures) {
+    for (const fixture of premierLeagueFixtures) {
       try {
         // Extract fixture date from various possible fields
         const fixtureDate = new Date(fixture.date || fixture.kickoffTime || fixture.fixture?.date || fixture.startTime);
@@ -312,7 +408,7 @@ async function syncGameweeksAndFixtures() {
         const endDate = new Date(sortedFixtures[sortedFixtures.length - 1].date || sortedFixtures[sortedFixtures.length - 1].kickoffTime || sortedFixtures[sortedFixtures.length - 1].fixture?.date || sortedFixtures[sortedFixtures.length - 1].startTime);
         const deadline = new Date(startDate.getTime() - 2 * 60 * 60 * 1000);
         
-        console.log(`Creating gameweek ${gameweekNumber} with ${sortedFixtures.length} fixtures`);
+        console.log(`Creating gameweek ${gameweekNumber} with ${sortedFixtures.length} Premier League fixtures`);
         
         const { data: gameweek, error: gameweekError } = await supabase
           .from('gameweeks')
@@ -374,7 +470,7 @@ async function syncGameweeksAndFixtures() {
               continue;
             }
             
-            console.log(`Creating fixture: ${homeTeam.name || homeTeam.displayName} vs ${awayTeam.name || awayTeam.displayName}`);
+            console.log(`Creating Premier League fixture: ${homeTeam.name || homeTeam.displayName} vs ${awayTeam.name || awayTeam.displayName}`);
             
             // Generate consistent UUIDs for fixture and team IDs
             const fixtureUuid = generateUUIDFromId(fixtureId, 'fixture');
@@ -418,8 +514,8 @@ async function syncGameweeksAndFixtures() {
       }
     }
     
-    console.log('Gameweeks and fixtures sync completed successfully');
-    return { message: `Successfully synced ${gameweekNumber - 1} gameweeks and ${totalFixtures} fixtures`, gameweeks: gameweekNumber - 1, fixtures: totalFixtures };
+    console.log('Premier League gameweeks and fixtures sync completed successfully');
+    return { message: `Successfully synced ${gameweekNumber - 1} gameweeks and ${totalFixtures} Premier League fixtures`, gameweeks: gameweekNumber - 1, fixtures: totalFixtures };
   } catch (error) {
     console.error('Error in syncGameweeksAndFixtures:', error);
     throw error;
@@ -451,7 +547,7 @@ const handler = async (req: Request): Promise<Response> => {
         });
         
       case 'sync-all':
-        console.log('Starting full sync with delays between operations...');
+        console.log('Starting full Premier League 2025/26 sync with delays between operations...');
         const teamsResult = await syncTeams();
         
         // Add longer delay between teams and fixtures sync
