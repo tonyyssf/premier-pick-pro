@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Crown, Globe, Lock } from 'lucide-react';
+import { ManageLeagueDialog } from './ManageLeagueDialog';
 
 interface LeagueCardProps {
   league: {
@@ -21,6 +22,7 @@ interface LeagueCardProps {
   };
   onJoin?: (leagueId: string) => void;
   onLeave?: (leagueId: string) => void;
+  onLeagueUpdated?: () => void;
   isJoining?: boolean;
   isLeaving?: boolean;
 }
@@ -29,6 +31,7 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({
   league,
   onJoin,
   onLeave,
+  onLeagueUpdated,
   isJoining = false,
   isLeaving = false
 }) => {
@@ -93,10 +96,12 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({
             </Button>
           )}
           
-          {league.is_creator && (
-            <Button variant="outline" className="flex-1" size="sm">
-              Manage League
-            </Button>
+          {league.is_creator && onLeagueUpdated && (
+            <ManageLeagueDialog league={league} onLeagueUpdated={onLeagueUpdated}>
+              <Button variant="outline" className="flex-1" size="sm">
+                Manage League
+              </Button>
+            </ManageLeagueDialog>
           )}
         </div>
       </CardContent>

@@ -224,6 +224,7 @@ const Leagues = () => {
                       key={league.id}
                       league={league}
                       onLeave={handleLeaveLeague}
+                      onLeagueUpdated={fetchLeagues}
                       isLeaving={leavingLeague === league.id}
                     />
                   ))}
@@ -246,6 +247,7 @@ const Leagues = () => {
                       key={league.id}
                       league={league}
                       onJoin={handleJoinLeague}
+                      onLeagueUpdated={fetchLeagues}
                       isJoining={joiningLeague === league.id}
                     />
                   ))}
