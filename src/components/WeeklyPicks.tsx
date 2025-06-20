@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
 import { TeamCard } from './TeamCard';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, CheckCircle } from 'lucide-react';
+import { usePicks } from '../contexts/PicksContext';
+import { Button } from './ui/button';
 
 interface Team {
   id: string;
@@ -13,24 +15,86 @@ interface Team {
 
 export const WeeklyPicks: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const { submitPick, getTeamUsedCount, hasPickForGameweek, getCurrentPick, currentGameweek } = usePicks();
   
   const teams: Team[] = [
     { id: '1', name: 'Arsenal', opponent: 'Chelsea', venue: 'H', usedCount: 0 },
-    { id: '2', name: 'Manchester City', opponent: 'Liverpool', venue: 'A', usedCount: 1 },
-    { id: '3', name: 'Manchester United', opponent: 'Tottenham', venue: 'H', usedCount: 2 },
+    { id: '2', name: 'Manchester City', opponent: 'Liverpool', venue: 'A', usedCount: 0 },
+    { id: '3', name: 'Manchester United', opponent: 'Tottenham', venue: 'H', usedCount: 0 },
     { id: '4', name: 'Liverpool', opponent: 'Manchester City', venue: 'H', usedCount: 0 },
-    { id: '5', name: 'Chelsea', opponent: 'Arsenal', venue: 'A', usedCount: 1 },
+    { id: '5', name: 'Chelsea', opponent: 'Arsenal', venue: 'A', usedCount: 0 },
     { id: '6', name: 'Tottenham', opponent: 'Manchester United', venue: 'A', usedCount: 0 },
     { id: '7', name: 'Newcastle', opponent: 'Brighton', venue: 'H', usedCount: 0 },
-    { id: '8', name: 'Brighton', opponent: 'Newcastle', venue: 'A', usedCount: 1 },
-  ];
+    { id: '8', name: 'Brighton', opponent: 'Newcastle', venue: 'A', usedCount: 0 },
+  ].map(team => ({
+    ...team,
+    usedCount: getTeamUsedCount(team.id)
+  }));
+
+  const currentPick = getCurrentPick();
+  const hasAlreadyPicked = hasPickForGameweek(currentGameweek);
+
+  const handleSubmitPick = () => {
+    const team = teams.find(t => t.id === selectedTeam);
+    if (team) {
+      const success = submitPick(team);
+      if (success) {
+        setSelectedTeam(null);
+      }
+    }
+  };
+
+  if (hasAlreadyPicked && currentPick) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 text-plpe-purple mb-2">
+            <Calendar className="h-5 w-5" />
+            <span className="font-semibold">Gameweek {currentGameweek}</span>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Pick</h2>
+          <div className="flex items-center space-x-2 text-gray-600">
+            <Clock className="h-4 w-4" />
+            <span>Deadline: Saturday, 12:30 PM GMT</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
+          <div className="flex items-center space-x-3 mb-4">
+            <CheckCircle className="h-8 w-8 text-green-500" />
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Pick Confirmed</h3>
+              <p className="text-gray-600">You've made your pick for this gameweek</p>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-gray-900">{currentPick.teamName}</h4>
+                <p className="text-sm text-gray-600">
+                  {currentPick.venue === 'H' ? 'vs' : '@'} {currentPick.opponent}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Picked on</p>
+                <p className="text-sm font-medium">
+                  {currentPick.timestamp.toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-plpe-purple mb-2">
           <Calendar className="h-5 w-5" />
-          <span className="font-semibold">Gameweek 15</span>
+          <span className="font-semibold">Gameweek {currentGameweek}</span>
         </div>
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Make Your Pick</h2>
         <div className="flex items-center space-x-2 text-gray-600">
@@ -62,15 +126,18 @@ export const WeeklyPicks: React.FC = () => {
             You've selected {teams.find(t => t.id === selectedTeam)?.name} to win their match this week.
           </p>
           <div className="flex space-x-4">
-            <button className="bg-plpe-purple text-white px-6 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+            <Button 
+              onClick={handleSubmitPick}
+              className="bg-plpe-purple hover:bg-purple-700"
+            >
               Submit Pick
-            </button>
-            <button 
-              className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            </Button>
+            <Button 
+              variant="outline"
               onClick={() => setSelectedTeam(null)}
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
