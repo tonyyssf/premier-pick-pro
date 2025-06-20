@@ -1,17 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
-import { Trophy, Medal, Award, Users, Globe } from 'lucide-react';
+import { Users, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from './ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from './ui/table';
+import { StandingsTable } from './StandingsTable';
+import { LoadingSpinner } from './LoadingSpinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 interface LeagueStanding {
@@ -97,103 +91,8 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
     loadData();
   }, [leagueId]);
 
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Trophy className="h-5 w-5 text-yellow-500" />;
-      case 2:
-        return <Medal className="h-5 w-5 text-gray-400" />;
-      case 3:
-        return <Award className="h-5 w-5 text-amber-600" />;
-      default:
-        return <span className="text-sm font-bold text-gray-600">{rank}</span>;
-    }
-  };
-
-  const renderStandingsTable = (standings: (LeagueStanding | GlobalStanding)[], isLeague: boolean) => {
-    if (standings.length === 0) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-gray-600">No standings available yet.</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Standings will appear once members make picks and gameweeks are completed.
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">Rank</TableHead>
-              <TableHead>Player</TableHead>
-              <TableHead className="text-center">Points</TableHead>
-              <TableHead className="text-center">Correct</TableHead>
-              <TableHead className="text-center">Total</TableHead>
-              <TableHead className="text-center">Win Rate</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {standings.map((standing, index) => {
-              const rank = standing.current_rank || index + 1;
-              const isCurrentUser = user && standing.user_id === user.id;
-              const winRate = standing.total_picks > 0 
-                ? ((standing.correct_picks / standing.total_picks) * 100).toFixed(1)
-                : '0.0';
-
-              return (
-                <TableRow
-                  key={standing.id}
-                  className={isCurrentUser ? 'bg-purple-50 border-l-4 border-plpe-purple' : ''}
-                >
-                  <TableCell>
-                    <div className="flex items-center justify-center">
-                      {getRankIcon(rank)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-semibold text-gray-900">
-                      {isCurrentUser ? 'You' : `Player ${standing.user_id.slice(0, 8)}`}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="text-lg font-bold text-plpe-purple">
-                      {standing.total_points}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="font-semibold">
-                      {standing.correct_picks}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="font-semibold">
-                      {standing.total_picks}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="font-semibold text-gray-600">
-                      {winRate}%
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-    );
-  };
-
   if (loading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-plpe-purple mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading leaderboard...</p>
-      </div>
-    );
+    return <LoadingSpinner message="Loading leaderboard..." />;
   }
 
   return (
@@ -216,11 +115,17 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
           </TabsList>
           
           <TabsContent value="league" className="mt-6">
-            {renderStandingsTable(leagueStandings, true)}
+            <StandingsTable 
+              standings={leagueStandings} 
+              currentUserId={user?.id} 
+            />
           </TabsContent>
           
           <TabsContent value="global" className="mt-6">
-            {renderStandingsTable(globalStandings, false)}
+            <StandingsTable 
+              standings={globalStandings} 
+              currentUserId={user?.id} 
+            />
           </TabsContent>
         </Tabs>
       </div>
