@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
 
@@ -56,10 +55,11 @@ async function fetchFromRapidAPI(endpoint: string) {
   console.log(`Fetching from endpoint: ${endpoint}`);
   console.log(`Using API key: ${rapidApiKey.substring(0, 8)}...`);
   
-  const response = await fetch(`https://api-football-v1.p.rapidapi.com/v3/${endpoint}`, {
+  // Updated to use the correct English Premiere League API
+  const response = await fetch(`https://english-premier-league1.p.rapidapi.com/${endpoint}`, {
     headers: {
       'X-RapidAPI-Key': rapidApiKey,
-      'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com'
+      'X-RapidAPI-Host': 'english-premier-league1.p.rapidapi.com'
     }
   });
   
@@ -72,7 +72,7 @@ async function fetchFromRapidAPI(endpoint: string) {
     
     // Check for specific error types
     if (response.status === 403) {
-      throw new Error(`API access denied (403). Please check: 1) Your RapidAPI subscription is active, 2) You have access to the API-FOOTBALL service, 3) Your API key is correct. Error: ${errorText}`);
+      throw new Error(`API access denied (403). Please check: 1) Your RapidAPI subscription is active, 2) You have access to the "English Premiere League" service, 3) Your API key is correct. Error: ${errorText}`);
     } else if (response.status === 429) {
       throw new Error(`Rate limit exceeded (429). Please wait before making more requests. Error: ${errorText}`);
     } else {
@@ -81,7 +81,7 @@ async function fetchFromRapidAPI(endpoint: string) {
   }
   
   const data = await response.json();
-  console.log(`Received data with ${data.response?.length || 0} items`);
+  console.log(`Received data:`, JSON.stringify(data, null, 2));
   
   // Check if the API returned an error in the response body
   if (data.errors && data.errors.length > 0) {
@@ -95,16 +95,43 @@ async function syncTeams() {
   console.log('Starting teams sync...');
   
   try {
-    // Try current season (2024) first, then fall back to 2023
+    // Updated endpoint for English Premiere League API - try different potential endpoints
     let teamsData;
-    try {
-      teamsData = await fetchFromRapidAPI('teams?league=39&season=2024');
-    } catch (error) {
-      console.log('Failed to fetch 2024 season, trying 2023...');
-      teamsData = await fetchFromRapidAPI('teams?league=39&season=2023');
+    const possibleEndpoints = [
+      'teams',
+      'clubs', 
+      'v1/teams',
+      'v1/clubs'
+    ];
+    
+    for (const endpoint of possibleEndpoints) {
+      try {
+        console.log(`Trying endpoint: ${endpoint}`);
+        teamsData = await fetchFromRapidAPI(endpoint);
+        if (teamsData && (teamsData.teams || teamsData.clubs || teamsData.data || Array.isArray(teamsData))) {
+          console.log(`Successfully fetched data from ${endpoint}`);
+          break;
+        }
+      } catch (error) {
+        console.log(`Failed to fetch from ${endpoint}:`, error.message);
+        if (endpoint === possibleEndpoints[possibleEndpoints.length - 1]) {
+          throw error; // Re-throw if this was the last endpoint to try
+        }
+      }
     }
     
-    const teams = teamsData.response as EPLTeam[];
+    // Adapt to different response structures
+    let teams = [];
+    if (teamsData.teams) {
+      teams = teamsData.teams;
+    } else if (teamsData.clubs) {
+      teams = teamsData.clubs;
+    } else if (teamsData.data) {
+      teams = teamsData.data;
+    } else if (Array.isArray(teamsData)) {
+      teams = teamsData;
+    }
+    
     console.log(`Fetched ${teams.length} teams`);
     
     if (teams.length === 0) {
@@ -112,7 +139,8 @@ async function syncTeams() {
     }
     
     for (const teamData of teams) {
-      const { team } = teamData;
+      // Adapt to different team data structures
+      const team = teamData.team || teamData;
       
       console.log(`Upserting team: ${team.name} (ID: ${team.id})`);
       
@@ -121,8 +149,8 @@ async function syncTeams() {
         .upsert({
           id: team.id.toString(),
           name: team.name,
-          short_name: team.code || team.name.slice(0, 3).toUpperCase(),
-          logo_url: team.logo || ''
+          short_name: team.code || team.short_name || team.name.slice(0, 3).toUpperCase(),
+          logo_url: team.logo || team.logo_url || ''
         }, {
           onConflict: 'id'
         });
@@ -145,16 +173,43 @@ async function syncGameweeksAndFixtures() {
   console.log('Starting gameweeks and fixtures sync...');
   
   try {
-    // Try current season first, then fall back
+    // Updated endpoints for English Premiere League API
     let fixturesData;
-    try {
-      fixturesData = await fetchFromRapidAPI('fixtures?league=39&season=2024');
-    } catch (error) {
-      console.log('Failed to fetch 2024 fixtures, trying 2023...');
-      fixturesData = await fetchFromRapidAPI('fixtures?league=39&season=2023');
+    const possibleEndpoints = [
+      'fixtures',
+      'matches',
+      'v1/fixtures',
+      'v1/matches'
+    ];
+    
+    for (const endpoint of possibleEndpoints) {
+      try {
+        console.log(`Trying fixtures endpoint: ${endpoint}`);
+        fixturesData = await fetchFromRapidAPI(endpoint);
+        if (fixturesData && (fixturesData.fixtures || fixturesData.matches || fixturesData.data || Array.isArray(fixturesData))) {
+          console.log(`Successfully fetched fixtures from ${endpoint}`);
+          break;
+        }
+      } catch (error) {
+        console.log(`Failed to fetch fixtures from ${endpoint}:`, error.message);
+        if (endpoint === possibleEndpoints[possibleEndpoints.length - 1]) {
+          throw error;
+        }
+      }
     }
     
-    const fixtures = fixturesData.response as EPLFixture[];
+    // Adapt to different response structures
+    let fixtures = [];
+    if (fixturesData.fixtures) {
+      fixtures = fixturesData.fixtures;
+    } else if (fixturesData.matches) {
+      fixtures = fixturesData.matches;
+    } else if (fixturesData.data) {
+      fixtures = fixturesData.data;
+    } else if (Array.isArray(fixturesData)) {
+      fixtures = fixturesData;
+    }
+    
     console.log(`Fetched ${fixtures.length} fixtures`);
     
     if (fixtures.length === 0) {
@@ -162,11 +217,11 @@ async function syncGameweeksAndFixtures() {
     }
     
     // Group fixtures by rounds (gameweeks)
-    const gameweeksMap = new Map<string, EPLFixture[]>();
+    const gameweeksMap = new Map<string, any[]>();
     
     for (const fixture of fixtures) {
-      // For Premier League, we'll create gameweeks based on fixture dates
-      const fixtureDate = new Date(fixture.fixture.date);
+      // Adapt to different fixture data structures
+      const fixtureDate = new Date(fixture.fixture?.date || fixture.date || fixture.kickoff_time);
       const weekNumber = Math.ceil((fixtureDate.getTime() - new Date('2024-08-01').getTime()) / (7 * 24 * 60 * 60 * 1000));
       const gameweekKey = `Gameweek ${Math.max(1, Math.min(38, weekNumber))}`;
       
@@ -183,15 +238,17 @@ async function syncGameweeksAndFixtures() {
     for (const [gameweekName, gameweekFixtures] of gameweeksMap) {
       if (gameweekNumber > 38) break; // Premier League has 38 gameweeks
       
-      // Sort fixtures by date to get the first and last fixture dates
-      const sortedFixtures = gameweekFixtures.sort((a, b) => 
-        new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime()
-      );
+      // Sort fixtures by date
+      const sortedFixtures = gameweekFixtures.sort((a, b) => {
+        const dateA = new Date(a.fixture?.date || a.date || a.kickoff_time);
+        const dateB = new Date(b.fixture?.date || b.date || b.kickoff_time);
+        return dateA.getTime() - dateB.getTime();
+      });
       
       if (sortedFixtures.length === 0) continue;
       
-      const startDate = new Date(sortedFixtures[0].fixture.date);
-      const endDate = new Date(sortedFixtures[sortedFixtures.length - 1].fixture.date);
+      const startDate = new Date(sortedFixtures[0].fixture?.date || sortedFixtures[0].date || sortedFixtures[0].kickoff_time);
+      const endDate = new Date(sortedFixtures[sortedFixtures.length - 1].fixture?.date || sortedFixtures[sortedFixtures.length - 1].date || sortedFixtures[sortedFixtures.length - 1].kickoff_time);
       const deadline = new Date(startDate.getTime() - 2 * 60 * 60 * 1000); // 2 hours before first match
       
       console.log(`Creating gameweek ${gameweekNumber} with ${sortedFixtures.length} fixtures`);
@@ -218,22 +275,29 @@ async function syncGameweeksAndFixtures() {
       
       // Create fixtures for this gameweek
       for (const fixture of sortedFixtures) {
-        const status = fixture.fixture.status.short === 'FT' ? 'finished' : 
-                      fixture.fixture.status.short === 'LIVE' ? 'live' : 'scheduled';
+        // Adapt to different fixture structures
+        const fixtureId = fixture.fixture?.id || fixture.id;
+        const homeTeam = fixture.teams?.home || fixture.home_team;
+        const awayTeam = fixture.teams?.away || fixture.away_team;
+        const goals = fixture.goals || fixture.score;
+        const status = fixture.fixture?.status?.short || fixture.status;
         
-        console.log(`Creating fixture: ${fixture.teams.home.name} vs ${fixture.teams.away.name}`);
+        const fixtureStatus = status === 'FT' ? 'finished' : 
+                            status === 'LIVE' ? 'live' : 'scheduled';
+        
+        console.log(`Creating fixture: ${homeTeam.name} vs ${awayTeam.name}`);
         
         const { error: fixtureError } = await supabase
           .from('fixtures')
           .upsert({
-            id: fixture.fixture.id.toString(),
+            id: fixtureId.toString(),
             gameweek_id: gameweek.id,
-            home_team_id: fixture.teams.home.id.toString(),
-            away_team_id: fixture.teams.away.id.toString(),
-            kickoff_time: fixture.fixture.date,
-            home_score: fixture.goals.home,
-            away_score: fixture.goals.away,
-            status: status
+            home_team_id: homeTeam.id.toString(),
+            away_team_id: awayTeam.id.toString(),
+            kickoff_time: fixture.fixture?.date || fixture.date || fixture.kickoff_time,
+            home_score: goals?.home,
+            away_score: goals?.away,
+            status: fixtureStatus
           }, {
             onConflict: 'id'
           });
