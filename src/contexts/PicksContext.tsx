@@ -101,16 +101,40 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const loadCurrentGameweek = async () => {
     try {
-      // Get current gameweek
-      const { data: gameweekData, error: gameweekError } = await supabase
+      console.log('Loading current gameweek...');
+      
+      // First, try to get the current gameweek (marked as is_current = true)
+      let { data: gameweekData, error: gameweekError } = await supabase
         .from('gameweeks')
         .select('*')
         .eq('is_current', true)
         .single();
 
-      if (gameweekError) {
-        console.error('Error loading current gameweek:', gameweekError);
-        return;
+      // If no current gameweek is found, default to gameweek 1
+      if (gameweekError || !gameweekData) {
+        console.log('No current gameweek found, defaulting to gameweek 1');
+        const { data: gw1Data, error: gw1Error } = await supabase
+          .from('gameweeks')
+          .select('*')
+          .eq('number', 1)
+          .single();
+          
+        if (gw1Error) {
+          console.error('Error loading gameweek 1:', gw1Error);
+          return;
+        }
+        
+        // Set gameweek 1 as current
+        const { error: updateError } = await supabase
+          .from('gameweeks')
+          .update({ is_current: true })
+          .eq('id', gw1Data.id);
+          
+        if (updateError) {
+          console.error('Error setting gameweek 1 as current:', updateError);
+        }
+        
+        gameweekData = gw1Data;
       }
 
       const gameweek: Gameweek = {
@@ -120,6 +144,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         isCurrent: gameweekData.is_current,
       };
 
+      console.log('Current gameweek loaded:', gameweek);
       setCurrentGameweek(gameweek);
 
       // Load fixtures for current gameweek
@@ -136,6 +161,8 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         console.error('Error loading fixtures:', fixturesError);
         return;
       }
+
+      console.log('Fixtures loaded:', fixturesData?.length || 0, 'fixtures');
 
       const formattedFixtures: Fixture[] = fixturesData.map(fixture => ({
         id: fixture.id,
