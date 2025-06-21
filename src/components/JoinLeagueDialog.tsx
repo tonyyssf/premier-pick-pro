@@ -69,44 +69,73 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
     try {
       console.log('Looking for league with invite code:', trimmedCode);
       
-      // First, find the league by invite code (case-insensitive search)
-      const { data: leagues, error: leagueError } = await supabase
+      // First, let's get ALL leagues to see what invite codes exist
+      const { data: allLeagues, error: allLeaguesError } = await supabase
+        .from('leagues')
+        .select('id, name, max_members, invite_code');
+
+      console.log('All leagues in database:', allLeagues);
+
+      if (allLeaguesError) {
+        console.error('Error fetching all leagues:', allLeaguesError);
+      }
+
+      // Now search for the specific league using multiple approaches
+      let foundLeague = null;
+
+      // Try exact match first
+      const { data: exactMatch } = await supabase
         .from('leagues')
         .select('id, name, max_members, invite_code')
-        .ilike('invite_code', trimmedCode);
+        .eq('invite_code', trimmedCode);
 
-      console.log('League lookup result:', { leagues, leagueError });
+      if (exactMatch && exactMatch.length > 0) {
+        foundLeague = exactMatch[0];
+        console.log('Found league with exact match:', foundLeague);
+      } else {
+        // Try case-insensitive search
+        const { data: caseInsensitiveMatch } = await supabase
+          .from('leagues')
+          .select('id, name, max_members, invite_code')
+          .ilike('invite_code', trimmedCode);
 
-      if (leagueError) {
-        console.error('League lookup error:', leagueError);
-        toast({
-          title: "Error Looking Up League",
-          description: "There was an error searching for the league. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        if (caseInsensitiveMatch && caseInsensitiveMatch.length > 0) {
+          foundLeague = caseInsensitiveMatch[0];
+          console.log('Found league with case-insensitive match:', foundLeague);
+        } else {
+          // Try searching with UPPER function on the database side
+          const { data: upperMatch } = await supabase
+            .from('leagues')
+            .select('id, name, max_members, invite_code')
+            .eq('invite_code', trimmedCode.toUpperCase());
+
+          if (upperMatch && upperMatch.length > 0) {
+            foundLeague = upperMatch[0];
+            console.log('Found league with upper case match:', foundLeague);
+          }
+        }
       }
 
-      if (!leagues || leagues.length === 0) {
+      if (!foundLeague) {
+        console.log('No league found with code:', trimmedCode);
+        console.log('Available invite codes:', allLeagues?.map(l => l.invite_code));
         toast({
           title: "League Not Found",
-          description: "No league found with that invite code. Please check the code and try again.",
+          description: `No league found with invite code "${trimmedCode}". Please check the code and try again.`,
           variant: "destructive",
         });
         return;
       }
-
-      const league = leagues[0];
 
       // Check if user is already a member
       const { data: existingMembership, error: membershipError } = await supabase
         .from('league_members')
         .select('id')
-        .eq('league_id', league.id)
+        .eq('league_id', foundLeague.id)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (membershipError && membershipError.code !== 'PGRST116') {
+      if (membershipError) {
         console.error('Membership check error:', membershipError);
         toast({
           title: "Error Checking Membership",
@@ -126,11 +155,11 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       }
 
       // Check member count if there's a limit
-      if (league.max_members) {
+      if (foundLeague.max_members) {
         const { count, error: countError } = await supabase
           .from('league_members')
           .select('*', { count: 'exact', head: true })
-          .eq('league_id', league.id);
+          .eq('league_id', foundLeague.id);
 
         if (countError) {
           console.error('Count error:', countError);
@@ -142,7 +171,7 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
           return;
         }
 
-        if (count && count >= league.max_members) {
+        if (count && count >= foundLeague.max_members) {
           toast({
             title: "League Full",
             description: "This league has reached its maximum number of members.",
@@ -156,7 +185,7 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       const { error: joinError } = await supabase
         .from('league_members')
         .insert({
-          league_id: league.id,
+          league_id: foundLeague.id,
           user_id: user.id
         });
 
@@ -172,7 +201,7 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
 
       toast({
         title: "Joined League!",
-        description: `You've successfully joined "${league.name}".`,
+        description: `You've successfully joined "${foundLeague.name}".`,
       });
 
       setInviteCode('');
