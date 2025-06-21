@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Fixture } from '@/types/picks';
 
@@ -12,7 +11,6 @@ interface SharePickData {
 }
 
 export const usePickShare = () => {
-  const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
 
   const generateShareText = (pickData: SharePickData): string => {
@@ -58,7 +56,6 @@ export const usePickShare = () => {
   };
 
   return {
-    generating,
     generateShareText,
     shareToSocial,
     copyShareText

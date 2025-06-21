@@ -1,9 +1,8 @@
 
-import React, { useState } from 'react';
-import { Share, Copy, Image } from 'lucide-react';
+import React from 'react';
+import { Share, Copy } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePickShare } from '@/hooks/usePickShare';
-import { ShareImageGenerator } from './ShareImageGenerator';
 import { Fixture } from '@/types/picks';
 
 interface SharePickCardProps {
@@ -21,7 +20,6 @@ export const SharePickCard: React.FC<SharePickCardProps> = ({
   fixture,
   gameweekNumber
 }) => {
-  const [showImageGenerator, setShowImageGenerator] = useState(false);
   const { generateShareText, shareToSocial, copyShareText } = usePickShare();
 
   const pickData = { teamName, opponentName, venue, fixture, gameweekNumber };
@@ -46,59 +44,30 @@ export const SharePickCard: React.FC<SharePickCardProps> = ({
         Share your pick on social media and invite friends to join!
       </p>
 
-      {!showImageGenerator ? (
-        <>
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <p className="text-gray-800 font-medium text-center">
-              "{shareText}"
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Button
-              onClick={handleShare}
-              className="flex-1"
-            >
-              <Share className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-            
-            <Button
-              onClick={handleCopy}
-              variant="outline"
-              className="flex-1"
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copy Text
-            </Button>
-
-            <Button
-              onClick={() => setShowImageGenerator(true)}
-              variant="outline"
-              className="flex-1 bg-plpe-gradient text-white hover:opacity-90"
-            >
-              <Image className="h-4 w-4 mr-2" />
-              Create Image
-            </Button>
-          </div>
-        </>
-      ) : (
-        <div className="space-y-4">
-          <ShareImageGenerator
-            gameweekNumber={gameweekNumber}
-            teamName={teamName}
-            opponentName={opponentName}
-          />
-          
-          <Button
-            onClick={() => setShowImageGenerator(false)}
-            variant="outline"
-            className="w-full"
-          >
-            Back to Text Share
-          </Button>
-        </div>
-      )}
+      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <p className="text-gray-800 font-medium text-center">
+          "{shareText}"
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Button
+          onClick={handleShare}
+          className="flex-1"
+        >
+          <Share className="h-4 w-4 mr-2" />
+          Share
+        </Button>
+        
+        <Button
+          onClick={handleCopy}
+          variant="outline"
+          className="flex-1"
+        >
+          <Copy className="h-4 w-4 mr-2" />
+          Copy Text
+        </Button>
+      </div>
     </div>
   );
 };
