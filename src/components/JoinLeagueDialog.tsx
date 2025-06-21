@@ -69,47 +69,52 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
     try {
       console.log('Looking for league with invite code:', trimmedCode);
       
-      // First, find the league by invite code
-      const { data: league, error: leagueError } = await supabase
+      // First, find the league by invite code (case-insensitive search)
+      const { data: leagues, error: leagueError } = await supabase
         .from('leagues')
-        .select('id, name, max_members')
-        .eq('invite_code', trimmedCode)
-        .single();
+        .select('id, name, max_members, invite_code')
+        .ilike('invite_code', trimmedCode);
 
-      console.log('League lookup result:', { league, leagueError });
+      console.log('League lookup result:', { leagues, leagueError });
 
-      if (leagueError || !league) {
-        // Let's also try a case-insensitive search as a fallback
-        const { data: leaguesCaseInsensitive, error: caseInsensitiveError } = await supabase
-          .from('leagues')
-          .select('id, name, max_members, invite_code')
-          .ilike('invite_code', trimmedCode);
-
-        console.log('Case-insensitive lookup result:', { leaguesCaseInsensitive, caseInsensitiveError });
-
-        if (caseInsensitiveError || !leaguesCaseInsensitive || leaguesCaseInsensitive.length === 0) {
-          toast({
-            title: "League Not Found",
-            description: "No league found with that invite code. Please check the code and try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // Use the first match from case-insensitive search
-        const foundLeague = leaguesCaseInsensitive[0];
-        league.id = foundLeague.id;
-        league.name = foundLeague.name;
-        league.max_members = foundLeague.max_members;
+      if (leagueError) {
+        console.error('League lookup error:', leagueError);
+        toast({
+          title: "Error Looking Up League",
+          description: "There was an error searching for the league. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
+      if (!leagues || leagues.length === 0) {
+        toast({
+          title: "League Not Found",
+          description: "No league found with that invite code. Please check the code and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const league = leagues[0];
+
       // Check if user is already a member
-      const { data: existingMembership } = await supabase
+      const { data: existingMembership, error: membershipError } = await supabase
         .from('league_members')
         .select('id')
         .eq('league_id', league.id)
         .eq('user_id', user.id)
         .single();
+
+      if (membershipError && membershipError.code !== 'PGRST116') {
+        console.error('Membership check error:', membershipError);
+        toast({
+          title: "Error Checking Membership",
+          description: "There was an error checking your membership status.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       if (existingMembership) {
         toast({
@@ -122,10 +127,20 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
 
       // Check member count if there's a limit
       if (league.max_members) {
-        const { count } = await supabase
+        const { count, error: countError } = await supabase
           .from('league_members')
           .select('*', { count: 'exact', head: true })
           .eq('league_id', league.id);
+
+        if (countError) {
+          console.error('Count error:', countError);
+          toast({
+            title: "Error Checking League Capacity",
+            description: "There was an error checking the league capacity.",
+            variant: "destructive",
+          });
+          return;
+        }
 
         if (count && count >= league.max_members) {
           toast({
@@ -145,7 +160,15 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
           user_id: user.id
         });
 
-      if (joinError) throw joinError;
+      if (joinError) {
+        console.error('Join error:', joinError);
+        toast({
+          title: "Error Joining League",
+          description: joinError.message || "Failed to join the league. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Joined League!",
