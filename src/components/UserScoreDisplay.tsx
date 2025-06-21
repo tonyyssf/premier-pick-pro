@@ -16,53 +16,14 @@ export const UserScoreDisplay: React.FC = () => {
     ? gameweekScores.find(score => score.userId === user.id && score.gameweekId === currentGameweek.id)
     : null;
 
-  if (!userStanding) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Points</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              No picks made yet
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Correct Picks</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0/0</div>
-            <p className="text-xs text-muted-foreground">
-              0% win rate
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Rank</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">
-              Not ranked yet
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Always show user score display, even with 0 points
+  const displayPoints = userStanding?.totalPoints || 0;
+  const displayCorrectPicks = userStanding?.correctPicks || 0;
+  const displayTotalPicks = userStanding?.totalPicks || 0;
+  const displayRank = userStanding?.currentRank;
 
-  const winRate = userStanding.totalPicks > 0 
-    ? ((userStanding.correctPicks / userStanding.totalPicks) * 100).toFixed(1)
+  const winRate = displayTotalPicks > 0 
+    ? ((displayCorrectPicks / displayTotalPicks) * 100).toFixed(1)
     : '0.0';
 
   return (
@@ -73,9 +34,10 @@ export const UserScoreDisplay: React.FC = () => {
           <Trophy className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-plpe-purple">{userStanding.totalPoints}</div>
+          <div className="text-2xl font-bold text-plpe-purple">{displayPoints}</div>
           <p className="text-xs text-muted-foreground">
-            {currentGameweekScore ? `+${currentGameweekScore.points} this gameweek` : 'Season total'}
+            {currentGameweekScore ? `+${currentGameweekScore.points} this gameweek` : 
+             displayTotalPicks === 0 ? 'Make your first pick!' : 'Season total'}
           </p>
         </CardContent>
       </Card>
@@ -86,7 +48,7 @@ export const UserScoreDisplay: React.FC = () => {
           <Target className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{userStanding.correctPicks}/{userStanding.totalPicks}</div>
+          <div className="text-2xl font-bold">{displayCorrectPicks}/{displayTotalPicks}</div>
           <p className="text-xs text-muted-foreground">
             {winRate}% win rate
           </p>
@@ -100,10 +62,10 @@ export const UserScoreDisplay: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {userStanding.currentRank ? `#${userStanding.currentRank}` : '-'}
+            {displayRank ? `#${displayRank}` : '-'}
           </div>
           <p className="text-xs text-muted-foreground">
-            Global position
+            {displayTotalPicks === 0 ? 'Start making picks to get ranked!' : 'Global position'}
           </p>
         </CardContent>
       </Card>

@@ -47,8 +47,8 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {standings.map((standing, index) => {
-            const rank = standing.current_rank || index + 1;
+          {standings.map((standing) => {
+            const rank = standing.current_rank || 999;
             const isCurrentUser = currentUserId && standing.user_id === currentUserId;
             const winRate = standing.total_picks > 0 
               ? ((standing.correct_picks / standing.total_picks) * 100).toFixed(1)
@@ -68,6 +68,9 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
                   <div className="font-semibold text-gray-900">
                     {isCurrentUser ? 'You' : `Player ${standing.user_id.slice(0, 8)}`}
                   </div>
+                  {standing.total_picks === 0 && (
+                    <div className="text-xs text-gray-500">No picks yet</div>
+                  )}
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="text-lg font-bold text-plpe-purple">

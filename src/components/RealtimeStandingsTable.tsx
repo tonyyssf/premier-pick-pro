@@ -63,8 +63,8 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {standings.map((standing, index) => {
-            const rank = standing.current_rank || index + 1;
+          {standings.map((standing) => {
+            const rank = standing.current_rank || 999;
             const isCurrentUser = currentUserId && standing.user_id === currentUserId;
             const winRate = standing.total_picks > 0 
               ? ((standing.correct_picks / standing.total_picks) * 100).toFixed(1)
@@ -83,14 +83,19 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
                   </div>
                 </TableCell>
                 <TableCell className="py-3">
-                  <div className="font-semibold text-gray-900 min-h-[24px] flex items-center">
-                    {isCurrentUser ? (
-                      <span className="flex items-center gap-2">
-                        You
-                        <div className="w-2 h-2 bg-plpe-purple rounded-full animate-pulse"></div>
-                      </span>
-                    ) : (
-                      `Player ${standing.user_id.slice(0, 8)}`
+                  <div className="min-h-[24px] flex flex-col justify-center">
+                    <div className="font-semibold text-gray-900 flex items-center gap-2">
+                      {isCurrentUser ? (
+                        <span className="flex items-center gap-2">
+                          You
+                          <div className="w-2 h-2 bg-plpe-purple rounded-full animate-pulse"></div>
+                        </span>
+                      ) : (
+                        `Player ${standing.user_id.slice(0, 8)}`
+                      )}
+                    </div>
+                    {standing.total_picks === 0 && (
+                      <div className="text-xs text-gray-500">No picks yet</div>
                     )}
                   </div>
                 </TableCell>
