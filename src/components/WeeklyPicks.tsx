@@ -91,63 +91,19 @@ export const WeeklyPicks: React.FC = () => {
           gameweekNumber={currentGameweek.number}
         />
       ) : (
-        <div className="relative mb-8">
-          {/* Desktop grid layout */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {fixtures.map((fixture) => (
-              <FixtureCard
-                key={fixture.id}
-                fixture={fixture}
-                homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
-                awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
-                maxUses={2}
-                selectedTeam={null}
-                onTeamSelect={handleTeamSelect}
-                submitting={submitting}
-              />
-            ))}
-          </div>
-
-          {/* Mobile carousel with overscroll-snap */}
-          <div className="md:hidden">
-            <div 
-              className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scroll-smooth overscroll-x-contain"
-              style={{
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              {fixtures.map((fixture, index) => (
-                <div 
-                  key={fixture.id} 
-                  className="flex-none w-80 snap-center"
-                  style={{ scrollSnapAlign: 'center' }}
-                >
-                  <FixtureCard
-                    fixture={fixture}
-                    homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
-                    awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
-                    maxUses={2}
-                    selectedTeam={null}
-                    onTeamSelect={handleTeamSelect}
-                    submitting={submitting}
-                  />
-                </div>
-              ))}
-            </div>
-            
-            {/* Carousel indicators */}
-            <div className="flex justify-center mt-4 space-x-2">
-              {fixtures.map((_, index) => (
-                <div
-                  key={index}
-                  className="w-2 h-2 rounded-full bg-gray-300"
-                  aria-hidden="true"
-                />
-              ))}
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {fixtures.map((fixture) => (
+            <FixtureCard
+              key={fixture.id}
+              fixture={fixture}
+              homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
+              awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
+              maxUses={2}
+              selectedTeam={null}
+              onTeamSelect={handleTeamSelect}
+              submitting={submitting}
+            />
+          ))}
         </div>
       )}
     </div>
