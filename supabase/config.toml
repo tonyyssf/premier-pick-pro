@@ -25,3 +25,9 @@ verify_jwt = true
 
 [functions.auto-advance-gameweek]
 verify_jwt = false
+
+[functions.send-sms-reminder]
+verify_jwt = false
+
+[functions.send-gameweek-reminders]
+verify_jwt = false

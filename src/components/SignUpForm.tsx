@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { PhoneNumberInput } from '@/components/PhoneNumberInput';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, Phone } from 'lucide-react';
 
 interface SignUpFormProps {
@@ -18,6 +20,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   onSwitchToSignIn 
 }) => {
   const { signUp } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -34,21 +37,73 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
     
-    const { error } = await signUp(formData.email, formData.password, {
-      username: formData.username,
-      name: formData.name,
-      phone_number: formData.phone_number
-    });
+    try {
+      // Sign up the user with metadata
+      const { error: signUpError } = await signUp(formData.email, formData.password, {
+        username: formData.username,
+        name: formData.name,
+        phone_number: formData.phone_number
+      });
 
-    setLoading(false);
-    
-    if (!error && onSuccess) {
-      onSuccess();
+      if (signUpError) {
+        console.error('Sign up error:', signUpError);
+        setLoading(false);
+        return;
+      }
+
+      // Wait a moment for the user to be created and the trigger to run
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Get the newly created user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && formData.phone_number) {
+        // Update the profile with SMS preferences and other details
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            phone_number: formData.phone_number,
+            country_code: formData.country_code,
+            sms_reminders_enabled: formData.sms_reminders_enabled,
+            username: formData.username,
+            name: formData.name
+          })
+          .eq('id', user.id);
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          toast({
+            title: "Profile Update Failed",
+            description: "Account created but failed to save SMS preferences. You can update them later in settings.",
+            variant: "destructive",
+          });
+        } else {
+          console.log('Profile updated successfully with SMS preferences');
+        }
+      }
+
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Unexpected error during signup:', error);
+      toast({
+        title: "Signup Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
