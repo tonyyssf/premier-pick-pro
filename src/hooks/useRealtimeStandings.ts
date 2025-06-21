@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,7 +26,7 @@ interface LeagueStanding {
   name?: string;
 }
 
-export const useRealtimeStandings = () => {
+export const useWeeklyStandings = () => {
   const [userStandings, setUserStandings] = useState<UserStanding[]>([]);
   const [leagueStandings, setLeagueStandings] = useState<{ [leagueId: string]: LeagueStanding[] }>({});
   const [loading, setLoading] = useState(true);
@@ -36,7 +35,7 @@ export const useRealtimeStandings = () => {
 
   const loadGlobalStandings = async () => {
     try {
-      // First get the standings data
+      // Get the standings data
       const { data: standingsData, error: standingsError } = await supabase
         .from('user_standings')
         .select('*')
@@ -101,7 +100,7 @@ export const useRealtimeStandings = () => {
 
   const loadLeagueStandings = async (leagueId: string) => {
     try {
-      // First get the league standings data
+      // Get the league standings data
       const { data: standingsData, error: standingsError } = await supabase
         .from('league_standings')
         .select('*')
@@ -172,7 +171,7 @@ export const useRealtimeStandings = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Initial load
+    // Initial load only - no real-time subscriptions
     const loadData = async () => {
       setLoading(true);
       await loadGlobalStandings();
@@ -180,59 +179,6 @@ export const useRealtimeStandings = () => {
     };
 
     loadData();
-
-    // Set up realtime subscription for global standings
-    const globalChannel = supabase
-      .channel('global-standings-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_standings'
-        },
-        (payload) => {
-          console.log('Global standings update:', payload);
-          // Reload standings to get updated profile data
-          loadGlobalStandings();
-
-          // Show toast for current user's rank changes
-          if (payload.new && typeof payload.new === 'object' && 'user_id' in payload.new && payload.new.user_id === user.id && payload.eventType === 'UPDATE') {
-            toast({
-              title: "Your Rank Updated!",
-              description: `You're now ranked #${(payload.new as any).current_rank} with ${(payload.new as any).total_points} points`,
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Set up realtime subscription for league standings
-    const leagueChannel = supabase
-      .channel('league-standings-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'league_standings'
-        },
-        (payload) => {
-          console.log('League standings update:', payload);
-          
-          if (payload.new && typeof payload.new === 'object' && 'league_id' in payload.new) {
-            const leagueId = (payload.new as any).league_id;
-            // Reload league standings to get updated profile data
-            loadLeagueStandings(leagueId);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(globalChannel);
-      supabase.removeChannel(leagueChannel);
-    };
   }, [user]);
 
   return {
@@ -243,3 +189,6 @@ export const useRealtimeStandings = () => {
     loadGlobalStandings
   };
 };
+
+// Keep the old export name for backward compatibility
+export const useRealtimeStandings = useWeeklyStandings;

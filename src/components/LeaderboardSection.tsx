@@ -3,14 +3,14 @@ import React from 'react';
 import { Trophy, Medal, Award, RefreshCw } from 'lucide-react';
 import { usePicks } from '../contexts/PicksContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useRealtimeStandings } from '../hooks/useRealtimeStandings';
+import { useWeeklyStandings } from '../hooks/useRealtimeStandings';
 import { Button } from './ui/button';
-import { RealtimeStandingsTable } from './RealtimeStandingsTable';
+import { WeeklyStandingsTable } from './WeeklyStandingsTable';
 
 export const LeaderboardSection: React.FC = () => {
   const { calculateScores, scoresLoading } = usePicks();
   const { user } = useAuth();
-  const { userStandings, loading } = useRealtimeStandings();
+  const { userStandings, loading } = useWeeklyStandings();
 
   const handleUpdateScores = async () => {
     await calculateScores();
@@ -23,7 +23,7 @@ export const LeaderboardSection: React.FC = () => {
 
   const currentUserStanding = getCurrentUserStanding();
 
-  // Convert to the format expected by RealtimeStandingsTable
+  // Convert to the format expected by WeeklyStandingsTable
   const formattedStandings = userStandings.map(standing => ({
     id: standing.id,
     user_id: standing.userId,
@@ -62,13 +62,12 @@ export const LeaderboardSection: React.FC = () => {
             <div className="bg-plpe-gradient px-6 py-4">
               <h3 className="text-xl font-semibold text-white flex items-center gap-2">
                 Top Players
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                <span className="text-sm font-normal">Live</span>
+                <span className="text-sm font-normal">(Weekly Updates)</span>
               </h3>
             </div>
             
             <div className="p-6">
-              <RealtimeStandingsTable 
+              <WeeklyStandingsTable 
                 standings={formattedStandings.slice(0, 10)} 
                 currentUserId={user?.id}
                 isLoading={loading}
@@ -80,7 +79,6 @@ export const LeaderboardSection: React.FC = () => {
                 <div className="text-center text-gray-600">
                   <span className="font-semibold">Your Position: </span>
                   #{currentUserStanding.currentRank} with {currentUserStanding.totalPoints} points
-                  <div className="w-2 h-2 bg-plpe-purple rounded-full animate-pulse inline-block ml-2"></div>
                 </div>
               </div>
             )}

@@ -1,8 +1,8 @@
 
 import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRealtimeStandings } from '@/hooks/useRealtimeStandings';
-import { RealtimeStandingsTable } from './RealtimeStandingsTable';
+import { useWeeklyStandings } from '@/hooks/useRealtimeStandings';
+import { WeeklyStandingsTable } from './WeeklyStandingsTable';
 import { LoadingSpinner } from './LoadingSpinner';
 
 interface LeagueLeaderboardProps {
@@ -15,7 +15,7 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
   leagueName 
 }) => {
   const { user } = useAuth();
-  const { leagueStandings, loading, loadLeagueStandings } = useRealtimeStandings();
+  const { leagueStandings, loading, loadLeagueStandings } = useWeeklyStandings();
 
   const currentLeagueStandings = leagueStandings[leagueId] || [];
 
@@ -24,17 +24,16 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
   }, [leagueId]);
 
   if (loading && currentLeagueStandings.length === 0) {
-    return <LoadingSpinner message="Loading live leaderboard..." />;
+    return <LoadingSpinner message="Loading leaderboard..." />;
   }
 
   return (
     <div className="bg-gray-50 rounded-lg p-4">
       <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
         {leagueName} Standings
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-        <span className="text-sm font-normal text-gray-600">Live</span>
+        <span className="text-sm font-normal text-gray-600">(Weekly Updates)</span>
       </h4>
-      <RealtimeStandingsTable 
+      <WeeklyStandingsTable 
         standings={currentLeagueStandings} 
         currentUserId={user?.id}
         isLoading={loading && currentLeagueStandings.length === 0}
