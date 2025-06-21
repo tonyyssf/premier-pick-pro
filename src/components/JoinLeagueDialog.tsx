@@ -8,7 +8,8 @@ import { UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { inviteCodeSchema, sanitizeInput } from '@/utils/validation';
+import { inviteCodeSchema } from '@/utils/validation';
+import { findLeagueByInviteCode } from '@/utils/leagueInviteUtils';
 import { z } from 'zod';
 
 interface JoinLeagueDialogProps {
@@ -71,22 +72,10 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       console.log('User ID:', user.id);
       console.log('Search code:', trimmedCode);
       
-      // First, find the league with the invite code
-      const { data: leagues, error: searchError } = await supabase
-        .from('leagues')
-        .select('id, name, max_members, invite_code, creator_id')
-        .eq('invite_code', trimmedCode);
+      // Use the new utility function to find the league
+      const foundLeague = await findLeagueByInviteCode(trimmedCode);
 
-      if (searchError) {
-        console.error('Error searching for league:', searchError);
-        throw new Error('Failed to search for leagues');
-      }
-
-      console.log('Search results:', leagues);
-
-      if (!leagues || leagues.length === 0) {
-        console.log('No league found with code:', trimmedCode);
-        
+      if (!foundLeague) {
         toast({
           title: "League Not Found",
           description: `No league found with invite code "${trimmedCode}". Please check the code and try again.`,
@@ -95,7 +84,6 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
         return;
       }
 
-      const foundLeague = leagues[0];
       console.log('Found league:', foundLeague);
 
       // Check if user is already a member
