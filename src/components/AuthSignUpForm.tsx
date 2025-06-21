@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneNumberInput } from '@/components/PhoneNumberInput';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateAndSanitizeUser } from '@/utils/validation';
 import { z } from 'zod';
@@ -24,6 +25,8 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+1');
   const { signUp } = useAuth();
 
   const validateSignUpForm = () => {
@@ -59,6 +62,12 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
       case 'name':
         setName(value);
         break;
+      case 'phoneNumber':
+        setPhoneNumber(value);
+        break;
+      case 'countryCode':
+        setCountryCode(value);
+        break;
     }
     
     // Clear error when user starts typing
@@ -73,7 +82,7 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
     onErrorsChange({});
     
     if (!email || !password || !username || !name) {
-      onErrorsChange({ general: 'Please fill in all fields' });
+      onErrorsChange({ general: 'Please fill in all required fields' });
       onLoadingChange(false);
       return;
     }
@@ -85,7 +94,10 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
 
     try {
       const sanitizedData = validateAndSanitizeUser({ username, name });
-      await signUp(email, password, sanitizedData);
+      await signUp(email, password, {
+        ...sanitizedData,
+        phone_number: phoneNumber
+      });
     } catch (error) {
       console.error('Sign up error:', error);
     }
@@ -132,6 +144,15 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
           required
         />
       </div>
+      <PhoneNumberInput
+        value={phoneNumber}
+        onChange={(value) => handleInputChange('phoneNumber', value)}
+        countryCode={countryCode}
+        onCountryCodeChange={(code) => handleInputChange('countryCode', code)}
+        label="Phone Number (Optional)"
+        placeholder="(555) 123-4567"
+        required={false}
+      />
       <div className="space-y-2">
         <Label htmlFor="signup-password">Password</Label>
         <Input
