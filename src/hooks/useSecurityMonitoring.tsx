@@ -23,6 +23,7 @@ export interface SecurityMetrics {
   lastAuditTime: Date;
   criticalIssues: number;
   warnings: number;
+  securityScore: number;
 }
 
 export const useSecurityMonitoring = () => {
@@ -73,7 +74,7 @@ export const useSecurityMonitoring = () => {
   const calculateSecurityMetrics = (
     functions: SecurityAuditResult[], 
     extensions: ExtensionAuditResult[]
-  ): Pick<SecurityMetrics, 'criticalIssues' | 'warnings'> => {
+  ): Pick<SecurityMetrics, 'criticalIssues' | 'warnings' | 'securityScore'> => {
     let criticalIssues = 0;
     let warnings = 0;
 
@@ -86,13 +87,21 @@ export const useSecurityMonitoring = () => {
 
     // Check extension recommendations
     extensions.forEach(ext => {
-      if (ext.security_recommendation.includes('monitor') || 
-          ext.security_recommendation.includes('Consider')) {
+      if (ext.security_recommendation.includes('SECURITY ISSUE')) {
+        criticalIssues++;
+      } else if (ext.security_recommendation.includes('Consider') || 
+                 ext.security_recommendation.includes('monitor')) {
         warnings++;
       }
     });
 
-    return { criticalIssues, warnings };
+    // Calculate security score (0-100)
+    const totalChecks = functions.length + extensions.length;
+    const issues = criticalIssues * 2 + warnings; // Weight critical issues more heavily
+    const maxPossibleIssues = totalChecks * 2;
+    const securityScore = totalChecks > 0 ? Math.max(0, Math.round(((maxPossibleIssues - issues) / maxPossibleIssues) * 100)) : 100;
+
+    return { criticalIssues, warnings, securityScore };
   };
 
   const performSecurityAudit = async () => {
@@ -103,14 +112,15 @@ export const useSecurityMonitoring = () => {
         auditExtensions()
       ]);
 
-      const { criticalIssues, warnings } = calculateSecurityMetrics(functionAudit, extensionAudit);
+      const { criticalIssues, warnings, securityScore } = calculateSecurityMetrics(functionAudit, extensionAudit);
 
       const newMetrics: SecurityMetrics = {
         securityFunctions: functionAudit,
         extensionAudit,
         lastAuditTime: new Date(),
         criticalIssues,
-        warnings
+        warnings,
+        securityScore
       };
 
       setMetrics(newMetrics);
@@ -122,6 +132,7 @@ export const useSecurityMonitoring = () => {
           operation: 'security_audit_completed',
           criticalIssues,
           warnings,
+          securityScore,
           functionCount: functionAudit.length,
           extensionCount: extensionAudit.length
         }
@@ -130,8 +141,14 @@ export const useSecurityMonitoring = () => {
       if (criticalIssues > 0) {
         toast({
           title: "Security Issues Detected",
-          description: `${criticalIssues} critical security issues found`,
+          description: `${criticalIssues} critical security issues found (Score: ${securityScore}/100)`,
           variant: "destructive",
+        });
+      } else if (securityScore >= 90) {
+        toast({
+          title: "Excellent Security",
+          description: `Security score: ${securityScore}/100 - Well done!`,
+          variant: "default",
         });
       }
 
@@ -154,6 +171,11 @@ export const useSecurityMonitoring = () => {
 
   useEffect(() => {
     performSecurityAudit();
+    
+    // Set up periodic security audits every 5 minutes
+    const interval = setInterval(performSecurityAudit, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   return {

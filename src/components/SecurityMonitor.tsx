@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
 import { 
   Shield, 
@@ -11,7 +12,9 @@ import {
   XCircle,
   RefreshCw,
   Database,
-  Lock
+  Lock,
+  Award,
+  TrendingUp
 } from 'lucide-react';
 
 export const SecurityMonitor: React.FC = () => {
@@ -62,6 +65,18 @@ export const SecurityMonitor: React.FC = () => {
     }
   };
 
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-green-600';
+    if (score >= 70) return 'text-orange-600';
+    return 'text-red-600';
+  };
+
+  const getScoreProgressColor = (score: number) => {
+    if (score >= 90) return 'bg-green-500';
+    if (score >= 70) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -75,6 +90,35 @@ export const SecurityMonitor: React.FC = () => {
           Run Audit
         </Button>
       </div>
+
+      {/* Security Score Card */}
+      <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <Award className="h-8 w-8 text-blue-600" />
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Security Score</h3>
+                <p className="text-sm text-gray-600">Overall security assessment</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className={`text-3xl font-bold ${getScoreColor(metrics.securityScore)}`}>
+                {metrics.securityScore}/100
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                {metrics.securityScore >= 90 ? 'Excellent' : 
+                 metrics.securityScore >= 70 ? 'Good' : 'Needs Improvement'}
+              </div>
+            </div>
+          </div>
+          <Progress 
+            value={metrics.securityScore} 
+            className="h-3"
+          />
+        </CardContent>
+      </Card>
 
       {/* Overall Security Status */}
       <Card className={
@@ -162,7 +206,11 @@ export const SecurityMonitor: React.FC = () => {
                   <div className="font-medium">{ext.extension_name}</div>
                   <Badge variant="outline" className="text-xs">{ext.schema_location}</Badge>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className={`text-sm ${
+                  ext.security_recommendation.includes('properly isolated') ? 'text-green-600' :
+                  ext.security_recommendation.includes('SECURITY ISSUE') ? 'text-red-600' :
+                  'text-gray-600'
+                }`}>
                   {ext.security_recommendation}
                 </div>
               </div>
