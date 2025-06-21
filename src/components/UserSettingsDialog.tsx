@@ -9,6 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Phone } from 'lucide-react';
+import { PhoneNumberInput } from './PhoneNumberInput';
+import { validateAndSanitizeUser } from '@/utils/validation';
 
 interface UserSettingsDialogProps {
   open: boolean;
@@ -31,6 +33,7 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
     country_code: '+1',
     sms_reminders_enabled: false
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Load user profile data
   useEffect(() => {
@@ -71,35 +74,73 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
     }
   }, [open, user, toast]);
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    try {
+      // Validate using our validation utility
+      validateAndSanitizeUser({
+        username: formData.username,
+        name: formData.name
+      });
+    } catch (error: any) {
+      if (error.issues) {
+        error.issues.forEach((issue: any) => {
+          newErrors[issue.path[0]] = issue.message;
+        });
+      } else {
+        newErrors.general = error.message;
+      }
+    }
+
+    // Additional phone number validation
+    if (formData.phone_number && formData.phone_number.length < 10) {
+      newErrors.phone_number = 'Phone number must be at least 10 digits';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Update auth metadata
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          username: formData.username,
-          name: formData.name,
-          phone_number: formData.phone_number
-        }
+      console.log('Saving profile data:', formData);
+
+      // Update profile table with sanitized data
+      const sanitizedData = validateAndSanitizeUser({
+        username: formData.username,
+        name: formData.name
       });
 
-      if (authError) throw authError;
-
-      // Update profile table
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          username: formData.username,
-          name: formData.name,
-          phone_number: formData.phone_number,
+          username: sanitizedData.username,
+          name: sanitizedData.name,
+          phone_number: formData.phone_number || null,
           country_code: formData.country_code,
           sms_reminders_enabled: formData.sms_reminders_enabled
         })
         .eq('id', user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
+
+      console.log('Profile updated successfully');
 
       toast({
         title: "Settings updated",
@@ -108,9 +149,10 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
 
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Error updating settings:', error);
       toast({
         title: "Error updating settings",
-        description: error.message,
+        description: error.message || 'An unexpected error occurred',
         variant: "destructive",
       });
     } finally {
@@ -123,6 +165,14 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
       ...prev,
       [field]: value
     }));
+    
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
   };
 
   if (loadingProfile) {
@@ -161,45 +211,50 @@ export const UserSettingsDialog: React.FC<UserSettingsDialogProps> = ({
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="username">
+              Username
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
             <Input
               id="username"
               value={formData.username}
               onChange={(e) => handleInputChange('username', e.target.value)}
               placeholder="Enter username"
+              className={errors.username ? 'border-red-500' : ''}
             />
+            {errors.username && (
+              <p className="text-xs text-red-500">{errors.username}</p>
+            )}
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">
+              Name
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="Enter your full name"
+              className={errors.name ? 'border-red-500' : ''}
             />
+            {errors.name && (
+              <p className="text-xs text-red-500">{errors.name}</p>
+            )}
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <div className="flex gap-2">
-              <Input
-                value={formData.country_code}
-                onChange={(e) => handleInputChange('country_code', e.target.value)}
-                className="w-20"
-                placeholder="+1"
-              />
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone_number}
-                onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                placeholder="(555) 123-4567"
-                className="flex-1"
-              />
-            </div>
-            <p className="text-xs text-gray-500">Used for SMS reminders about upcoming deadlines</p>
-          </div>
+          <PhoneNumberInput
+            value={formData.phone_number}
+            onChange={(value) => handleInputChange('phone_number', value)}
+            countryCode={formData.country_code}
+            onCountryCodeChange={(code) => handleInputChange('country_code', code)}
+            label="Phone Number (Optional)"
+            placeholder="(555) 123-4567"
+          />
+          {errors.phone_number && (
+            <p className="text-xs text-red-500">{errors.phone_number}</p>
+          )}
 
           <div className="flex items-center justify-between p-3 border rounded-lg">
             <div className="flex items-center space-x-3">
