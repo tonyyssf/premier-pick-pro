@@ -14,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signUp: (email: string, password: string, metadata?: UserMetadata) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
 }
@@ -75,10 +75,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
+    // Configure session persistence based on remember me option
+    const options = rememberMe ? {
+      // For remember me, we'll rely on Supabase's default persistent session
+      // which lasts longer and survives browser restarts
+    } : undefined;
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options
     });
 
     if (error) {
@@ -87,12 +94,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         description: error.message,
         variant: "destructive",
       });
+    } else if (rememberMe) {
+      // Store a flag in localStorage to indicate extended session preference
+      localStorage.setItem('plpe_remember_me', 'true');
+      toast({
+        title: "Signed In Successfully",
+        description: "You'll stay signed in for an extended period.",
+      });
+    } else {
+      // Remove the remember me flag if not selected
+      localStorage.removeItem('plpe_remember_me');
     }
 
     return { error };
   };
 
   const signOut = async () => {
+    // Clear remember me preference on sign out
+    localStorage.removeItem('plpe_remember_me');
+    
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast({

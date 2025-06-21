@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { validateAndSanitizeUser } from '@/utils/validation';
 import { z } from 'zod';
 
@@ -15,6 +15,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { signIn, signUp, user } = useAuth();
@@ -25,6 +26,14 @@ const Auth = () => {
       navigate('/');
     }
   }, [user, navigate]);
+
+  // Check if user previously selected remember me
+  useEffect(() => {
+    const storedRememberMe = localStorage.getItem('plpe_remember_me');
+    if (storedRememberMe === 'true') {
+      setRememberMe(true);
+    }
+  }, []);
 
   const validateSignUpForm = () => {
     try {
@@ -56,7 +65,7 @@ const Auth = () => {
       return;
     }
     
-    await signIn(email, password);
+    await signIn(email, password, rememberMe);
     setLoading(false);
   };
 
@@ -163,6 +172,19 @@ const Auth = () => {
                       placeholder="Enter your password"
                       required
                     />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    />
+                    <Label 
+                      htmlFor="remember-me" 
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Remember me for longer sessions
+                    </Label>
                   </div>
                   <Button 
                     type="submit" 
