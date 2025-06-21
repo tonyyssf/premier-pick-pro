@@ -38,7 +38,8 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   };
 
   const handleInputChange = (value: string) => {
-    const sanitized = sanitizeInput(value.toUpperCase());
+    // Remove any non-alphanumeric characters and convert to uppercase
+    const sanitized = value.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 6);
     setInviteCode(sanitized);
     if (error) {
       setError('');
@@ -57,7 +58,7 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       return;
     }
 
-    const trimmedCode = inviteCode.trim();
+    const trimmedCode = inviteCode.trim().toUpperCase();
     
     if (!validateInviteCode(trimmedCode)) {
       return;
@@ -66,6 +67,8 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
     setIsLoading(true);
 
     try {
+      console.log('Looking for league with invite code:', trimmedCode);
+      
       // First, find the league by invite code
       const { data: league, error: leagueError } = await supabase
         .from('leagues')
@@ -73,13 +76,31 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
         .eq('invite_code', trimmedCode)
         .single();
 
+      console.log('League lookup result:', { league, leagueError });
+
       if (leagueError || !league) {
-        toast({
-          title: "League Not Found",
-          description: "No league found with that invite code.",
-          variant: "destructive",
-        });
-        return;
+        // Let's also try a case-insensitive search as a fallback
+        const { data: leaguesCaseInsensitive, error: caseInsensitiveError } = await supabase
+          .from('leagues')
+          .select('id, name, max_members, invite_code')
+          .ilike('invite_code', trimmedCode);
+
+        console.log('Case-insensitive lookup result:', { leaguesCaseInsensitive, caseInsensitiveError });
+
+        if (caseInsensitiveError || !leaguesCaseInsensitive || leaguesCaseInsensitive.length === 0) {
+          toast({
+            title: "League Not Found",
+            description: "No league found with that invite code. Please check the code and try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Use the first match from case-insensitive search
+        const foundLeague = leaguesCaseInsensitive[0];
+        league.id = foundLeague.id;
+        league.name = foundLeague.name;
+        league.max_members = foundLeague.max_members;
       }
 
       // Check if user is already a member
