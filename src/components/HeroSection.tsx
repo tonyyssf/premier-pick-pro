@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Trophy, Target, Users } from 'lucide-react';
 import { GameRulesModal } from './GameRulesModal';
 
 export const HeroSection: React.FC = () => {
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleStartPlaying = () => {
-    // Scroll to the weekly picks section
-    const weeklyPicksSection = document.querySelector('[data-section="weekly-picks"]');
-    if (weeklyPicksSection) {
-      weeklyPicksSection.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
+    navigate('/');
   };
 
   const handleHowItWorks = () => {
