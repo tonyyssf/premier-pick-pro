@@ -42,47 +42,53 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
       console.log('=== FETCHING LEAGUE MEMBERS ===');
       console.log('League ID:', leagueId);
       
-      // Fetch league members with their profiles using a join query
-      const { data: membersWithProfiles, error } = await supabase
+      // First fetch league members
+      const { data: leagueMembers, error: membersError } = await supabase
         .from('league_members')
-        .select(`
-          id,
-          user_id,
-          joined_at,
-          profiles!user_id (
-            username,
-            name,
-            email
-          )
-        `)
+        .select('id, user_id, joined_at')
         .eq('league_id', leagueId)
         .order('joined_at', { ascending: true });
 
-      console.log('Fetched members data:', membersWithProfiles);
-      console.log('Fetch error:', error);
+      console.log('Fetched league members:', leagueMembers);
+      console.log('Members error:', membersError);
 
-      if (error) throw error;
+      if (membersError) throw membersError;
 
-      if (!membersWithProfiles || membersWithProfiles.length === 0) {
+      if (!leagueMembers || leagueMembers.length === 0) {
         console.log('No members found for league:', leagueId);
         setMembers([]);
         return;
       }
 
-      // Transform the data to match our interface
-      const transformedMembers = membersWithProfiles.map(member => ({
-        id: member.id,
-        user_id: member.user_id,
-        joined_at: member.joined_at,
-        profiles: member.profiles ? {
-          username: member.profiles.username,
-          name: member.profiles.name,
-          email: member.profiles.email
-        } : null
-      }));
+      // Get user IDs to fetch profiles
+      const userIds = leagueMembers.map(member => member.user_id);
 
-      console.log('Transformed members:', transformedMembers);
-      setMembers(transformedMembers);
+      // Fetch profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, name, email')
+        .in('id', userIds);
+
+      console.log('Fetched profiles:', profiles);
+      console.log('Profiles error:', profilesError);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const membersWithProfiles = leagueMembers.map(member => {
+        const profile = profiles?.find(p => p.id === member.user_id);
+        return {
+          ...member,
+          profiles: profile ? {
+            username: profile.username,
+            name: profile.name,
+            email: profile.email
+          } : null
+        };
+      });
+
+      console.log('Combined members with profiles:', membersWithProfiles);
+      setMembers(membersWithProfiles);
     } catch (error: any) {
       console.error('Error fetching members:', error);
       toast({
