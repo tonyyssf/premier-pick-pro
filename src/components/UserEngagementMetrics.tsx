@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,15 +50,10 @@ export const UserEngagementMetrics: React.FC = () => {
       
       if (picksError) throw picksError;
 
-      // Get user standings for top performers
+      // Get user standings for top performers - fix the query
       const { data: standings, error: standingsError } = await supabase
         .from('user_standings')
-        .select(`
-          user_id,
-          total_points,
-          current_rank,
-          profiles:user_id (name, username)
-        `)
+        .select('user_id, total_points, current_rank')
         .order('total_points', { ascending: false })
         .limit(10);
       
@@ -96,13 +90,16 @@ export const UserEngagementMetrics: React.FC = () => {
         picks: picks.filter(p => p.gameweek_id === gw.id).length,
       })).slice(-10); // Last 10 gameweeks
 
-      // Top performers
-      const topPerformers = standings.map(s => ({
-        id: s.user_id,
-        name: s.profiles?.name || s.profiles?.username || 'Unknown User',
-        points: s.total_points,
-        rank: s.current_rank || 0,
-      })).slice(0, 5);
+      // Top performers - manually join with profiles data
+      const topPerformers = standings.map(s => {
+        const profile = profiles.find(p => p.id === s.user_id);
+        return {
+          id: s.user_id,
+          name: profile?.name || profile?.username || 'Unknown User',
+          points: s.total_points,
+          rank: s.current_rank || 0,
+        };
+      }).slice(0, 5);
 
       return {
         totalUsers,
