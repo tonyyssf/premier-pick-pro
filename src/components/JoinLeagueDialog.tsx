@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -67,58 +66,137 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
     setIsLoading(true);
 
     try {
-      console.log('Looking for league with invite code:', trimmedCode);
+      console.log('=== DETAILED INVITE CODE DEBUG ===');
+      console.log('Original input:', inviteCode);
+      console.log('Trimmed code:', trimmedCode);
+      console.log('Code length:', trimmedCode.length);
+      console.log('Code characters:', trimmedCode.split('').map(c => `${c} (${c.charCodeAt(0)})`));
       
-      // First, let's get ALL leagues to see what invite codes exist
+      // First, let's get ALL leagues with detailed info
       const { data: allLeagues, error: allLeaguesError } = await supabase
         .from('leagues')
-        .select('id, name, max_members, invite_code');
+        .select('id, name, max_members, invite_code, creator_id, created_at');
 
-      console.log('All leagues in database:', allLeagues);
-
+      console.log('=== ALL LEAGUES IN DATABASE ===');
       if (allLeaguesError) {
         console.error('Error fetching all leagues:', allLeaguesError);
+      } else {
+        console.log('Total leagues found:', allLeagues?.length || 0);
+        allLeagues?.forEach((league, index) => {
+          console.log(`League ${index + 1}:`, {
+            id: league.id,
+            name: league.name,
+            invite_code: league.invite_code,
+            invite_code_length: league.invite_code?.length,
+            invite_code_chars: league.invite_code?.split('').map(c => `${c} (${c.charCodeAt(0)})`),
+            creator_id: league.creator_id,
+            created_at: league.created_at
+          });
+          
+          // Direct string comparison
+          const exactMatch = league.invite_code === trimmedCode;
+          const upperMatch = league.invite_code?.toUpperCase() === trimmedCode;
+          const lowerMatch = league.invite_code?.toLowerCase() === trimmedCode.toLowerCase();
+          
+          console.log(`  Comparison with "${trimmedCode}":`, {
+            exact_match: exactMatch,
+            upper_match: upperMatch,
+            lower_match: lowerMatch,
+            stored_code: league.invite_code,
+            search_code: trimmedCode
+          });
+        });
       }
 
-      // Now search for the specific league using multiple approaches
+      // Try different search strategies with detailed logging
       let foundLeague = null;
-
-      // Try exact match first
-      const { data: exactMatch } = await supabase
-        .from('leagues')
-        .select('id, name, max_members, invite_code')
-        .eq('invite_code', trimmedCode);
-
-      if (exactMatch && exactMatch.length > 0) {
-        foundLeague = exactMatch[0];
-        console.log('Found league with exact match:', foundLeague);
+      
+      console.log('=== SEARCH STRATEGY 1: Direct match ===');
+      const directMatch = allLeagues?.find(league => league.invite_code === trimmedCode);
+      if (directMatch) {
+        console.log('Found with direct match:', directMatch);
+        foundLeague = directMatch;
       } else {
-        // Try case-insensitive search
-        const { data: caseInsensitiveMatch } = await supabase
-          .from('leagues')
-          .select('id, name, max_members, invite_code')
-          .ilike('invite_code', trimmedCode);
+        console.log('No direct match found');
+      }
 
-        if (caseInsensitiveMatch && caseInsensitiveMatch.length > 0) {
-          foundLeague = caseInsensitiveMatch[0];
-          console.log('Found league with case-insensitive match:', foundLeague);
+      if (!foundLeague) {
+        console.log('=== SEARCH STRATEGY 2: Case insensitive ===');
+        const caseInsensitiveMatch = allLeagues?.find(league => 
+          league.invite_code?.toLowerCase() === trimmedCode.toLowerCase()
+        );
+        if (caseInsensitiveMatch) {
+          console.log('Found with case insensitive match:', caseInsensitiveMatch);
+          foundLeague = caseInsensitiveMatch;
         } else {
-          // Try searching with UPPER function on the database side
-          const { data: upperMatch } = await supabase
-            .from('leagues')
-            .select('id, name, max_members, invite_code')
-            .eq('invite_code', trimmedCode.toUpperCase());
-
-          if (upperMatch && upperMatch.length > 0) {
-            foundLeague = upperMatch[0];
-            console.log('Found league with upper case match:', foundLeague);
-          }
+          console.log('No case insensitive match found');
         }
       }
 
       if (!foundLeague) {
-        console.log('No league found with code:', trimmedCode);
-        console.log('Available invite codes:', allLeagues?.map(l => l.invite_code));
+        console.log('=== SEARCH STRATEGY 3: Database query exact ===');
+        const { data: dbExactMatch, error: dbExactError } = await supabase
+          .from('leagues')
+          .select('id, name, max_members, invite_code')
+          .eq('invite_code', trimmedCode)
+          .maybeSingle();
+
+        if (dbExactError) {
+          console.error('Database exact match error:', dbExactError);
+        } else if (dbExactMatch) {
+          console.log('Found with database exact match:', dbExactMatch);
+          foundLeague = dbExactMatch;
+        } else {
+          console.log('No database exact match found');
+        }
+      }
+
+      if (!foundLeague) {
+        console.log('=== SEARCH STRATEGY 4: Database ilike ===');
+        const { data: dbIlikeMatch, error: dbIlikeError } = await supabase
+          .from('leagues')
+          .select('id, name, max_members, invite_code')
+          .ilike('invite_code', trimmedCode)
+          .maybeSingle();
+
+        if (dbIlikeError) {
+          console.error('Database ilike error:', dbIlikeError);
+        } else if (dbIlikeMatch) {
+          console.log('Found with database ilike match:', dbIlikeMatch);
+          foundLeague = dbIlikeMatch;
+        } else {
+          console.log('No database ilike match found');
+        }
+      }
+
+      if (!foundLeague) {
+        console.log('=== SEARCH STRATEGY 5: Raw SQL query ===');
+        const { data: rawSqlMatch, error: rawSqlError } = await supabase
+          .rpc('check_invite_code_exists', { search_code: trimmedCode });
+
+        if (rawSqlError) {
+          console.error('Raw SQL error:', rawSqlError);
+        } else {
+          console.log('Raw SQL result:', rawSqlMatch);
+        }
+      }
+
+      console.log('=== FINAL RESULT ===');
+      console.log('Found league:', foundLeague);
+
+      if (!foundLeague) {
+        console.log('=== FAILURE ANALYSIS ===');
+        console.log('Search code:', trimmedCode);
+        console.log('Available codes:', allLeagues?.map(l => l.invite_code));
+        console.log('Search code as bytes:', Array.from(new TextEncoder().encode(trimmedCode)));
+        
+        if (allLeagues && allLeagues.length > 0) {
+          console.log('Sample code comparison:');
+          const sampleCode = allLeagues[0].invite_code;
+          console.log('Sample code:', sampleCode);
+          console.log('Sample code as bytes:', Array.from(new TextEncoder().encode(sampleCode || '')));
+        }
+        
         toast({
           title: "League Not Found",
           description: `No league found with invite code "${trimmedCode}". Please check the code and try again.`,
