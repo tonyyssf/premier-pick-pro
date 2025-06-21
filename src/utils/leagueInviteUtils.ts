@@ -15,7 +15,8 @@ export const findLeagueByInviteCode = async (inviteCode: string): Promise<League
   
   try {
     // Use the security definer function to bypass RLS for invite code lookup
-    const { data, error } = await supabase
+    // Note: Using 'any' type for the RPC call until Supabase types are regenerated
+    const { data, error } = await (supabase as any)
       .rpc('get_league_by_invite_code', { 
         p_code: inviteCode 
       });
@@ -27,12 +28,15 @@ export const findLeagueByInviteCode = async (inviteCode: string): Promise<League
 
     console.log('RPC result:', data);
     
-    if (!data || data.length === 0) {
+    // Handle the case where data could be null or an empty array
+    if (!data || (Array.isArray(data) && data.length === 0)) {
       console.log('No league found with invite code:', inviteCode);
       return null;
     }
 
-    return data[0] as LeagueInviteData;
+    // If data is an array, take the first element; otherwise use data directly
+    const leagueData = Array.isArray(data) ? data[0] : data;
+    return leagueData as LeagueInviteData;
   } catch (error) {
     console.error('Error in findLeagueByInviteCode:', error);
     throw error;

@@ -497,6 +497,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_league_by_invite_code: {
+        Args: { p_code: string }
+        Returns: {
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          invite_code: string
+          is_public: boolean | null
+          max_members: number | null
+          name: string
+          updated_at: string
+        }[]
+      }
       is_admin: {
         Args: { user_uuid?: string }
         Returns: boolean
