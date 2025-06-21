@@ -51,16 +51,20 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
     usedCount: number;
     isDisabled: boolean;
   }> = ({ team, isHome, usedCount, isDisabled }) => (
-    <div 
+    <button
+      type="button"
       className={`
-        relative border-2 rounded-lg p-3 cursor-pointer transition-all duration-200 transform hover:scale-105 flex-1
+        relative border-2 rounded-lg p-4 transition-all duration-200 flex-1
+        min-h-[48px] min-w-[48px] touch-manipulation
         ${isDisabled
           ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
-          : 'border-gray-200 bg-white hover:border-plpe-purple hover:shadow-md'
+          : 'border-gray-200 bg-white hover:border-plpe-purple hover:shadow-md active:scale-95'
         }
         ${submitting ? 'animate-pulse' : ''}
       `}
       onClick={!isDisabled ? () => onTeamSelect(fixture.id, team.id) : undefined}
+      disabled={isDisabled}
+      aria-label={`Pick ${team.name} ${isHome ? 'home' : 'away'} team`}
     >
       {usedCount >= maxUses && (
         <div className="absolute inset-0 bg-gray-900/20 rounded-lg flex items-center justify-center">
@@ -78,12 +82,12 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
       
       <div className="text-center">
         <div 
-          className="w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 text-white font-bold text-xs shadow-sm"
+          className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 text-white font-bold text-sm shadow-sm"
           style={{ backgroundColor: team.teamColor || '#6B7280' }}
         >
           {team.shortName}
         </div>
-        <h4 className="font-semibold text-gray-900 text-sm mb-1">{team.name}</h4>
+        <h4 className="font-semibold text-gray-900 text-sm mb-1 leading-tight">{team.name}</h4>
         <p className="text-xs text-gray-600">{isHome ? 'Home' : 'Away'}</p>
         
         <div className="flex justify-center space-x-1 mt-2">
@@ -98,11 +102,11 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
         </div>
         <span className="text-xs text-gray-500">{usedCount}/{maxUses} used</span>
       </div>
-    </div>
+    </button>
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 border">
+    <div className="bg-white rounded-lg shadow-md p-4 border will-change-transform">
       <div className="text-center mb-4">
         <div className="text-sm text-gray-600 mb-1">
           {formatKickoffTime(fixture.kickoffTime)}

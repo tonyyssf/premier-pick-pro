@@ -45,7 +45,7 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto will-change-scroll">
       <div className="flex items-center gap-2 mb-4 text-sm text-gray-600">
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         <span>Live updates enabled</span>
@@ -54,12 +54,12 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-16">Rank</TableHead>
-            <TableHead>Player</TableHead>
-            <TableHead className="text-center">Points</TableHead>
-            <TableHead className="text-center">Correct</TableHead>
-            <TableHead className="text-center">Total</TableHead>
-            <TableHead className="text-center">Win Rate</TableHead>
+            <TableHead className="w-16 text-center">Rank</TableHead>
+            <TableHead className="min-w-[120px]">Player</TableHead>
+            <TableHead className="text-center min-w-[80px]">Points</TableHead>
+            <TableHead className="text-center min-w-[80px] hidden sm:table-cell">Correct</TableHead>
+            <TableHead className="text-center min-w-[80px] hidden sm:table-cell">Total</TableHead>
+            <TableHead className="text-center min-w-[80px] hidden md:table-cell">Win Rate</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,17 +73,17 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
             return (
               <TableRow
                 key={standing.id}
-                className={`transition-all duration-300 ${
+                className={`transition-all duration-300 min-h-[48px] ${
                   isCurrentUser ? 'bg-purple-50 border-l-4 border-plpe-purple animate-pulse' : 'hover:bg-gray-50'
                 }`}
               >
-                <TableCell>
-                  <div className="flex items-center justify-center">
+                <TableCell className="text-center py-3">
+                  <div className="flex items-center justify-center min-h-[24px]">
                     <RankIcon rank={rank} />
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="font-semibold text-gray-900">
+                <TableCell className="py-3">
+                  <div className="font-semibold text-gray-900 min-h-[24px] flex items-center">
                     {isCurrentUser ? (
                       <span className="flex items-center gap-2">
                         You
@@ -94,23 +94,23 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
-                  <div className="text-lg font-bold text-plpe-purple">
+                <TableCell className="text-center py-3">
+                  <div className="text-lg font-bold text-plpe-purple min-h-[24px] flex items-center justify-center">
                     {standing.total_points}
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
-                  <div className="font-semibold">
+                <TableCell className="text-center py-3 hidden sm:table-cell">
+                  <div className="font-semibold min-h-[24px] flex items-center justify-center">
                     {standing.correct_picks}
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
-                  <div className="font-semibold">
+                <TableCell className="text-center py-3 hidden sm:table-cell">
+                  <div className="font-semibold min-h-[24px] flex items-center justify-center">
                     {standing.total_picks}
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
-                  <div className="font-semibold text-gray-600">
+                <TableCell className="text-center py-3 hidden md:table-cell">
+                  <div className="font-semibold text-gray-600 min-h-[24px] flex items-center justify-center">
                     {winRate}%
                   </div>
                 </TableCell>
@@ -119,6 +119,29 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
           })}
         </TableBody>
       </Table>
+
+      {/* Mobile-friendly summary for hidden columns */}
+      <div className="sm:hidden mt-4 space-y-2">
+        {standings.slice(0, 3).map((standing) => {
+          const isCurrentUser = currentUserId && standing.user_id === currentUserId;
+          const winRate = standing.total_picks > 0 
+            ? ((standing.correct_picks / standing.total_picks) * 100).toFixed(1)
+            : '0.0';
+
+          if (!isCurrentUser) return null;
+
+          return (
+            <div key={standing.id} className="bg-purple-50 rounded-lg p-3 border-l-4 border-plpe-purple">
+              <div className="text-sm text-gray-600 mb-1">Your detailed stats:</div>
+              <div className="flex justify-between text-sm">
+                <span>Correct picks: <span className="font-semibold">{standing.correct_picks}</span></span>
+                <span>Total picks: <span className="font-semibold">{standing.total_picks}</span></span>
+                <span>Win rate: <span className="font-semibold">{winRate}%</span></span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
