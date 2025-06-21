@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Crown, Globe, Lock } from 'lucide-react';
 import { ManageLeagueDialog } from './ManageLeagueDialog';
+import { LeagueMembersList } from './LeagueMembersList';
 
 interface LeagueCardProps {
   league: {
@@ -71,6 +72,17 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({
             Code: <span className="font-mono font-semibold">{league.invite_code}</span>
           </div>
         </div>
+        
+        {/* Show members list only if user is a member or creator */}
+        {(league.is_member || league.is_creator) && (
+          <div className="mb-4">
+            <LeagueMembersList 
+              leagueId={league.id}
+              creatorId={league.creator_id}
+              memberCount={league.member_count || 0}
+            />
+          </div>
+        )}
         
         <div className="flex space-x-2">
           {!league.is_member && !league.is_creator && onJoin && (
