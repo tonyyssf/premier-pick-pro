@@ -2,17 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Plus, Copy, Share2, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { validateAndSanitizeLeague } from '@/utils/validation';
 import { leagueCreateLimiter, checkRateLimit } from '@/utils/rateLimiter';
 import { z } from 'zod';
+import { CreateLeagueForm } from '@/components/CreateLeagueForm';
+import { LeagueSuccessDialog } from '@/components/LeagueSuccessDialog';
+import { LeagueLimitWarning } from '@/components/LeagueLimitWarning';
 
 interface CreateLeagueDialogProps {
   onLeagueCreated?: () => void;
@@ -195,24 +194,6 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
     });
   };
 
-  const copyToClipboard = async (text: string, type: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast({
-        title: "Copied!",
-        description: `${type} copied to clipboard.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Copy Failed",
-        description: "Could not copy to clipboard.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const shareUrl = createdLeague ? `${window.location.origin}/leagues?join=${createdLeague.invite_code}` : '';
-
   const canCreateLeague = userLeagueCount < MAX_LEAGUES_PER_USER;
 
   if (createdLeague) {
@@ -224,75 +205,10 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
             <span>Create League</span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Share2 className="h-5 w-5 text-green-600" />
-              <span>League Created Successfully!</span>
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">{createdLeague.name}</h3>
-              <p className="text-sm text-gray-600">Share your league with friends</p>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium">League Code</Label>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Input
-                    value={createdLeague.invite_code}
-                    readOnly
-                    className="font-mono text-center text-lg font-bold"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(createdLeague.invite_code, 'League code')}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium">Share Link</Label>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Input
-                    value={shareUrl}
-                    readOnly
-                    className="text-sm"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(shareUrl, 'Share link')}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex space-x-2 pt-4">
-              <Button variant="outline" onClick={handleClose} className="flex-1">
-                Create Another
-              </Button>
-              <Button 
-                onClick={() => {
-                  window.open(`/leagues`, '_blank');
-                  handleClose();
-                }}
-                className="flex-1"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View League
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
+        <LeagueSuccessDialog
+          createdLeague={createdLeague}
+          onClose={handleClose}
+        />
       </Dialog>
     );
   }
@@ -316,86 +232,21 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
             <span className="text-gray-600">Checking league limit...</span>
           </div>
         ) : !canCreateLeague ? (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
-              <div>
-                <h3 className="font-medium text-red-900">League Limit Reached</h3>
-                <p className="text-sm text-red-700 mt-1">
-                  You've reached the maximum limit of {MAX_LEAGUES_PER_USER} leagues. Please delete an existing league to create a new one.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Close
-              </Button>
-            </div>
-          </div>
+          <LeagueLimitWarning
+            maxLeagues={MAX_LEAGUES_PER_USER}
+            onClose={() => setOpen(false)}
+          />
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="text-sm text-gray-600 mb-4">
-              You have created {userLeagueCount} of {MAX_LEAGUES_PER_USER} leagues allowed.
-            </div>
-
-            <div>
-              <Label htmlFor="name">League Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Enter league name"
-                required
-                className={errors.name ? 'border-red-500' : ''}
-              />
-              {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
-            </div>
-            
-            <div>
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Describe your league..."
-                rows={3}
-                className={errors.description ? 'border-red-500' : ''}
-              />
-              {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description}</p>}
-            </div>
-            
-            <div>
-              <Label htmlFor="maxMembers">Maximum Members</Label>
-              <Input
-                id="maxMembers"
-                type="number"
-                min="2"
-                max="500"
-                value={formData.maxMembers}
-                onChange={(e) => handleInputChange('maxMembers', parseInt(e.target.value))}
-                className={errors.maxMembers ? 'border-red-500' : ''}
-              />
-              {errors.maxMembers && <p className="text-sm text-red-500 mt-1">{errors.maxMembers}</p>}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isPublic"
-                checked={formData.isPublic}
-                onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
-              />
-              <Label htmlFor="isPublic">Make league public</Label>
-            </div>
-            
-            <div className="flex space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading} className="flex-1">
-                {isLoading ? 'Creating...' : 'Create League'}
-              </Button>
-            </div>
-          </form>
+          <CreateLeagueForm
+            formData={formData}
+            errors={errors}
+            isLoading={isLoading}
+            userLeagueCount={userLeagueCount}
+            maxLeagues={MAX_LEAGUES_PER_USER}
+            onInputChange={handleInputChange}
+            onSubmit={handleSubmit}
+            onCancel={() => setOpen(false)}
+          />
         )}
       </DialogContent>
     </Dialog>
