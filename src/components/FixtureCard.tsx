@@ -21,6 +21,7 @@ interface FixtureCardProps {
   maxUses: number;
   selectedTeam: string | null;
   onTeamSelect: (fixtureId: string, teamId: string) => void;
+  submitting?: boolean;
 }
 
 export const FixtureCard: React.FC<FixtureCardProps> = ({
@@ -28,13 +29,11 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
   homeTeamUsedCount,
   awayTeamUsedCount,
   maxUses,
-  selectedTeam,
-  onTeamSelect
+  onTeamSelect,
+  submitting = false
 }) => {
-  const isHomeTeamDisabled = homeTeamUsedCount >= maxUses;
-  const isAwayTeamDisabled = awayTeamUsedCount >= maxUses;
-  const isHomeTeamSelected = selectedTeam === fixture.homeTeam.id;
-  const isAwayTeamSelected = selectedTeam === fixture.awayTeam.id;
+  const isHomeTeamDisabled = homeTeamUsedCount >= maxUses || submitting;
+  const isAwayTeamDisabled = awayTeamUsedCount >= maxUses || submitting;
 
   const formatKickoffTime = (date: Date) => {
     return date.toLocaleString('en-GB', {
@@ -51,25 +50,29 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
     isHome: boolean;
     usedCount: number;
     isDisabled: boolean;
-    isSelected: boolean;
-  }> = ({ team, isHome, usedCount, isDisabled, isSelected }) => (
+  }> = ({ team, isHome, usedCount, isDisabled }) => (
     <div 
       className={`
         relative border-2 rounded-lg p-3 cursor-pointer transition-all duration-200 transform hover:scale-105 flex-1
-        ${isSelected 
-          ? 'border-plpe-purple bg-purple-50 shadow-lg' 
-          : isDisabled
-            ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
-            : 'border-gray-200 bg-white hover:border-plpe-purple hover:shadow-md'
+        ${isDisabled
+          ? 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
+          : 'border-gray-200 bg-white hover:border-plpe-purple hover:shadow-md'
         }
+        ${submitting ? 'animate-pulse' : ''}
       `}
       onClick={!isDisabled ? () => onTeamSelect(fixture.id, team.id) : undefined}
     >
-      {isDisabled && (
+      {usedCount >= maxUses && (
         <div className="absolute inset-0 bg-gray-900/20 rounded-lg flex items-center justify-center">
           <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
             Used {maxUses}/{maxUses}
           </span>
+        </div>
+      )}
+
+      {submitting && (
+        <div className="absolute inset-0 bg-plpe-purple/10 rounded-lg flex items-center justify-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-plpe-purple"></div>
         </div>
       )}
       
@@ -115,7 +118,6 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
           isHome={true}
           usedCount={homeTeamUsedCount}
           isDisabled={isHomeTeamDisabled}
-          isSelected={isHomeTeamSelected}
         />
         
         <div className="flex items-center justify-center px-2">
@@ -127,7 +129,6 @@ export const FixtureCard: React.FC<FixtureCardProps> = ({
           isHome={false}
           usedCount={awayTeamUsedCount}
           isDisabled={isAwayTeamDisabled}
-          isSelected={isAwayTeamSelected}
         />
       </div>
     </div>

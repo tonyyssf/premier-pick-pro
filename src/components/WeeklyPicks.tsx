@@ -3,12 +3,9 @@ import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
 import { GameweekHeader } from './GameweekHeader';
 import { PickConfirmationCard } from './PickConfirmationCard';
-import { PickSelectionCard } from './PickSelectionCard';
 import { usePicks } from '../contexts/PicksContext';
 
 export const WeeklyPicks: React.FC = () => {
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-  const [selectedFixture, setSelectedFixture] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [undoing, setUndoing] = useState(false);
   const { 
@@ -28,45 +25,18 @@ export const WeeklyPicks: React.FC = () => {
   const hasAlreadyPicked = currentGameweek ? hasPickForGameweek(currentGameweek.id) : false;
   const canUndo = canUndoPick();
 
-  const handleTeamSelect = (fixtureId: string, teamId: string) => {
-    setSelectedFixture(fixtureId);
-    setSelectedTeam(teamId);
-  };
-
-  const handleSubmitPick = async () => {
-    if (selectedFixture && selectedTeam) {
-      setSubmitting(true);
-      const success = await submitPick(selectedFixture, selectedTeam);
-      if (success) {
-        setSelectedTeam(null);
-        setSelectedFixture(null);
-      }
-      setSubmitting(false);
-    }
+  const handleTeamSelect = async (fixtureId: string, teamId: string) => {
+    if (submitting) return; // Prevent double submission
+    
+    setSubmitting(true);
+    await submitPick(fixtureId, teamId);
+    setSubmitting(false);
   };
 
   const handleUndoPick = async () => {
     setUndoing(true);
     await undoPick();
     setUndoing(false);
-  };
-
-  const handleCancel = () => {
-    setSelectedTeam(null);
-    setSelectedFixture(null);
-  };
-
-  const getSelectedTeamInfo = () => {
-    if (!selectedFixture || !selectedTeam) return null;
-    
-    const fixture = fixtures.find(f => f.id === selectedFixture);
-    if (!fixture) return null;
-    
-    const team = fixture.homeTeam.id === selectedTeam ? fixture.homeTeam : fixture.awayTeam;
-    const opponent = fixture.homeTeam.id === selectedTeam ? fixture.awayTeam : fixture.homeTeam;
-    const venue = fixture.homeTeam.id === selectedTeam ? 'Home' : 'Away';
-    
-    return { team, opponent, venue };
   };
 
   const getCurrentPickInfo = () => {
@@ -121,30 +91,20 @@ export const WeeklyPicks: React.FC = () => {
           gameweekNumber={currentGameweek.number}
         />
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {fixtures.map((fixture) => (
-              <FixtureCard
-                key={fixture.id}
-                fixture={fixture}
-                homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
-                awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
-                maxUses={2}
-                selectedTeam={selectedTeam}
-                onTeamSelect={handleTeamSelect}
-              />
-            ))}
-          </div>
-
-          <PickSelectionCard
-            selectedTeam={selectedTeam}
-            selectedFixture={selectedFixture}
-            teamInfo={getSelectedTeamInfo()}
-            submitting={submitting}
-            onSubmitPick={handleSubmitPick}
-            onCancel={handleCancel}
-          />
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {fixtures.map((fixture) => (
+            <FixtureCard
+              key={fixture.id}
+              fixture={fixture}
+              homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
+              awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
+              maxUses={2}
+              selectedTeam={null}
+              onTeamSelect={handleTeamSelect}
+              submitting={submitting}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
