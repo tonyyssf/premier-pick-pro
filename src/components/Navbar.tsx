@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { Settings, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -9,6 +9,7 @@ import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 
 export const Navbar: React.FC = () => {
   const { signOut, user } = useAuth();
+  const { isAdmin } = useAdmin();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -19,13 +20,17 @@ export const Navbar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navigationItems = [
+  // Filter navigation items based on admin status
+  const baseNavigationItems = [
     { to: "/how-to-play", label: "How to Play" },
     { to: "/", label: "My Picks" },
     { to: "/leagues", label: "Leagues" },
-    { to: "/leaderboards", label: "Leaderboards" },
-    { to: "/admin", label: "Admin" }
+    { to: "/leaderboards", label: "Leaderboards" }
   ];
+
+  const navigationItems = isAdmin 
+    ? [...baseNavigationItems, { to: "/admin", label: "Admin" }]
+    : baseNavigationItems;
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
