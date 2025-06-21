@@ -1,20 +1,14 @@
 
 import React from 'react';
-import { Trophy, Medal, Award, RefreshCw } from 'lucide-react';
+import { Trophy, Medal, Award } from 'lucide-react';
 import { usePicks } from '../contexts/PicksContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWeeklyStandings } from '../hooks/useRealtimeStandings';
-import { Button } from './ui/button';
 import { WeeklyStandingsTable } from './WeeklyStandingsTable';
 
 export const LeaderboardSection: React.FC = () => {
-  const { calculateScores, scoresLoading } = usePicks();
   const { user } = useAuth();
   const { userStandings, loading } = useWeeklyStandings();
-
-  const handleUpdateScores = async () => {
-    await calculateScores();
-  };
 
   const getCurrentUserStanding = () => {
     if (!user) return null;
@@ -31,6 +25,8 @@ export const LeaderboardSection: React.FC = () => {
     correct_picks: standing.correctPicks,
     total_picks: standing.totalPicks,
     current_rank: standing.currentRank,
+    username: standing.username,
+    name: standing.name,
   }));
 
   return (
@@ -39,15 +35,6 @@ export const LeaderboardSection: React.FC = () => {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Global Leaderboard</h2>
           <p className="text-xl text-gray-600 mb-6">See how you stack up against players worldwide</p>
-          
-          <Button
-            onClick={handleUpdateScores}
-            disabled={scoresLoading}
-            className="bg-plpe-purple hover:bg-purple-700"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${scoresLoading ? 'animate-spin' : ''}`} />
-            {scoresLoading ? 'Calculating...' : 'Update Scores'}
-          </Button>
         </div>
 
         {userStandings.length === 0 && !loading ? (
