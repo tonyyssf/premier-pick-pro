@@ -134,7 +134,7 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
                 <div className="flex items-center space-x-2">
                   <div className="flex-1">
                     <p className="text-sm font-medium">
-                      {member.profiles?.name || member.profiles?.username || 'Unknown User'}
+                      {member.profiles?.username || member.profiles?.name || 'Unknown User'}
                       {member.user_id === creatorId && (
                         <Badge variant="secondary" className="ml-2 text-xs">
                           <Crown className="h-3 w-3 mr-1" />
