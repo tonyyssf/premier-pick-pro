@@ -18,53 +18,126 @@ export const usePickShare = () => {
     setGenerating(true);
     
     try {
-      // Create a canvas for the share image
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      // Create a temporary div with the share template
+      const shareTemplate = document.createElement('div');
+      shareTemplate.innerHTML = `
+        <div style="
+          width: 800px;
+          height: 400px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          color: white;
+          font-family: Arial, sans-serif;
+          position: relative;
+          overflow: hidden;
+        ">
+          <!-- Background pattern -->
+          <div style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+              radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
+              radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 0%, transparent 50%);
+          "></div>
+          
+          <!-- Content -->
+          <div style="position: relative; z-index: 1; text-align: center;">
+            <h1 style="
+              font-size: 32px;
+              font-weight: bold;
+              margin: 0 0 20px 0;
+              text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            ">My Premier League Pick</h1>
+            
+            <div style="
+              background: rgba(255,255,255,0.15);
+              backdrop-filter: blur(10px);
+              border-radius: 16px;
+              padding: 30px;
+              margin: 20px 0;
+              border: 1px solid rgba(255,255,255,0.2);
+            ">
+              <div style="
+                font-size: 48px;
+                font-weight: bold;
+                margin-bottom: 10px;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              ">${pickData.teamName}</div>
+              
+              <div style="
+                font-size: 24px;
+                margin: 15px 0;
+                opacity: 0.9;
+              ">vs</div>
+              
+              <div style="
+                font-size: 36px;
+                font-weight: bold;
+                margin-bottom: 15px;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              ">${pickData.opponentName}</div>
+              
+              <div style="
+                font-size: 18px;
+                opacity: 0.8;
+                margin-bottom: 10px;
+              ">${pickData.venue}</div>
+              
+              <div style="
+                font-size: 16px;
+                opacity: 0.7;
+              ">${pickData.fixture.kickoffTime.toLocaleDateString('en-GB', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}</div>
+            </div>
+            
+            <div style="
+              font-size: 24px;
+              font-weight: bold;
+              margin: 25px 0 10px 0;
+              text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            ">Join me and make your picks! ⚽</div>
+            
+            <div style="
+              font-size: 18px;
+              opacity: 0.9;
+              font-weight: 500;
+            ">Premier League Picks Express</div>
+          </div>
+        </div>
+      `;
+
+      // Use html2canvas to capture the template
+      const html2canvas = (await import('html2canvas')).default;
       
-      if (!ctx) {
-        throw new Error('Could not get canvas context');
-      }
-
-      // Set canvas dimensions
-      canvas.width = 800;
-      canvas.height = 400;
-
-      // Background gradient
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, '#667eea');
-      gradient.addColorStop(1, '#764ba2');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Main text
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 32px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('My Premier League Pick:', canvas.width / 2, 80);
-
-      // Team names
-      ctx.font = 'bold 48px Arial';
-      ctx.fillText(`${pickData.teamName}`, canvas.width / 2, 160);
+      // Temporarily add to DOM for rendering
+      shareTemplate.style.position = 'absolute';
+      shareTemplate.style.left = '-9999px';
+      shareTemplate.style.top = '-9999px';
+      document.body.appendChild(shareTemplate);
       
-      ctx.font = '24px Arial';
-      ctx.fillText('vs', canvas.width / 2, 200);
+      const canvas = await html2canvas(shareTemplate.firstElementChild as HTMLElement, {
+        width: 800,
+        height: 400,
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null
+      });
       
-      ctx.font = 'bold 36px Arial';
-      ctx.fillText(`${pickData.opponentName}`, canvas.width / 2, 240);
-
-      // Venue info
-      ctx.font = '20px Arial';
-      ctx.fillText(`(${pickData.venue})`, canvas.width / 2, 270);
-
-      // Call to action
-      ctx.font = 'bold 24px Arial';
-      ctx.fillText('Join me and make your picks!', canvas.width / 2, 320);
+      // Remove from DOM
+      document.body.removeChild(shareTemplate);
       
-      ctx.font = '18px Arial';
-      ctx.fillText('Premier League Picks Express', canvas.width / 2, 350);
-
-      // Convert canvas to blob
+      // Convert to blob URL
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
           if (blob) {
@@ -89,7 +162,7 @@ export const usePickShare = () => {
   };
 
   const shareToSocial = async (imageUrl: string, pickData: SharePickData) => {
-    const shareText = `Just picked ${pickData.teamName} to beat ${pickData.opponentName}! Join me and make your Premier League picks! 🏈⚽`;
+    const shareText = `Just picked ${pickData.teamName} to beat ${pickData.opponentName}! Join me and make your Premier League picks! ⚽`;
     
     if (navigator.share) {
       try {
