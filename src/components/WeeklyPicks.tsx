@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
 import { GameweekHeader } from './GameweekHeader';
@@ -117,7 +118,7 @@ export const WeeklyPicks: React.FC = () => {
           canUndo={canUndo}
           undoing={undoing}
           onUndoPick={handleUndoPick}
-          gameweekNumber={currentGameweek.week}
+          gameweekNumber={currentGameweek.number}
         />
       ) : (
         <>
