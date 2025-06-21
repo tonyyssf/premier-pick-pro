@@ -473,6 +473,14 @@ export type Database = {
         Args: { gameweek_uuid: string }
         Returns: undefined
       }
+      check_extension_security: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          extension_name: string
+          schema_name: string
+          security_note: string
+        }[]
+      }
       check_gameweek_completion: {
         Args: { gameweek_uuid: string }
         Returns: boolean
