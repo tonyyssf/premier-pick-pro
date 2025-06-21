@@ -28,9 +28,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('Setting up auth state listener...');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id || 'no user');
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -38,13 +41,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        } else {
+          console.log('Initial session check:', session?.user?.id || 'no session');
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Failed to get initial session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      console.log('Cleaning up auth subscription...');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: UserMetadata) => {
@@ -76,16 +95,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
-    // Configure session persistence based on remember me option
-    const options = rememberMe ? {
-      // For remember me, we'll rely on Supabase's default persistent session
-      // which lasts longer and survives browser restarts
-    } : undefined;
-
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-      options
     });
 
     if (error) {
@@ -95,14 +107,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         variant: "destructive",
       });
     } else if (rememberMe) {
-      // Store a flag in localStorage to indicate extended session preference
       localStorage.setItem('plpe_remember_me', 'true');
       toast({
         title: "Signed In Successfully",
         description: "You'll stay signed in for an extended period.",
       });
     } else {
-      // Remove the remember me flag if not selected
       localStorage.removeItem('plpe_remember_me');
     }
 
@@ -110,15 +120,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signOut = async () => {
-    // Clear remember me preference on sign out
-    localStorage.removeItem('plpe_remember_me');
+    console.log('Attempting to sign out...');
+    console.log('Current session exists:', !!session);
+    console.log('Current user exists:', !!user);
     
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      // Clear remember me preference
+      localStorage.removeItem('plpe_remember_me');
+      
+      // Always attempt sign out, even if session seems missing
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Sign out error:', error);
+        
+        // If the error is about session missing, we might already be signed out
+        if (error.message.includes('session') || error.message.includes('Auth session missing')) {
+          console.log('Session already cleared, forcing local state reset...');
+          // Clear local state anyway
+          setSession(null);
+          setUser(null);
+          toast({
+            title: "Signed Out",
+            description: "You have been signed out.",
+          });
+        } else {
+          toast({
+            title: "Sign Out Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      } else {
+        console.log('Sign out successful');
+        toast({
+          title: "Signed Out",
+          description: "You have been signed out successfully.",
+        });
+      }
+    } catch (error: any) {
+      console.error('Unexpected sign out error:', error);
+      // Force clear local state on any error
+      setSession(null);
+      setUser(null);
       toast({
-        title: "Sign Out Failed",
-        description: error.message,
-        variant: "destructive",
+        title: "Signed Out",
+        description: "You have been signed out.",
       });
     }
   };

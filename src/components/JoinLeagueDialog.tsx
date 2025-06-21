@@ -67,35 +67,25 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
     setIsLoading(true);
 
     try {
-      console.log('=== SIMPLIFIED INVITE CODE SEARCH ===');
+      console.log('=== JOIN LEAGUE ATTEMPT ===');
+      console.log('User ID:', user.id);
       console.log('Search code:', trimmedCode);
       
-      // Get all leagues for debugging
-      const { data: allLeagues, error: allLeaguesError } = await supabase
+      // First, find the league with the invite code
+      const { data: leagues, error: searchError } = await supabase
         .from('leagues')
-        .select('id, name, max_members, invite_code, creator_id');
+        .select('id, name, max_members, invite_code, creator_id')
+        .eq('invite_code', trimmedCode);
 
-      if (allLeaguesError) {
-        console.error('Error fetching leagues:', allLeaguesError);
+      if (searchError) {
+        console.error('Error searching for league:', searchError);
         throw new Error('Failed to search for leagues');
       }
 
-      console.log('All leagues:', allLeagues?.map(l => ({ 
-        id: l.id, 
-        name: l.name, 
-        invite_code: l.invite_code 
-      })));
+      console.log('Search results:', leagues);
 
-      // Find league with matching invite code
-      const foundLeague = allLeagues?.find(league => 
-        league.invite_code === trimmedCode
-      );
-
-      console.log('Search result:', foundLeague);
-
-      if (!foundLeague) {
+      if (!leagues || leagues.length === 0) {
         console.log('No league found with code:', trimmedCode);
-        console.log('Available codes:', allLeagues?.map(l => l.invite_code));
         
         toast({
           title: "League Not Found",
@@ -104,6 +94,9 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
         });
         return;
       }
+
+      const foundLeague = leagues[0];
+      console.log('Found league:', foundLeague);
 
       // Check if user is already a member
       const { data: existingMembership, error: membershipError } = await supabase
@@ -177,6 +170,8 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
         return;
       }
 
+      console.log('Successfully joined league:', foundLeague.name);
+      
       toast({
         title: "Joined League!",
         description: `You've successfully joined "${foundLeague.name}".`,
