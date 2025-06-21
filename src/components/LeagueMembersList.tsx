@@ -49,7 +49,7 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
           id,
           user_id,
           joined_at,
-          profiles:user_id (
+          profiles!user_id (
             username,
             name,
             email
