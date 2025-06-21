@@ -15,7 +15,15 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import HowToPlay from "./pages/HowToPlay";
 
-const queryClient = new QueryClient();
+// Create QueryClient instance outside of component to avoid recreation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App: React.FC = () => {
   return (
