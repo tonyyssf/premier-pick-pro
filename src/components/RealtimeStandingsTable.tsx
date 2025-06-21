@@ -50,6 +50,21 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
     return standing.username || standing.name || `Player ${standing.user_id.slice(0, 8)}`;
   };
 
+  const renderStreakCircles = () => {
+    // For now, return 5 empty circles since users haven't made picks yet
+    return (
+      <div className="flex gap-1">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div
+            key={index}
+            className="w-3 h-3 rounded-full border border-gray-300 bg-white"
+            title="No pick yet"
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="overflow-x-auto will-change-scroll">
       <div className="flex items-center gap-2 mb-4 text-sm text-gray-600">
@@ -66,6 +81,7 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
             <TableHead className="text-center min-w-[80px] hidden sm:table-cell">Correct</TableHead>
             <TableHead className="text-center min-w-[80px] hidden sm:table-cell">Total</TableHead>
             <TableHead className="text-center min-w-[80px] hidden md:table-cell">Win Rate</TableHead>
+            <TableHead className="text-center min-w-[100px] hidden lg:table-cell">Last 5</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -125,6 +141,11 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
                     {winRate}%
                   </div>
                 </TableCell>
+                <TableCell className="text-center py-3 hidden lg:table-cell">
+                  <div className="min-h-[24px] flex items-center justify-center">
+                    {renderStreakCircles()}
+                  </div>
+                </TableCell>
               </TableRow>
             );
           })}
@@ -148,6 +169,10 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
                 <span>Correct picks: <span className="font-semibold">{standing.correct_picks}</span></span>
                 <span>Total picks: <span className="font-semibold">{standing.total_picks}</span></span>
                 <span>Win rate: <span className="font-semibold">{winRate}%</span></span>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm text-gray-600">Last 5:</span>
+                {renderStreakCircles()}
               </div>
             </div>
           );
