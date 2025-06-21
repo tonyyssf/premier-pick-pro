@@ -46,8 +46,7 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
     return <EmptyStandings />;
   }
 
-  const getDisplayName = (standing: Standing, isCurrentUser: boolean) => {
-    if (isCurrentUser) return 'You';
+  const getDisplayName = (standing: Standing) => {
     return standing.username || standing.name || `Player ${standing.user_id.slice(0, 8)}`;
   };
 
@@ -81,7 +80,9 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
               <TableRow
                 key={standing.id}
                 className={`transition-all duration-300 min-h-[48px] ${
-                  isCurrentUser ? 'bg-purple-50 border-l-4 border-plpe-purple animate-pulse' : 'hover:bg-gray-50'
+                  isCurrentUser 
+                    ? 'bg-purple-50 border-l-4 border-plpe-purple shadow-sm' 
+                    : 'hover:bg-gray-50'
                 }`}
               >
                 <TableCell className="text-center py-3">
@@ -92,13 +93,11 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
                 <TableCell className="py-3">
                   <div className="min-h-[24px] flex flex-col justify-center">
                     <div className="font-semibold text-gray-900 flex items-center gap-2">
-                      {isCurrentUser ? (
-                        <span className="flex items-center gap-2">
+                      {getDisplayName(standing)}
+                      {isCurrentUser && (
+                        <span className="text-xs bg-plpe-purple text-white px-2 py-1 rounded-full">
                           You
-                          <div className="w-2 h-2 bg-plpe-purple rounded-full animate-pulse"></div>
                         </span>
-                      ) : (
-                        getDisplayName(standing, false)
                       )}
                     </div>
                     {standing.total_picks === 0 && (
