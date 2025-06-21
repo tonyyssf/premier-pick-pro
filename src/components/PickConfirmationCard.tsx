@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CheckCircle, Undo } from 'lucide-react';
 import { Button } from './ui/button';
@@ -16,6 +15,7 @@ interface PickConfirmationCardProps {
   canUndo: boolean;
   undoing: boolean;
   onUndoPick: () => void;
+  gameweekNumber?: number;
 }
 
 export const PickConfirmationCard: React.FC<PickConfirmationCardProps> = ({
@@ -23,7 +23,8 @@ export const PickConfirmationCard: React.FC<PickConfirmationCardProps> = ({
   pickInfo,
   canUndo,
   undoing,
-  onUndoPick
+  onUndoPick,
+  gameweekNumber = 1
 }) => {
   return (
     <div className="space-y-6">
@@ -92,6 +93,7 @@ export const PickConfirmationCard: React.FC<PickConfirmationCardProps> = ({
           opponentName={pickInfo.opponent.name}
           venue={pickInfo.venue}
           fixture={pickInfo.fixture}
+          gameweekNumber={gameweekNumber}
         />
       )}
     </div>

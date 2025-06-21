@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Share, Download, Image as ImageIcon } from 'lucide-react';
+import React from 'react';
+import { Share, Copy } from 'lucide-react';
 import { Button } from './ui/button';
 import { usePickShare } from '@/hooks/usePickShare';
 import { Fixture } from '@/types/picks';
@@ -10,36 +10,27 @@ interface SharePickCardProps {
   opponentName: string;
   venue: string;
   fixture: Fixture;
+  gameweekNumber: number;
 }
 
 export const SharePickCard: React.FC<SharePickCardProps> = ({
   teamName,
   opponentName,
   venue,
-  fixture
+  fixture,
+  gameweekNumber
 }) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const { generating, generateShareImage, shareToSocial, downloadImage } = usePickShare();
+  const { generateShareText, shareToSocial, copyShareText } = usePickShare();
 
-  const handleGenerateImage = async () => {
-    const pickData = { teamName, opponentName, venue, fixture };
-    const url = await generateShareImage(pickData);
-    if (url) {
-      setImageUrl(url);
-    }
-  };
+  const pickData = { teamName, opponentName, venue, fixture, gameweekNumber };
+  const shareText = generateShareText(pickData);
 
   const handleShare = async () => {
-    if (imageUrl) {
-      const pickData = { teamName, opponentName, venue, fixture };
-      await shareToSocial(imageUrl, pickData);
-    }
+    await shareToSocial(pickData);
   };
 
-  const handleDownload = () => {
-    if (imageUrl) {
-      downloadImage(imageUrl);
-    }
+  const handleCopy = () => {
+    copyShareText(pickData);
   };
 
   return (
@@ -50,58 +41,33 @@ export const SharePickCard: React.FC<SharePickCardProps> = ({
       </div>
 
       <p className="text-gray-600 mb-4">
-        Generate a custom image to share your pick on social media and invite friends to join!
+        Share your pick on social media and invite friends to join!
       </p>
 
-      {!imageUrl ? (
+      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <p className="text-gray-800 font-medium text-center">
+          "{shareText}"
+        </p>
+      </div>
+      
+      <div className="flex space-x-3">
         <Button
-          onClick={handleGenerateImage}
-          disabled={generating}
-          className="w-full mb-4"
+          onClick={handleShare}
+          className="flex-1"
         >
-          <ImageIcon className="h-4 w-4 mr-2" />
-          {generating ? 'Generating Image...' : 'Generate Share Image'}
+          <Share className="h-4 w-4 mr-2" />
+          Share
         </Button>
-      ) : (
-        <div className="space-y-4">
-          <div className="border rounded-lg overflow-hidden">
-            <img 
-              src={imageUrl} 
-              alt="Share image" 
-              className="w-full h-auto"
-            />
-          </div>
-          
-          <div className="flex space-x-3">
-            <Button
-              onClick={handleShare}
-              className="flex-1"
-            >
-              <Share className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-            
-            <Button
-              onClick={handleDownload}
-              variant="outline"
-              className="flex-1"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          </div>
-
-          <Button
-            onClick={handleGenerateImage}
-            variant="ghost"
-            size="sm"
-            className="w-full"
-          >
-            <ImageIcon className="h-4 w-4 mr-2" />
-            Generate New Image
-          </Button>
-        </div>
-      )}
+        
+        <Button
+          onClick={handleCopy}
+          variant="outline"
+          className="flex-1"
+        >
+          <Copy className="h-4 w-4 mr-2" />
+          Copy Text
+        </Button>
+      </div>
     </div>
   );
 };
