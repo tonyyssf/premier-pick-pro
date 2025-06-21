@@ -469,6 +469,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      audit_extension_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          extension_name: string
+          schema_location: string
+          security_recommendation: string
+        }[]
+      }
       calculate_gameweek_scores: {
         Args: { gameweek_uuid: string }
         Returns: undefined
@@ -504,6 +512,15 @@ export type Database = {
       is_league_public: {
         Args: { _league_id: string }
         Returns: boolean
+      }
+      security_audit_log: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          function_name: string
+          schema_name: string
+          is_security_definer: boolean
+          search_path_set: boolean
+        }[]
       }
       update_all_scores: {
         Args: Record<PropertyKey, never>

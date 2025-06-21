@@ -1,3 +1,4 @@
+
 // Security event logging utility
 export interface SecurityEvent {
   type: 'auth_failure' | 'rate_limit_exceeded' | 'invalid_input' | 'unauthorized_access' | 'suspicious_activity';
@@ -58,6 +59,40 @@ class SecurityLogger {
   clearEvents(): void {
     this.events = [];
     localStorage.removeItem('security_logs');
+  }
+
+  // Get security events by type for analysis
+  getEventsByType(type: SecurityEvent['type']): SecurityEvent[] {
+    return this.events.filter(event => event.type === type);
+  }
+
+  // Get security events for a specific user
+  getEventsForUser(userId: string): SecurityEvent[] {
+    return this.events.filter(event => event.userId === userId);
+  }
+
+  // Get security summary for monitoring dashboard
+  getSecuritySummary(): {
+    totalEvents: number;
+    criticalEvents: number;
+    recentEvents: SecurityEvent[];
+    eventsByType: Record<string, number>;
+  } {
+    const recentEvents = this.events.slice(-10);
+    const criticalTypes = ['auth_failure', 'unauthorized_access', 'suspicious_activity'];
+    const criticalEvents = this.events.filter(event => criticalTypes.includes(event.type)).length;
+    
+    const eventsByType = this.events.reduce((acc, event) => {
+      acc[event.type] = (acc[event.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      totalEvents: this.events.length,
+      criticalEvents,
+      recentEvents,
+      eventsByType
+    };
   }
 }
 
