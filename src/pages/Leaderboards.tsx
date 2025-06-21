@@ -80,6 +80,8 @@ const Leaderboards = () => {
       );
 
       setLeaguesWithRanks(leaguesWithRankData);
+      // Expand all leagues by default
+      setExpandedLeagues(new Set(leaguesWithRankData.map(league => league.id)));
       console.log('Fetched leagues with ranks:', leaguesWithRankData);
     } catch (error: any) {
       console.error('Error fetching leagues with ranks:', error);
@@ -157,7 +159,7 @@ const Leaderboards = () => {
               ) : (
                 <div className="space-y-6">
                   {leaguesWithRanks.map((league) => (
-                    <Collapsible key={league.id}>
+                    <Collapsible key={league.id} open={expandedLeagues.has(league.id)}>
                       <Card className="hover:shadow-lg transition-shadow">
                         <CollapsibleTrigger 
                           className="w-full"
