@@ -21,6 +21,7 @@ export const Navbar: React.FC = () => {
 
   const navigationItems = [
     { to: "/", label: "My Picks" },
+    { to: "/how-to-play", label: "How to Play" },
     { to: "/leagues", label: "Leagues" },
     { to: "/leaderboards", label: "Leaderboards" },
     { to: "/admin", label: "Admin" }

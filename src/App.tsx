@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,6 +12,7 @@ import Leagues from "./pages/Leagues";
 import Leaderboards from "./pages/Leaderboards";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import HowToPlay from "./pages/HowToPlay";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +28,7 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/how-to-play" element={<HowToPlay />} />
                 <Route path="/leagues" element={<Leagues />} />
                 <Route path="/leaderboards" element={<Leaderboards />} />
                 <Route path="/admin" element={<Admin />} />
