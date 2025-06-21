@@ -6,8 +6,9 @@ import { AdminOnly } from '@/components/AdminOnly';
 import { AdminDataSync } from '@/components/AdminDataSync';
 import { AdminDataTable } from '@/components/AdminDataTable';
 import { SystemMonitoringDashboard } from '@/components/SystemMonitoringDashboard';
+import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Database, Activity } from 'lucide-react';
+import { Shield, Database, Activity, BarChart3 } from 'lucide-react';
 
 const Admin = () => {
   return (
@@ -26,7 +27,7 @@ const Admin = () => {
             </div>
 
             <Tabs defaultValue="data" className="space-y-8">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="data" className="flex items-center space-x-2">
                   <Database className="h-4 w-4" />
                   <span>Data Management</span>
@@ -34,6 +35,10 @@ const Admin = () => {
                 <TabsTrigger value="monitoring" className="flex items-center space-x-2">
                   <Activity className="h-4 w-4" />
                   <span>System Monitoring</span>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex items-center space-x-2">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>Analytics & Reports</span>
                 </TabsTrigger>
                 <TabsTrigger value="tables" className="flex items-center space-x-2">
                   <Shield className="h-4 w-4" />
@@ -47,6 +52,10 @@ const Admin = () => {
 
               <TabsContent value="monitoring" className="space-y-8">
                 <SystemMonitoringDashboard />
+              </TabsContent>
+
+              <TabsContent value="analytics" className="space-y-8">
+                <AnalyticsDashboard />
               </TabsContent>
 
               <TabsContent value="tables" className="space-y-8">
