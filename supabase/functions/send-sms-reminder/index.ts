@@ -14,6 +14,8 @@ interface SMSRequest {
   countryCode: string;
   gameweekNumber: number;
   deadlineTime: string;
+  reminderType?: string;
+  customMessage?: string;
 }
 
 serve(async (req) => {
@@ -41,15 +43,15 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { userId, gameweekId, phoneNumber, countryCode, gameweekNumber, deadlineTime }: SMSRequest = await req.json();
+    const { userId, gameweekId, phoneNumber, countryCode, gameweekNumber, deadlineTime, reminderType, customMessage }: SMSRequest = await req.json();
 
-    console.log(`Sending SMS to ${countryCode}${phoneNumber} for gameweek ${gameweekNumber}`);
+    console.log(`Sending ${reminderType || 'general'} SMS to ${countryCode}${phoneNumber} for gameweek ${gameweekNumber}`);
 
     // Format the full phone number
     const fullPhoneNumber = `${countryCode}${phoneNumber}`;
 
-    // Create the SMS message
-    const message = `🏈 Premier League Picks Reminder!\n\nGameweek ${gameweekNumber} deadline is approaching at ${deadlineTime}.\n\nDon't forget to make your picks! Visit the app to submit your selections.\n\nGood luck! ⚽`;
+    // Use custom message if provided, otherwise use default
+    const message = customMessage || `🏈 Premier League Picks Reminder!\n\nGameweek ${gameweekNumber} deadline is approaching at ${deadlineTime}.\n\nDon't forget to make your picks! Visit the app to submit your selections.\n\nGood luck! ⚽`;
 
     // Send SMS via Twilio
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
@@ -97,7 +99,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         messageId: twilioResult.sid,
-        message: 'SMS reminder sent successfully'
+        message: 'SMS reminder sent successfully',
+        reminderType: reminderType || 'general'
       }),
       { 
         status: 200, 

@@ -36,31 +36,64 @@ serve(async (req) => {
       );
     }
 
-    const now = new Date();
-    const deadline = new Date(currentGameweek.deadline);
-    const timeUntilDeadline = deadline.getTime() - now.getTime();
-    const hoursUntilDeadline = timeUntilDeadline / (1000 * 60 * 60);
+    // Get the first fixture kickoff time for this gameweek
+    const { data: firstFixture, error: fixtureError } = await supabase
+      .from('fixtures')
+      .select('kickoff_time')
+      .eq('gameweek_id', currentGameweek.id)
+      .order('kickoff_time', { ascending: true })
+      .limit(1)
+      .single();
 
-    console.log(`Current gameweek: ${currentGameweek.number}, deadline: ${deadline}, hours until: ${hoursUntilDeadline}`);
-
-    // Only send reminders if deadline is within 2-24 hours
-    if (hoursUntilDeadline < 2 || hoursUntilDeadline > 24) {
-      console.log(`Not sending reminders - deadline is ${hoursUntilDeadline} hours away`);
+    if (fixtureError || !firstFixture) {
+      console.log('No fixtures found for current gameweek:', fixtureError);
       return new Response(
-        JSON.stringify({ message: `Deadline is ${hoursUntilDeadline.toFixed(1)} hours away - no reminders sent` }),
+        JSON.stringify({ message: 'No fixtures found for current gameweek' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get all users who have SMS reminders enabled and haven't received a reminder for this gameweek
-    const { data: usersToRemind, error: usersError } = await supabase
+    const now = new Date();
+    const firstFixtureTime = new Date(firstFixture.kickoff_time);
+    const timeUntilFirstFixture = firstFixtureTime.getTime() - now.getTime();
+    const hoursUntilFirstFixture = timeUntilFirstFixture / (1000 * 60 * 60);
+
+    console.log(`Current gameweek: ${currentGameweek.number}, first fixture: ${firstFixtureTime}, hours until: ${hoursUntilFirstFixture}`);
+
+    // Check if first fixture has already started
+    if (hoursUntilFirstFixture <= 0) {
+      console.log('First fixture has already started - no reminders needed');
+      return new Response(
+        JSON.stringify({ message: 'First fixture has already started - no reminders needed' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Only send reminders if we're within the reminder windows (24 hours or 1 hour before first fixture)
+    const isOneDayWindow = hoursUntilFirstFixture <= 25 && hoursUntilFirstFixture > 23; // 1 day window (23-25 hours)
+    const isOneHourWindow = hoursUntilFirstFixture <= 1.5 && hoursUntilFirstFixture > 0.5; // 1 hour window (0.5-1.5 hours)
+
+    if (!isOneDayWindow && !isOneHourWindow) {
+      console.log(`Not in reminder window - first fixture is ${hoursUntilFirstFixture.toFixed(1)} hours away`);
+      return new Response(
+        JSON.stringify({ 
+          message: `Not in reminder window - first fixture is ${hoursUntilFirstFixture.toFixed(1)} hours away`,
+          reminderWindows: {
+            oneDayWindow: '23-25 hours before first fixture',
+            oneHourWindow: '0.5-1.5 hours before first fixture'
+          }
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const reminderType = isOneDayWindow ? 'one_day' : 'one_hour';
+    console.log(`In ${reminderType} reminder window`);
+
+    // Get all users who have SMS reminders enabled
+    const { data: usersWithSMS, error: usersError } = await supabase
       .from('profiles')
-      .select(`
-        id,
-        phone_number,
-        country_code,
-        sms_reminders_enabled
-      `)
+      .select('id, phone_number, country_code')
       .eq('sms_reminders_enabled', true)
       .not('phone_number', 'is', null)
       .not('phone_number', 'eq', '');
@@ -70,7 +103,7 @@ serve(async (req) => {
       throw usersError;
     }
 
-    if (!usersToRemind || usersToRemind.length === 0) {
+    if (!usersWithSMS || usersWithSMS.length === 0) {
       console.log('No users with SMS reminders enabled found');
       return new Response(
         JSON.stringify({ message: 'No users with SMS reminders enabled found' }),
@@ -78,32 +111,77 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Found ${usersToRemind.length} users with SMS reminders enabled`);
+    console.log(`Found ${usersWithSMS.length} users with SMS reminders enabled`);
 
-    // Filter out users who already received a reminder for this gameweek
+    // Get users who have already made picks for this gameweek
+    const { data: usersWithPicks, error: picksError } = await supabase
+      .from('user_picks')
+      .select('user_id')
+      .eq('gameweek_id', currentGameweek.id);
+
+    if (picksError) {
+      console.error('Error fetching user picks:', picksError);
+    }
+
+    const userIdsWithPicks = new Set(usersWithPicks?.map(pick => pick.user_id) || []);
+    
+    // Filter to only users who haven't made picks yet
+    const usersNeedingReminders = usersWithSMS.filter(user => !userIdsWithPicks.has(user.id));
+
+    console.log(`${usersNeedingReminders.length} users need reminders (${userIdsWithPicks.size} already made picks)`);
+
+    if (usersNeedingReminders.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          message: 'All users with SMS enabled have already made their picks for this gameweek',
+          totalUsersWithSMS: usersWithSMS.length,
+          usersWithPicks: userIdsWithPicks.size
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check which users already received reminders for this gameweek and reminder type
     const { data: alreadySent, error: sentError } = await supabase
       .from('sms_reminders')
-      .select('user_id')
+      .select('user_id, message_content')
       .eq('gameweek_id', currentGameweek.id);
 
     if (sentError) {
       console.error('Error checking sent reminders:', sentError);
     }
 
-    const sentUserIds = new Set(alreadySent?.map(r => r.user_id) || []);
-    const usersNeedingReminders = usersToRemind.filter(user => !sentUserIds.has(user.id));
+    // Filter out users who already received this type of reminder
+    const sentUserIds = new Set();
+    alreadySent?.forEach(reminder => {
+      // Check if this reminder was for the same time window based on message content
+      const isOneDayReminder = reminder.message_content.includes('1 day') || reminder.message_content.includes('24 hour');
+      const isOneHourReminder = reminder.message_content.includes('1 hour') || reminder.message_content.includes('soon');
+      
+      if ((reminderType === 'one_day' && isOneDayReminder) || 
+          (reminderType === 'one_hour' && isOneHourReminder)) {
+        sentUserIds.add(reminder.user_id);
+      }
+    });
 
-    console.log(`${usersNeedingReminders.length} users need reminders (${sentUserIds.size} already sent)`);
+    const finalUsersToRemind = usersNeedingReminders.filter(user => !sentUserIds.has(user.id));
 
-    if (usersNeedingReminders.length === 0) {
+    console.log(`${finalUsersToRemind.length} users need ${reminderType} reminders (${sentUserIds.size} already received this type)`);
+
+    if (finalUsersToRemind.length === 0) {
       return new Response(
-        JSON.stringify({ message: 'All eligible users have already received reminders for this gameweek' }),
+        JSON.stringify({ 
+          message: `All eligible users have already received ${reminderType} reminders for this gameweek`,
+          reminderType,
+          totalEligible: usersNeedingReminders.length,
+          alreadySent: sentUserIds.size
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Format deadline time for display
-    const deadlineFormatted = deadline.toLocaleString('en-US', {
+    // Format time for display
+    const timeFormatted = firstFixtureTime.toLocaleString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -116,9 +194,13 @@ serve(async (req) => {
     let errorCount = 0;
 
     // Send SMS reminders to each user
-    for (const user of usersNeedingReminders) {
+    for (const user of finalUsersToRemind) {
       try {
-        console.log(`Sending SMS reminder to user ${user.id} at ${user.country_code}${user.phone_number}`);
+        console.log(`Sending ${reminderType} SMS reminder to user ${user.id} at ${user.country_code}${user.phone_number}`);
+
+        // Create appropriate message based on reminder type
+        const urgencyText = reminderType === 'one_day' ? 'tomorrow' : 'soon';
+        const timeText = reminderType === 'one_day' ? `The first match starts ${timeFormatted}` : `The first match starts in about 1 hour at ${timeFormatted}`;
 
         // Call the send-sms-reminder function
         const { error: smsError } = await supabase.functions.invoke('send-sms-reminder', {
@@ -128,7 +210,9 @@ serve(async (req) => {
             phoneNumber: user.phone_number,
             countryCode: user.country_code || '+1',
             gameweekNumber: currentGameweek.number,
-            deadlineTime: deadlineFormatted
+            deadlineTime: timeFormatted,
+            reminderType,
+            customMessage: `🏈 Premier League Picks Reminder!\n\nGameweek ${currentGameweek.number} starts ${urgencyText}!\n\n${timeText}\n\nYou haven't made your pick yet - don't miss out! Visit the app to submit your selection.\n\nGood luck! ⚽`
           }
         });
 
@@ -150,11 +234,16 @@ serve(async (req) => {
     }
 
     const result = {
-      message: `SMS reminders processed for gameweek ${currentGameweek.number}`,
+      message: `${reminderType} SMS reminders processed for gameweek ${currentGameweek.number}`,
       gameweek: currentGameweek.number,
-      deadline: deadlineFormatted,
-      hoursUntilDeadline: Math.round(hoursUntilDeadline * 10) / 10,
-      totalEligible: usersNeedingReminders.length,
+      firstFixtureTime: timeFormatted,
+      hoursUntilFirstFixture: Math.round(hoursUntilFirstFixture * 10) / 10,
+      reminderType,
+      totalUsersWithSMS: usersWithSMS.length,
+      usersWithExistingPicks: userIdsWithPicks.size,
+      usersNeedingReminders: usersNeedingReminders.length,
+      usersAlreadySentThisType: sentUserIds.size,
+      finalUsersReminded: finalUsersToRemind.length,
       successCount,
       errorCount
     };
