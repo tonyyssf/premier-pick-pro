@@ -18,6 +18,8 @@ interface Standing {
   correct_picks: number;
   total_picks: number;
   current_rank: number | null;
+  username?: string;
+  name?: string;
 }
 
 interface StandingsTableProps {
@@ -32,6 +34,11 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
   if (standings.length === 0) {
     return <EmptyStandings />;
   }
+
+  const getDisplayName = (standing: Standing, isCurrentUser: boolean) => {
+    if (isCurrentUser) return 'You';
+    return standing.username || standing.name || `Player ${standing.user_id.slice(0, 8)}`;
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -66,7 +73,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
                 </TableCell>
                 <TableCell>
                   <div className="font-semibold text-gray-900">
-                    {isCurrentUser ? 'You' : `Player ${standing.user_id.slice(0, 8)}`}
+                    {getDisplayName(standing, isCurrentUser)}
                   </div>
                   {standing.total_picks === 0 && (
                     <div className="text-xs text-gray-500">No picks yet</div>

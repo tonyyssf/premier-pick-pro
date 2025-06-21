@@ -18,6 +18,8 @@ interface Standing {
   correct_picks: number;
   total_picks: number;
   current_rank: number | null;
+  username?: string;
+  name?: string;
 }
 
 interface RealtimeStandingsTableProps {
@@ -43,6 +45,11 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
   if (standings.length === 0) {
     return <EmptyStandings />;
   }
+
+  const getDisplayName = (standing: Standing, isCurrentUser: boolean) => {
+    if (isCurrentUser) return 'You';
+    return standing.username || standing.name || `Player ${standing.user_id.slice(0, 8)}`;
+  };
 
   return (
     <div className="overflow-x-auto will-change-scroll">
@@ -91,7 +98,7 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
                           <div className="w-2 h-2 bg-plpe-purple rounded-full animate-pulse"></div>
                         </span>
                       ) : (
-                        `Player ${standing.user_id.slice(0, 8)}`
+                        getDisplayName(standing, false)
                       )}
                     </div>
                     {standing.total_picks === 0 && (

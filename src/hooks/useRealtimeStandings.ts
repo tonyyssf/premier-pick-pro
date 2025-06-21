@@ -11,6 +11,8 @@ interface UserStanding {
   correctPicks: number;
   totalPicks: number;
   currentRank: number | null;
+  username?: string;
+  name?: string;
 }
 
 interface LeagueStanding {
@@ -21,6 +23,8 @@ interface LeagueStanding {
   total_picks: number;
   current_rank: number | null;
   league_id: string;
+  username?: string;
+  name?: string;
 }
 
 export const useRealtimeStandings = () => {
@@ -32,23 +36,44 @@ export const useRealtimeStandings = () => {
 
   const loadGlobalStandings = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: standingsData, error } = await supabase
         .from('user_standings')
-        .select('*')
+        .select(`
+          *,
+          profiles!inner(username, name)
+        `)
         .order('current_rank', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
 
-      const formattedStandings: UserStanding[] = data.map(standing => ({
+      const formattedStandings: UserStanding[] = standingsData.map(standing => ({
         id: standing.id,
         userId: standing.user_id,
         totalPoints: standing.total_points,
         correctPicks: standing.correct_picks,
         totalPicks: standing.total_picks,
         currentRank: standing.current_rank,
+        username: standing.profiles?.username,
+        name: standing.profiles?.name,
       }));
 
-      setUserStandings(formattedStandings);
+      // Sort alphabetically by username when points and correct picks are tied
+      const sortedStandings = formattedStandings.sort((a, b) => {
+        // First sort by points (descending)
+        if (a.totalPoints !== b.totalPoints) {
+          return b.totalPoints - a.totalPoints;
+        }
+        // Then by correct picks (descending)
+        if (a.correctPicks !== b.correctPicks) {
+          return b.correctPicks - a.correctPicks;
+        }
+        // Finally alphabetically by username
+        const usernameA = a.username || a.name || `Player ${a.userId.slice(0, 8)}`;
+        const usernameB = b.username || b.name || `Player ${b.userId.slice(0, 8)}`;
+        return usernameA.localeCompare(usernameB);
+      });
+
+      setUserStandings(sortedStandings);
     } catch (error: any) {
       console.error('Error loading global standings:', error);
       toast({
@@ -61,17 +86,48 @@ export const useRealtimeStandings = () => {
 
   const loadLeagueStandings = async (leagueId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: standingsData, error } = await supabase
         .from('league_standings')
-        .select('*')
+        .select(`
+          *,
+          profiles!inner(username, name)
+        `)
         .eq('league_id', leagueId)
         .order('current_rank', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
 
+      const formattedStandings: LeagueStanding[] = standingsData.map(standing => ({
+        id: standing.id,
+        user_id: standing.user_id,
+        total_points: standing.total_points,
+        correct_picks: standing.correct_picks,
+        total_picks: standing.total_picks,
+        current_rank: standing.current_rank,
+        league_id: standing.league_id,
+        username: standing.profiles?.username,
+        name: standing.profiles?.name,
+      }));
+
+      // Sort alphabetically by username when points and correct picks are tied
+      const sortedStandings = formattedStandings.sort((a, b) => {
+        // First sort by points (descending)
+        if (a.total_points !== b.total_points) {
+          return b.total_points - a.total_points;
+        }
+        // Then by correct picks (descending)
+        if (a.correct_picks !== b.correct_picks) {
+          return b.correct_picks - a.correct_picks;
+        }
+        // Finally alphabetically by username
+        const usernameA = a.username || a.name || `Player ${a.user_id.slice(0, 8)}`;
+        const usernameB = b.username || b.name || `Player ${b.user_id.slice(0, 8)}`;
+        return usernameA.localeCompare(usernameB);
+      });
+
       setLeagueStandings(prev => ({
         ...prev,
-        [leagueId]: data || []
+        [leagueId]: sortedStandings
       }));
     } catch (error: any) {
       console.error('Error loading league standings:', error);
@@ -107,35 +163,15 @@ export const useRealtimeStandings = () => {
         },
         (payload) => {
           console.log('Global standings update:', payload);
-          
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            const newStanding: UserStanding = {
-              id: payload.new.id,
-              userId: payload.new.user_id,
-              totalPoints: payload.new.total_points,
-              correctPicks: payload.new.correct_picks,
-              totalPicks: payload.new.total_picks,
-              currentRank: payload.new.current_rank,
-            };
+          // Reload standings to get updated profile data
+          loadGlobalStandings();
 
-            setUserStandings(prev => {
-              const existing = prev.find(s => s.id === newStanding.id);
-              if (existing) {
-                return prev.map(s => s.id === newStanding.id ? newStanding : s);
-              } else {
-                return [...prev, newStanding].sort((a, b) => (a.currentRank || 999) - (b.currentRank || 999));
-              }
+          // Show toast for current user's rank changes
+          if (payload.new && payload.new.user_id === user.id && payload.eventType === 'UPDATE') {
+            toast({
+              title: "Your Rank Updated!",
+              description: `You're now ranked #${payload.new.current_rank} with ${payload.new.total_points} points`,
             });
-
-            // Show toast for current user's rank changes
-            if (payload.new.user_id === user.id && payload.eventType === 'UPDATE') {
-              toast({
-                title: "Your Rank Updated!",
-                description: `You're now ranked #${payload.new.current_rank} with ${payload.new.total_points} points`,
-              });
-            }
-          } else if (payload.eventType === 'DELETE') {
-            setUserStandings(prev => prev.filter(s => s.id !== payload.old.id));
           }
         }
       )
@@ -154,31 +190,10 @@ export const useRealtimeStandings = () => {
         (payload) => {
           console.log('League standings update:', payload);
           
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          if (payload.new) {
             const leagueId = payload.new.league_id;
-            
-            setLeagueStandings(prev => {
-              const currentLeagueStandings = prev[leagueId] || [];
-              const existing = currentLeagueStandings.find(s => s.id === payload.new.id);
-              
-              let updatedStandings;
-              if (existing) {
-                updatedStandings = currentLeagueStandings.map(s => s.id === payload.new.id ? payload.new : s);
-              } else {
-                updatedStandings = [...currentLeagueStandings, payload.new];
-              }
-              
-              return {
-                ...prev,
-                [leagueId]: updatedStandings.sort((a, b) => (a.current_rank || 999) - (b.current_rank || 999))
-              };
-            });
-          } else if (payload.eventType === 'DELETE') {
-            const leagueId = payload.old.league_id;
-            setLeagueStandings(prev => ({
-              ...prev,
-              [leagueId]: (prev[leagueId] || []).filter(s => s.id !== payload.old.id)
-            }));
+            // Reload league standings to get updated profile data
+            loadLeagueStandings(leagueId);
           }
         }
       )
