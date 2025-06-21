@@ -39,45 +39,50 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
 
     setLoading(true);
     try {
-      // First get league members
-      const { data: leagueMembers, error: membersError } = await supabase
+      console.log('=== FETCHING LEAGUE MEMBERS ===');
+      console.log('League ID:', leagueId);
+      
+      // Fetch league members with their profiles using a join query
+      const { data: membersWithProfiles, error } = await supabase
         .from('league_members')
-        .select('id, user_id, joined_at')
+        .select(`
+          id,
+          user_id,
+          joined_at,
+          profiles:user_id (
+            username,
+            name,
+            email
+          )
+        `)
         .eq('league_id', leagueId)
         .order('joined_at', { ascending: true });
 
-      if (membersError) throw membersError;
+      console.log('Fetched members data:', membersWithProfiles);
+      console.log('Fetch error:', error);
 
-      if (!leagueMembers || leagueMembers.length === 0) {
+      if (error) throw error;
+
+      if (!membersWithProfiles || membersWithProfiles.length === 0) {
+        console.log('No members found for league:', leagueId);
         setMembers([]);
         return;
       }
 
-      // Get user IDs to fetch profiles
-      const userIds = leagueMembers.map(member => member.user_id);
+      // Transform the data to match our interface
+      const transformedMembers = membersWithProfiles.map(member => ({
+        id: member.id,
+        user_id: member.user_id,
+        joined_at: member.joined_at,
+        profiles: member.profiles ? {
+          username: member.profiles.username,
+          name: member.profiles.name,
+          email: member.profiles.email
+        } : null
+      }));
 
-      // Fetch profiles for these users
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, name, email')
-        .in('id', userIds);
-
-      if (profilesError) throw profilesError;
-
-      // Combine the data
-      const membersWithProfiles = leagueMembers.map(member => {
-        const profile = profiles?.find(p => p.id === member.user_id);
-        return {
-          ...member,
-          profiles: profile ? {
-            username: profile.username,
-            name: profile.name,
-            email: profile.email
-          } : null
-        };
-      });
-
-      setMembers(membersWithProfiles);
+      console.log('Transformed members:', transformedMembers);
+      setMembers(transformedMembers);
     } catch (error: any) {
       console.error('Error fetching members:', error);
       toast({
@@ -133,7 +138,7 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
               <div key={member.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                 <div className="flex items-center space-x-2">
                   <div className="flex-1">
-                    <p className="text-sm font-medium">
+                    <div className="text-sm font-medium">
                       {member.profiles?.username || member.profiles?.name || 'Unknown User'}
                       {member.user_id === creatorId && (
                         <Badge variant="secondary" className="ml-2 text-xs">
@@ -141,7 +146,7 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
                           Creator
                         </Badge>
                       )}
-                    </p>
+                    </div>
                     <p className="text-xs text-gray-500">
                       Joined: {new Date(member.joined_at).toLocaleDateString()}
                     </p>
