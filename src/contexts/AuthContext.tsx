@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 interface UserMetadata {
   username?: string;
   name?: string;
+  phone_number?: string;
 }
 
 interface AuthContextType {

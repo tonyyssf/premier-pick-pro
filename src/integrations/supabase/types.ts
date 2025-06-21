@@ -252,30 +252,80 @@ export type Database = {
       }
       profiles: {
         Row: {
+          country_code: string | null
           created_at: string
           email: string | null
           id: string
           name: string | null
+          phone_number: string | null
+          sms_reminders_enabled: boolean | null
           updated_at: string
           username: string | null
         }
         Insert: {
+          country_code?: string | null
           created_at?: string
           email?: string | null
           id: string
           name?: string | null
+          phone_number?: string | null
+          sms_reminders_enabled?: boolean | null
           updated_at?: string
           username?: string | null
         }
         Update: {
+          country_code?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name?: string | null
+          phone_number?: string | null
+          sms_reminders_enabled?: boolean | null
           updated_at?: string
           username?: string | null
         }
         Relationships: []
+      }
+      sms_reminders: {
+        Row: {
+          gameweek_id: string
+          id: string
+          message_content: string
+          phone_number: string
+          provider_message_id: string | null
+          sent_at: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          gameweek_id: string
+          id?: string
+          message_content: string
+          phone_number: string
+          provider_message_id?: string | null
+          sent_at?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          gameweek_id?: string
+          id?: string
+          message_content?: string
+          phone_number?: string
+          provider_message_id?: string | null
+          sent_at?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_reminders_gameweek_id_fkey"
+            columns: ["gameweek_id"]
+            isOneToOne: false
+            referencedRelation: "gameweeks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teams: {
         Row: {
