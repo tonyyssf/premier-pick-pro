@@ -1,19 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { StandingsTable } from './StandingsTable';
+import { useRealtimeStandings } from '@/hooks/useRealtimeStandings';
+import { RealtimeStandingsTable } from './RealtimeStandingsTable';
 import { LoadingSpinner } from './LoadingSpinner';
-
-interface LeagueStanding {
-  id: string;
-  user_id: string;
-  total_points: number;
-  correct_picks: number;
-  total_picks: number;
-  current_rank: number | null;
-}
 
 interface LeagueLeaderboardProps {
   leagueId: string;
@@ -24,53 +14,30 @@ export const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
   leagueId, 
   leagueName 
 }) => {
-  const [leagueStandings, setLeagueStandings] = useState<LeagueStanding[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { leagueStandings, loading, loadLeagueStandings } = useRealtimeStandings();
 
-  const loadLeagueStandings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('league_standings')
-        .select('*')
-        .eq('league_id', leagueId)
-        .order('current_rank', { ascending: true, nullsFirst: false });
-
-      if (error) throw error;
-      setLeagueStandings(data || []);
-    } catch (error: any) {
-      console.error('Error loading league standings:', error);
-      toast({
-        title: "Error Loading League Standings",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
+  const currentLeagueStandings = leagueStandings[leagueId] || [];
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await loadLeagueStandings();
-      setLoading(false);
-    };
-
-    loadData();
+    loadLeagueStandings(leagueId);
   }, [leagueId]);
 
-  if (loading) {
-    return <LoadingSpinner message="Loading leaderboard..." />;
+  if (loading && currentLeagueStandings.length === 0) {
+    return <LoadingSpinner message="Loading live leaderboard..." />;
   }
 
   return (
     <div className="bg-gray-50 rounded-lg p-4">
-      <h4 className="text-lg font-semibold text-gray-900 mb-4">
+      <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
         {leagueName} Standings
+        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+        <span className="text-sm font-normal text-gray-600">Live</span>
       </h4>
-      <StandingsTable 
-        standings={leagueStandings} 
-        currentUserId={user?.id} 
+      <RealtimeStandingsTable 
+        standings={currentLeagueStandings} 
+        currentUserId={user?.id}
+        isLoading={loading && currentLeagueStandings.length === 0}
       />
     </div>
   );

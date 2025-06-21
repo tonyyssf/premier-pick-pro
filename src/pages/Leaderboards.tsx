@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -94,6 +95,41 @@ const Leaderboards = () => {
 
   useEffect(() => {
     fetchLeaguesWithRanks();
+
+    // Set up realtime subscription for league standings to update user ranks
+    const channel = supabase
+      .channel('user-league-standings')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'league_standings',
+          filter: `user_id=eq.${user?.id}`
+        },
+        (payload) => {
+          console.log('User league rank updated:', payload);
+          
+          setLeaguesWithRanks(prev => 
+            prev.map(league => 
+              league.id === payload.new.league_id
+                ? { ...league, user_rank: payload.new.current_rank }
+                : league
+            )
+          );
+
+          // Show toast for rank changes
+          toast({
+            title: "League Rank Updated!",
+            description: `Your rank in ${leaguesWithRanks.find(l => l.id === payload.new.league_id)?.name} changed to #${payload.new.current_rank}`,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const getRankIcon = (rank: number | null) => {
@@ -128,9 +164,13 @@ const Leaderboards = () => {
       <Layout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Leaderboards</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              Leaderboards
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-lg font-normal text-gray-600">Live</span>
+            </h1>
             <p className="text-gray-600 mb-6">
-              View global rankings and your performance in different leagues.
+              View global rankings and your performance in different leagues with live updates.
             </p>
           </div>
 
@@ -160,7 +200,10 @@ const Leaderboards = () => {
                           <CardHeader className="bg-plpe-gradient text-white">
                             <div className="flex items-center justify-between">
                               <div className="text-left">
-                                <CardTitle className="text-lg">{league.name}</CardTitle>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                  {league.name}
+                                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                </CardTitle>
                                 {league.description && (
                                   <p className="text-sm text-white/80 mt-1">{league.description}</p>
                                 )}

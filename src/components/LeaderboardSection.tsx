@@ -3,32 +3,14 @@ import React from 'react';
 import { Trophy, Medal, Award, RefreshCw } from 'lucide-react';
 import { usePicks } from '../contexts/PicksContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeStandings } from '../hooks/useRealtimeStandings';
 import { Button } from './ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from './ui/table';
+import { RealtimeStandingsTable } from './RealtimeStandingsTable';
 
 export const LeaderboardSection: React.FC = () => {
-  const { userStandings, calculateScores, scoresLoading } = usePicks();
+  const { calculateScores, scoresLoading } = usePicks();
   const { user } = useAuth();
-
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Trophy className="h-6 w-6 text-yellow-500" />;
-      case 2:
-        return <Medal className="h-6 w-6 text-gray-400" />;
-      case 3:
-        return <Award className="h-6 w-6 text-amber-600" />;
-      default:
-        return <span className="text-lg font-bold text-gray-600">{rank}</span>;
-    }
-  };
+  const { userStandings, loading } = useRealtimeStandings();
 
   const handleUpdateScores = async () => {
     await calculateScores();
@@ -40,6 +22,16 @@ export const LeaderboardSection: React.FC = () => {
   };
 
   const currentUserStanding = getCurrentUserStanding();
+
+  // Convert to the format expected by RealtimeStandingsTable
+  const formattedStandings = userStandings.map(standing => ({
+    id: standing.id,
+    user_id: standing.userId,
+    total_points: standing.totalPoints,
+    correct_picks: standing.correctPicks,
+    total_picks: standing.totalPicks,
+    current_rank: standing.currentRank,
+  }));
 
   return (
     <div className="bg-gray-50 py-16">
@@ -58,7 +50,7 @@ export const LeaderboardSection: React.FC = () => {
           </Button>
         </div>
 
-        {userStandings.length === 0 ? (
+        {userStandings.length === 0 && !loading ? (
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Standings Yet</h3>
             <p className="text-gray-600">
@@ -68,69 +60,19 @@ export const LeaderboardSection: React.FC = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="bg-plpe-gradient px-6 py-4">
-              <h3 className="text-xl font-semibold text-white">Top Players</h3>
+              <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                Top Players
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <span className="text-sm font-normal">Live</span>
+              </h3>
             </div>
             
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">Rank</TableHead>
-                    <TableHead>Player</TableHead>
-                    <TableHead className="text-center">Points</TableHead>
-                    <TableHead className="text-center">Correct Picks</TableHead>
-                    <TableHead className="text-center">Total Picks</TableHead>
-                    <TableHead className="text-center">Win Rate</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {userStandings.slice(0, 10).map((standing, index) => {
-                    const rank = standing.currentRank || index + 1;
-                    const isCurrentUser = user && standing.userId === user.id;
-                    const winRate = standing.totalPicks > 0 
-                      ? ((standing.correctPicks / standing.totalPicks) * 100).toFixed(1)
-                      : '0.0';
-
-                    return (
-                      <TableRow
-                        key={standing.id}
-                        className={isCurrentUser ? 'bg-purple-50 border-l-4 border-plpe-purple' : ''}
-                      >
-                        <TableCell>
-                          <div className="flex items-center justify-center">
-                            {getRankIcon(rank)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-semibold text-gray-900">
-                            {isCurrentUser ? 'You' : `Player ${standing.userId.slice(0, 8)}`}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="text-2xl font-bold text-plpe-purple">
-                            {standing.totalPoints}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="font-semibold">
-                            {standing.correctPicks}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="font-semibold">
-                            {standing.totalPicks}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="font-semibold text-gray-600">
-                            {winRate}%
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+            <div className="p-6">
+              <RealtimeStandingsTable 
+                standings={formattedStandings.slice(0, 10)} 
+                currentUserId={user?.id}
+                isLoading={loading}
+              />
             </div>
 
             {currentUserStanding && currentUserStanding.currentRank && currentUserStanding.currentRank > 10 && (
@@ -138,6 +80,7 @@ export const LeaderboardSection: React.FC = () => {
                 <div className="text-center text-gray-600">
                   <span className="font-semibold">Your Position: </span>
                   #{currentUserStanding.currentRank} with {currentUserStanding.totalPoints} points
+                  <div className="w-2 h-2 bg-plpe-purple rounded-full animate-pulse inline-block ml-2"></div>
                 </div>
               </div>
             )}
