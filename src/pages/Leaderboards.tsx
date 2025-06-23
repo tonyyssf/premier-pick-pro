@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { LeagueLeaderboard } from '@/components/LeagueLeaderboard';
 import { LeaderboardSection } from '@/components/LeaderboardSection';
+import { AdBanner } from '@/components/AdBanner';
 import {
   Collapsible,
   CollapsibleContent,
