@@ -2,21 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Medal, Award, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { LeagueLeaderboard } from '@/components/LeagueLeaderboard';
-import { LeaderboardSection } from '@/components/LeaderboardSection';
-import { AdBanner } from '@/components/AdBanner';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { LeaderboardHeader } from '@/components/LeaderboardHeader';
+import { LeaderboardTabs } from '@/components/LeaderboardTabs';
 
 interface LeagueWithRank {
   id: string;
@@ -101,21 +91,6 @@ const Leaderboards = () => {
     // No real-time subscriptions for weekly updates
   }, [user]);
 
-  const getRankIcon = (rank: number | null) => {
-    if (!rank) return <span className="text-lg font-bold text-gray-400">-</span>;
-    
-    switch (rank) {
-      case 1:
-        return <Trophy className="h-6 w-6 text-yellow-500" />;
-      case 2:
-        return <Medal className="h-6 w-6 text-gray-400" />;
-      case 3:
-        return <Award className="h-6 w-6 text-amber-600" />;
-      default:
-        return <span className="text-lg font-bold text-gray-600">#{rank}</span>;
-    }
-  };
-
   const toggleLeagueExpansion = (leagueId: string) => {
     setExpandedLeagues(prev => {
       const newSet = new Set(prev);
@@ -132,119 +107,13 @@ const Leaderboards = () => {
     <ProtectedRoute>
       <Layout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              Leaderboards
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-lg font-normal text-gray-600">Weekly Updates</span>
-            </h1>
-            <p className="text-gray-600 mb-6">
-              View global rankings and your performance in different leagues. Standings update weekly after gameweeks end.
-            </p>
-          </div>
-
-          <Tabs defaultValue="leagues" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="leagues">My League Rankings</TabsTrigger>
-              <TabsTrigger value="global">Global Leaderboard</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="leagues" className="mt-6">
-              {isLoading ? (
-                <LoadingSpinner message="Loading your league rankings..." />
-              ) : leaguesWithRanks.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-600 mb-4">You're not a member of any leagues yet.</p>
-                  <p className="text-sm text-gray-500">Create or join a league to see your rankings!</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {leaguesWithRanks.map((league, index) => (
-                    <div key={league.id}>
-                      <Collapsible open={expandedLeagues.has(league.id)}>
-                        <Card className="hover:shadow-lg transition-shadow">
-                          <CollapsibleTrigger 
-                            className="w-full"
-                            onClick={() => toggleLeagueExpansion(league.id)}
-                          >
-                            <CardHeader className="bg-plpe-gradient text-white">
-                              <div className="flex items-center justify-between">
-                                <div className="text-left">
-                                  <CardTitle className="text-lg flex items-center gap-2">
-                                    {league.name}
-                                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                                  </CardTitle>
-                                  {league.description && (
-                                    <p className="text-sm text-white/80 mt-1">{league.description}</p>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <div className="text-right">
-                                    <p className="text-sm text-white/80">Your Rank</p>
-                                    <div className="flex items-center justify-end gap-2">
-                                      {getRankIcon(league.user_rank)}
-                                      {league.user_rank && (
-                                        <span className="text-sm text-white/70">
-                                          of {league.member_count}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  {expandedLeagues.has(league.id) ? (
-                                    <ChevronUp className="h-5 w-5 text-white" />
-                                  ) : (
-                                    <ChevronDown className="h-5 w-5 text-white" />
-                                  )}
-                                </div>
-                              </div>
-                            </CardHeader>
-                          </CollapsibleTrigger>
-                          
-                          <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="text-right">
-                                <p className="text-sm text-gray-600 mb-1">Members</p>
-                                <p className="text-lg font-semibold text-gray-900">
-                                  {league.member_count}
-                                </p>
-                              </div>
-                              {!league.user_rank && (
-                                <div className="flex-1 ml-4">
-                                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <p className="text-sm text-yellow-800">
-                                      No ranking yet - start making picks to see your position!
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            <CollapsibleContent className="mt-6">
-                              <LeagueLeaderboard 
-                                leagueId={league.id} 
-                                leagueName={league.name}
-                              />
-                            </CollapsibleContent>
-                          </CardContent>
-                        </Card>
-                      </Collapsible>
-                      
-                      {/* Insert ad after every 2 leagues */}
-                      {(index + 1) % 2 === 0 && index < leaguesWithRanks.length - 1 && (
-                        <div className="my-8">
-                          <AdBanner position="top" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="global" className="mt-6">
-              <LeaderboardSection />
-            </TabsContent>
-          </Tabs>
+          <LeaderboardHeader />
+          <LeaderboardTabs
+            leaguesWithRanks={leaguesWithRanks}
+            isLoading={isLoading}
+            expandedLeagues={expandedLeagues}
+            onToggleExpansion={toggleLeagueExpansion}
+          />
         </div>
       </Layout>
     </ProtectedRoute>
