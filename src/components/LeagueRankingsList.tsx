@@ -2,7 +2,6 @@
 import React from 'react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { LeagueRankingCard } from '@/components/LeagueRankingCard';
-import { AdBanner } from '@/components/AdBanner';
 
 interface LeagueWithRank {
   id: string;
@@ -40,21 +39,13 @@ export const LeagueRankingsList: React.FC<LeagueRankingsListProps> = ({
 
   return (
     <div className="space-y-6">
-      {leaguesWithRanks.map((league, index) => (
-        <div key={league.id}>
-          <LeagueRankingCard
-            league={league}
-            isExpanded={expandedLeagues.has(league.id)}
-            onToggleExpansion={onToggleExpansion}
-          />
-          
-          {/* Insert ad after every 2 leagues */}
-          {(index + 1) % 2 === 0 && index < leaguesWithRanks.length - 1 && (
-            <div className="my-8">
-              <AdBanner position="top" />
-            </div>
-          )}
-        </div>
+      {leaguesWithRanks.map((league) => (
+        <LeagueRankingCard
+          key={league.id}
+          league={league}
+          isExpanded={expandedLeagues.has(league.id)}
+          onToggleExpansion={onToggleExpansion}
+        />
       ))}
     </div>
   );
