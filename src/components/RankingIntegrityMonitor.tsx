@@ -3,11 +3,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, RefreshCw, CheckCircle } from 'lucide-react';
+import { AlertTriangle, RefreshCw, CheckCircle, Bug } from 'lucide-react';
 import { useRankingIntegrity } from '@/hooks/useRankingIntegrity';
 
 export const RankingIntegrityMonitor: React.FC = () => {
-  const { issues, isChecking, checkRankingIntegrity, refreshAllRankings } = useRankingIntegrity();
+  const { issues, isChecking, checkRankingIntegrity, refreshAllRankings, debugRankingData } = useRankingIntegrity();
 
   return (
     <Card>
@@ -18,7 +18,7 @@ export const RankingIntegrityMonitor: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             onClick={checkRankingIntegrity}
             disabled={isChecking}
@@ -35,6 +35,14 @@ export const RankingIntegrityMonitor: React.FC = () => {
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh All Rankings
+          </Button>
+          <Button
+            onClick={debugRankingData}
+            variant="secondary"
+            size="sm"
+          >
+            <Bug className="h-4 w-4 mr-2" />
+            Debug Data
           </Button>
         </div>
 
