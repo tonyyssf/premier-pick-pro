@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,34 +48,6 @@ export const useWeeklyStandings = () => {
 
       console.log('Raw global standings data:', standingsData);
 
-      // More detailed duplicate detection
-      const userIdCounts = new Map();
-      standingsData.forEach(standing => {
-        const count = userIdCounts.get(standing.user_id) || 0;
-        userIdCounts.set(standing.user_id, count + 1);
-      });
-
-      const duplicateUsers = Array.from(userIdCounts.entries()).filter(([_, count]) => count > 1);
-      
-      if (duplicateUsers.length > 0) {
-        console.error('Duplicate user entries found in global standings!', {
-          totalEntries: standingsData.length,
-          duplicateUsers: duplicateUsers.map(([userId, count]) => ({ userId, count }))
-        });
-        
-        // Don't show the toast error if there are no actual duplicates visible to the user
-        // Instead, let's check if this is a temporary state during updates
-        const uniqueStandings = standingsData.filter((standing, index, arr) => 
-          arr.findIndex(s => s.user_id === standing.user_id) === index
-        );
-        
-        if (standingsData.length !== uniqueStandings.length) {
-          console.log(`Filtering out ${standingsData.length - uniqueStandings.length} duplicate entries client-side`);
-        }
-      } else {
-        console.log('No duplicate entries found in global standings');
-      }
-
       // Get all unique user IDs
       const uniqueUserIds = [...new Set(standingsData.map(s => s.user_id))];
 
@@ -91,16 +62,7 @@ export const useWeeklyStandings = () => {
       // Create a map of user profiles for quick lookup
       const profilesMap = new Map(profilesData.map(profile => [profile.id, profile]));
 
-      // Filter out duplicates by keeping only the first occurrence of each user_id
-      const deduplicatedStandings = standingsData.filter((standing, index, arr) => 
-        arr.findIndex(s => s.user_id === standing.user_id) === index
-      );
-
-      if (standingsData.length !== deduplicatedStandings.length) {
-        console.log(`Client-side deduplication: ${standingsData.length} -> ${deduplicatedStandings.length} entries`);
-      }
-
-      const formattedStandings: UserStanding[] = deduplicatedStandings.map(standing => {
+      const formattedStandings: UserStanding[] = standingsData.map(standing => {
         const profile = profilesMap.get(standing.user_id);
         return {
           id: standing.id,
@@ -122,19 +84,6 @@ export const useWeeklyStandings = () => {
         if (b.currentRank === null) return -1;
         return a.currentRank - b.currentRank;
       });
-
-      // Check if ranks are sequential starting from 1
-      const hasProperRanking = sortedStandings.every((standing, index) => 
-        standing.currentRank === index + 1
-      );
-
-      if (!hasProperRanking && sortedStandings.length > 0) {
-        console.warn('Rankings are not sequential starting from 1:', 
-          sortedStandings.map(s => ({ userId: s.userId, rank: s.currentRank }))
-        );
-      } else {
-        console.log('Rankings are properly sequential from 1 to', sortedStandings.length);
-      }
 
       console.log('Final formatted global standings:', sortedStandings);
       setUserStandings(sortedStandings);
