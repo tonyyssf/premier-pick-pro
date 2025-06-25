@@ -30,10 +30,11 @@ export const useScoresAndStandings = (user: any) => {
         setGameweekScores(formattedScores);
       }
 
-      // Load user standings
+      // Load user standings from the unified standings table (global standings only)
       const { data: standingsData, error: standingsError } = await supabase
-        .from('user_standings')
+        .from('standings')
         .select('*')
+        .is('league_id', null)
         .order('current_rank', { ascending: true, nullsFirst: false });
 
       if (standingsError) {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,10 +36,11 @@ export const useWeeklyStandings = () => {
 
   const loadGlobalStandings = async () => {
     try {
-      // Get the standings data
+      // Get the global standings data (where league_id is NULL)
       const { data: standingsData, error: standingsError } = await supabase
-        .from('user_standings')
+        .from('standings')
         .select('*')
+        .is('league_id', null)
         .order('current_rank', { ascending: true, nullsFirst: false });
 
       if (standingsError) throw standingsError;
@@ -100,9 +102,9 @@ export const useWeeklyStandings = () => {
 
   const loadLeagueStandings = async (leagueId: string) => {
     try {
-      // Get the league standings data
+      // Get the league standings data (where league_id matches)
       const { data: standingsData, error: standingsError } = await supabase
-        .from('league_standings')
+        .from('standings')
         .select('*')
         .eq('league_id', leagueId)
         .order('current_rank', { ascending: true, nullsFirst: false });

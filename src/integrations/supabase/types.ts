@@ -170,50 +170,6 @@ export type Database = {
           },
         ]
       }
-      league_standings: {
-        Row: {
-          correct_picks: number
-          created_at: string
-          current_rank: number | null
-          id: string
-          league_id: string
-          total_picks: number
-          total_points: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          correct_picks?: number
-          created_at?: string
-          current_rank?: number | null
-          id?: string
-          league_id: string
-          total_picks?: number
-          total_points?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          correct_picks?: number
-          created_at?: string
-          current_rank?: number | null
-          id?: string
-          league_id?: string
-          total_picks?: number
-          total_points?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "league_standings_league_id_fkey"
-            columns: ["league_id"]
-            isOneToOne: false
-            referencedRelation: "leagues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       leagues: {
         Row: {
           created_at: string
@@ -327,6 +283,42 @@ export type Database = {
           },
         ]
       }
+      standings: {
+        Row: {
+          correct_picks: number
+          created_at: string
+          current_rank: number
+          id: string
+          league_id: string | null
+          total_picks: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          correct_picks?: number
+          created_at?: string
+          current_rank?: number
+          id?: string
+          league_id?: string | null
+          total_picks?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          correct_picks?: number
+          created_at?: string
+          current_rank?: number
+          id?: string
+          league_id?: string | null
+          total_picks?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           created_at: string
@@ -427,44 +419,15 @@ export type Database = {
         }
         Relationships: []
       }
-      user_standings: {
-        Row: {
-          correct_picks: number
-          created_at: string
-          current_rank: number | null
-          id: string
-          total_picks: number
-          total_points: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          correct_picks?: number
-          created_at?: string
-          current_rank?: number | null
-          id?: string
-          total_picks?: number
-          total_points?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          correct_picks?: number
-          created_at?: string
-          current_rank?: number | null
-          id?: string
-          total_picks?: number
-          total_points?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_refresh_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       advance_to_next_gameweek: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -493,6 +456,15 @@ export type Database = {
         Args: { gameweek_uuid: string }
         Returns: boolean
       }
+      check_ranking_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          issue_type: string
+          table_name: string
+          issue_count: number
+          details: string
+        }[]
+      }
       generate_invite_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -511,6 +483,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      initialize_user_complete_standings: {
+        Args: { target_user_id: string }
+        Returns: string
+      }
       is_admin: {
         Args: { user_uuid?: string }
         Returns: boolean
@@ -526,6 +502,10 @@ export type Database = {
       is_league_public: {
         Args: { _league_id: string }
         Returns: boolean
+      }
+      refresh_all_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       security_audit_log: {
         Args: Record<PropertyKey, never>

@@ -52,9 +52,9 @@ const Leaderboards = () => {
             .select('*', { count: 'exact', head: true })
             .eq('league_id', league.id);
 
-          // Get user's rank in this league
+          // Get user's rank in this league from the unified standings table
           const { data: userStanding } = await supabase
-            .from('league_standings')
+            .from('standings')
             .select('current_rank')
             .eq('league_id', league.id)
             .eq('user_id', user.id)
@@ -73,7 +73,7 @@ const Leaderboards = () => {
       setLeaguesWithRanks(leaguesWithRankData);
       // Expand all leagues by default
       setExpandedLeagues(new Set(leaguesWithRankData.map(league => league.id)));
-      console.log('Fetched leagues with ranks:', leaguesWithRankData);
+      console.log('Fetched leagues with ranks from unified standings:', leaguesWithRankData);
     } catch (error: any) {
       console.error('Error fetching leagues with ranks:', error);
       toast({

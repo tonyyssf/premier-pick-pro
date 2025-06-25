@@ -86,36 +86,38 @@ export const useRankingIntegrity = () => {
 
   const debugRankingData = async () => {
     try {
-      // Check user standings
-      const { data: userStandings, error: userError } = await supabase
-        .from('user_standings')
+      // Check global standings
+      const { data: globalStandings, error: globalError } = await supabase
+        .from('standings')
         .select('*')
+        .is('league_id', null)
         .order('current_rank', { ascending: true, nullsFirst: false });
       
-      if (userError) throw userError;
+      if (globalError) throw globalError;
       
       // Check league standings  
       const { data: leagueStandings, error: leagueError } = await supabase
-        .from('league_standings')
+        .from('standings')
         .select('*, leagues(name)')
+        .not('league_id', 'is', null)
         .order('league_id, current_rank', { ascending: true, nullsFirst: false });
       
       if (leagueError) throw leagueError;
       
-      console.log('User standings debug:', userStandings);
+      console.log('Global standings debug:', globalStandings);
       console.log('League standings debug:', leagueStandings);
       
-      // Check for users without standings
+      // Check for users without global standings
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, name');
         
       if (profilesError) throw profilesError;
       
-      const userIds = userStandings?.map(s => s.user_id) || [];
+      const userIds = globalStandings?.map(s => s.user_id) || [];
       const missingStandings = profiles?.filter(p => !userIds.includes(p.id)) || [];
       
-      console.log('Users without standings:', missingStandings);
+      console.log('Users without global standings:', missingStandings);
       
       toast({
         title: "Debug Data Logged",
