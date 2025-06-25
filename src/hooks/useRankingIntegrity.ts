@@ -18,11 +18,14 @@ export const useRankingIntegrity = () => {
   const checkRankingIntegrity = async () => {
     setIsChecking(true);
     try {
-      const { data, error } = await supabase.rpc('check_ranking_integrity');
+      // Use explicit any type for the RPC call since the function isn't in the generated types yet
+      const { data, error } = await (supabase.rpc as any)('check_ranking_integrity');
       
       if (error) throw error;
       
-      const significantIssues = data.filter((issue: RankingIssue) => issue.issue_count > 0);
+      // Ensure data is an array and filter for significant issues
+      const dataArray = Array.isArray(data) ? data : [];
+      const significantIssues = dataArray.filter((issue: RankingIssue) => issue.issue_count > 0);
       setIssues(significantIssues);
       
       if (significantIssues.length > 0) {
@@ -30,6 +33,12 @@ export const useRankingIntegrity = () => {
           title: "Ranking Issues Detected",
           description: `Found ${significantIssues.length} ranking integrity issues`,
           variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "No Issues Found",
+          description: "All rankings are in good order",
+          variant: "default",
         });
       }
       
@@ -47,13 +56,14 @@ export const useRankingIntegrity = () => {
 
   const refreshAllRankings = async () => {
     try {
-      const { data, error } = await supabase.rpc('admin_refresh_rankings');
+      // Use explicit any type for the RPC call since the function isn't in the generated types yet
+      const { data, error } = await (supabase.rpc as any)('admin_refresh_rankings');
       
       if (error) throw error;
       
       toast({
         title: "Rankings Refreshed",
-        description: data,
+        description: typeof data === 'string' ? data : "Rankings have been successfully refreshed",
         variant: "default",
       });
       
