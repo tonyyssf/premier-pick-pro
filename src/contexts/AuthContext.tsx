@@ -1,8 +1,11 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { sessionManager } from '@/utils/sessionSecurity';
+import { securityLogger } from '@/utils/securityLogger';
+import { enhancedAuthLimiter, checkEnhancedRateLimit } from '@/utils/enhancedRateLimiter';
+import { validateAndSanitizeInput, enhancedEmailSchema, enhancedPasswordSchema } from '@/utils/enhancedValidation';
 
 interface UserMetadata {
   username?: string;
@@ -34,6 +37,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id || 'no user');
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          securityLogger.log({
+            type: 'auth_failure',
+            userId: session.user.id,
+            details: { activity: 'successful_signin', event }
+          });
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          securityLogger.log({
+            type: 'auth_failure',
+            details: { activity: 'user_signout', event }
+          });
+          sessionManager.destroy();
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -46,6 +66,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Error getting session:', error);
+          securityLogger.log({
+            type: 'auth_failure',
+            details: { activity: 'session_init_failed', error: error.message }
+          });
         } else {
           console.log('Initial session check:', session?.user?.id || 'no session');
           setSession(session);
@@ -53,6 +77,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       } catch (error) {
         console.error('Failed to get initial session:', error);
+        securityLogger.log({
+          type: 'auth_failure',
+          details: { activity: 'session_init_error', error: String(error) }
+        });
       } finally {
         setLoading(false);
       }
@@ -67,56 +95,198 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: UserMetadata) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Rate limiting check
+    const clientIp = 'client'; // In production, get actual IP
+    const rateLimitResult = checkEnhancedRateLimit(enhancedAuthLimiter, clientIp);
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: metadata
-      }
-    });
-
-    if (error) {
+    if (!rateLimitResult.allowed) {
+      const error = new Error(
+        rateLimitResult.isBlocked 
+          ? `Account temporarily blocked. Try again in ${Math.ceil(rateLimitResult.timeUntilReset / 60000)} minutes.`
+          : `Too many signup attempts. Try again in ${Math.ceil(rateLimitResult.timeUntilReset / 1000)} seconds.`
+      );
+      
+      securityLogger.log({
+        type: 'rate_limit_exceeded',
+        details: { 
+          operation: 'signup_attempt',
+          isBlocked: rateLimitResult.isBlocked,
+          timeUntilReset: rateLimitResult.timeUntilReset
+        }
+      });
+      
       toast({
-        title: "Sign Up Failed",
+        title: "Too Many Attempts",
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Check Your Email",
-        description: "We've sent you a confirmation link to complete your signup.",
-      });
+      
+      return { error };
     }
 
-    return { error };
+    try {
+      // Enhanced input validation
+      const validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
+      const validatedPassword = validateAndSanitizeInput(password, enhancedPasswordSchema);
+      
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email: validatedEmail,
+        password: validatedPassword,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: metadata
+        }
+      });
+
+      if (error) {
+        securityLogger.log({
+          type: 'auth_failure',
+          details: { 
+            activity: 'signup_failed',
+            error: error.message,
+            email: validatedEmail
+          }
+        });
+        
+        toast({
+          title: "Sign Up Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        securityLogger.log({
+          type: 'suspicious_activity',
+          details: { 
+            activity: 'signup_successful',
+            email: validatedEmail
+          }
+        });
+        
+        toast({
+          title: "Check Your Email",
+          description: "We've sent you a confirmation link to complete your signup.",
+        });
+      }
+
+      return { error };
+    } catch (validationError: any) {
+      securityLogger.log({
+        type: 'invalid_input',
+        details: { 
+          operation: 'signup_validation_failed',
+          error: validationError.message,
+          field: 'email_or_password'
+        }
+      });
+      
+      const error = new Error('Invalid email or password format');
+      toast({
+        title: "Validation Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      
+      return { error };
+    }
   };
 
   const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
+    // Rate limiting check
+    const clientIp = 'client'; // In production, get actual IP
+    const rateLimitResult = checkEnhancedRateLimit(enhancedAuthLimiter, clientIp);
+    
+    if (!rateLimitResult.allowed) {
+      const error = new Error(
+        rateLimitResult.isBlocked 
+          ? `Account temporarily blocked. Try again in ${Math.ceil(rateLimitResult.timeUntilReset / 60000)} minutes.`
+          : `Too many login attempts. Try again in ${Math.ceil(rateLimitResult.timeUntilReset / 1000)} seconds.`
+      );
+      
+      securityLogger.log({
+        type: 'rate_limit_exceeded',
+        details: { 
+          operation: 'signin_attempt',
+          isBlocked: rateLimitResult.isBlocked,
+          timeUntilReset: rateLimitResult.timeUntilReset
+        }
+      });
+      
       toast({
-        title: "Sign In Failed",
+        title: "Too Many Attempts",
         description: error.message,
         variant: "destructive",
       });
-    } else if (rememberMe) {
-      localStorage.setItem('plpe_remember_me', 'true');
-      toast({
-        title: "Signed In Successfully",
-        description: "You'll stay signed in for an extended period.",
-      });
-    } else {
-      localStorage.removeItem('plpe_remember_me');
+      
+      return { error };
     }
 
-    return { error };
+    try {
+      // Enhanced input validation
+      const validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email: validatedEmail,
+        password: password, // Don't log password in validation
+      });
+
+      if (error) {
+        securityLogger.log({
+          type: 'auth_failure',
+          details: { 
+            activity: 'signin_failed',
+            error: error.message,
+            email: validatedEmail
+          }
+        });
+        
+        toast({
+          title: "Sign In Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        securityLogger.log({
+          type: 'suspicious_activity',
+          details: { 
+            activity: 'signin_successful',
+            email: validatedEmail,
+            rememberMe
+          }
+        });
+        
+        if (rememberMe) {
+          localStorage.setItem('plpe_remember_me', 'true');
+          toast({
+            title: "Signed In Successfully",
+            description: "You'll stay signed in for an extended period.",
+          });
+        } else {
+          localStorage.removeItem('plpe_remember_me');
+        }
+      }
+
+      return { error };
+    } catch (validationError: any) {
+      securityLogger.log({
+        type: 'invalid_input',
+        details: { 
+          operation: 'signin_validation_failed',
+          error: validationError.message,
+          field: 'email'
+        }
+      });
+      
+      const error = new Error('Invalid email format');
+      toast({
+        title: "Validation Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      
+      return { error };
+    }
   };
 
   const signOut = async () => {
