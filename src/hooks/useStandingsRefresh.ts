@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -52,18 +53,18 @@ export const useStandingsRefresh = () => {
 
       console.log('Standings initialization result:', data);
       
-      // Additional cleanup: ensure no duplicate global entries exist system-wide
-      const { error: cleanupError } = await supabase.rpc('admin_refresh_rankings');
+      // Force refresh all rankings using the updated function
+      const { error: refreshError } = await supabase.rpc('refresh_all_rankings');
       
-      if (cleanupError) {
-        console.error('Error during admin refresh:', cleanupError);
+      if (refreshError) {
+        console.error('Error during rankings refresh:', refreshError);
       } else {
-        console.log('Admin refresh completed successfully');
+        console.log('Rankings refresh completed successfully');
       }
       
       toast({
         title: "Rankings Updated",
-        description: "Your standings have been refreshed and duplicates removed.",
+        description: "Your standings have been refreshed with corrected rankings.",
       });
 
       return true;

@@ -97,20 +97,13 @@ export const useWeeklyStandings = () => {
         };
       });
 
-      // Sort properly to ensure correct ranking display
+      // Ensure the data is sorted correctly to display proper rankings
       const sortedStandings = formattedStandings.sort((a, b) => {
-        // First sort by points (descending)
-        if (a.totalPoints !== b.totalPoints) {
-          return b.totalPoints - a.totalPoints;
-        }
-        // Then by correct picks (descending)
-        if (a.correctPicks !== b.correctPicks) {
-          return b.correctPicks - a.correctPicks;
-        }
-        // Finally alphabetically by username
-        const usernameA = a.username || a.name || `Player ${a.userId.slice(0, 8)}`;
-        const usernameB = b.username || b.name || `Player ${b.userId.slice(0, 8)}`;
-        return usernameA.localeCompare(usernameB);
+        // Sort by rank (ascending, with null ranks at the end)
+        if (a.currentRank === null && b.currentRank === null) return 0;
+        if (a.currentRank === null) return 1;
+        if (b.currentRank === null) return -1;
+        return a.currentRank - b.currentRank;
       });
 
       console.log('Final formatted global standings:', sortedStandings);
@@ -165,20 +158,12 @@ export const useWeeklyStandings = () => {
         };
       });
 
-      // Sort alphabetically by username when points and correct picks are tied
+      // Sort by rank (ascending, with null ranks at the end)
       const sortedStandings = formattedStandings.sort((a, b) => {
-        // First sort by points (descending)
-        if (a.total_points !== b.total_points) {
-          return b.total_points - a.total_points;
-        }
-        // Then by correct picks (descending)
-        if (a.correct_picks !== b.correct_picks) {
-          return b.correct_picks - a.correct_picks;
-        }
-        // Finally alphabetically by username
-        const usernameA = a.username || a.name || `Player ${a.user_id.slice(0, 8)}`;
-        const usernameB = b.username || b.name || `Player ${b.user_id.slice(0, 8)}`;
-        return usernameA.localeCompare(usernameB);
+        if (a.current_rank === null && b.current_rank === null) return 0;
+        if (a.current_rank === null) return 1;
+        if (b.current_rank === null) return -1;
+        return a.current_rank - b.current_rank;
       });
 
       setLeagueStandings(prev => ({
@@ -198,14 +183,29 @@ export const useWeeklyStandings = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Initial load only - no real-time subscriptions
-    const loadData = async () => {
+    // Initial load with automatic refresh
+    const loadDataWithRefresh = async () => {
       setLoading(true);
+      
+      // First refresh all rankings to ensure they're correct
+      try {
+        console.log('Refreshing rankings on component mount...');
+        const { error: refreshError } = await supabase.rpc('refresh_all_rankings');
+        if (refreshError) {
+          console.error('Error refreshing rankings:', refreshError);
+        } else {
+          console.log('Rankings refreshed successfully');
+        }
+      } catch (error) {
+        console.error('Error during initial refresh:', error);
+      }
+      
+      // Then load the standings
       await loadGlobalStandings();
       setLoading(false);
     };
 
-    loadData();
+    loadDataWithRefresh();
   }, [user]);
 
   return {
