@@ -103,6 +103,11 @@ const Leaderboards = () => {
     });
   };
 
+  const handleRefreshNeeded = () => {
+    // Refresh the leagues data after standings refresh
+    fetchLeaguesWithRanks();
+  };
+
   return (
     <ProtectedRoute>
       <Layout>
@@ -113,6 +118,7 @@ const Leaderboards = () => {
             isLoading={isLoading}
             expandedLeagues={expandedLeagues}
             onToggleExpansion={toggleLeagueExpansion}
+            onRefreshNeeded={handleRefreshNeeded}
           />
         </div>
       </Layout>
