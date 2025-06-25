@@ -65,11 +65,20 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
     );
   };
 
+  // Filter out standings with null ranks and show a warning
+  const validStandings = standings.filter(s => s.current_rank !== null);
+  const nullRankCount = standings.length - validStandings.length;
+
   return (
     <div className="overflow-x-auto will-change-scroll">
       <div className="flex items-center gap-2 mb-4 text-sm text-gray-600">
         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         <span>Live updates enabled</span>
+        {nullRankCount > 0 && (
+          <div className="ml-4 px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
+            {nullRankCount} players without rankings - system issue detected
+          </div>
+        )}
       </div>
       
       <Table>
@@ -85,8 +94,7 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {standings.map((standing) => {
-            const rank = standing.current_rank || 999;
+          {validStandings.map((standing) => {
             const isCurrentUser = currentUserId && standing.user_id === currentUserId;
             const winRate = standing.total_picks > 0 
               ? ((standing.correct_picks / standing.total_picks) * 100).toFixed(1)
@@ -103,7 +111,7 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
               >
                 <TableCell className="text-center py-3">
                   <div className="flex items-center justify-center min-h-[24px]">
-                    <RankIcon rank={rank} />
+                    <RankIcon rank={standing.current_rank} />
                   </div>
                 </TableCell>
                 <TableCell className="py-3">
@@ -154,7 +162,7 @@ export const RealtimeStandingsTable: React.FC<RealtimeStandingsTableProps> = ({
 
       {/* Mobile-friendly summary for hidden columns */}
       <div className="sm:hidden mt-4 space-y-2">
-        {standings.slice(0, 3).map((standing) => {
+        {validStandings.slice(0, 3).map((standing) => {
           const isCurrentUser = currentUserId && standing.user_id === currentUserId;
           const winRate = standing.total_picks > 0 
             ? ((standing.correct_picks / standing.total_picks) * 100).toFixed(1)
