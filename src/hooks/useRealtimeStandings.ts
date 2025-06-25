@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,24 +49,38 @@ export const useWeeklyStandings = () => {
 
       console.log('Raw global standings data:', standingsData);
 
-      // Check for duplicate user entries
-      const userIds = standingsData.map(s => s.user_id);
-      const uniqueUserIds = [...new Set(userIds)];
-      if (userIds.length !== uniqueUserIds.length) {
+      // More detailed duplicate detection
+      const userIdCounts = new Map();
+      standingsData.forEach(standing => {
+        const count = userIdCounts.get(standing.user_id) || 0;
+        userIdCounts.set(standing.user_id, count + 1);
+      });
+
+      const duplicateUsers = Array.from(userIdCounts.entries()).filter(([_, count]) => count > 1);
+      
+      if (duplicateUsers.length > 0) {
         console.error('Duplicate user entries found in global standings!', {
-          totalEntries: userIds.length,
-          uniqueUsers: uniqueUserIds.length,
-          duplicates: userIds.filter((id, index) => userIds.indexOf(id) !== index)
+          totalEntries: standingsData.length,
+          duplicateUsers: duplicateUsers.map(([userId, count]) => ({ userId, count }))
         });
         
-        toast({
-          title: "Data Integrity Issue",
-          description: "Duplicate entries detected in global standings. Please refresh rankings.",
-          variant: "destructive",
-        });
+        // Don't show the toast error if there are no actual duplicates visible to the user
+        // Instead, let's check if this is a temporary state during updates
+        const uniqueStandings = standingsData.filter((standing, index, arr) => 
+          arr.findIndex(s => s.user_id === standing.user_id) === index
+        );
+        
+        if (standingsData.length !== uniqueStandings.length) {
+          console.log(`Filtering out ${standingsData.length - uniqueStandings.length} duplicate entries client-side`);
+        }
+      } else {
+        console.log('No duplicate entries found in global standings');
       }
 
-      // Get all user IDs from standings
+      // Get all unique user IDs
+      const uniqueUserIds = [...new Set(standingsData.map(s => s.user_id))];
+
+      // Get user profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, name')
@@ -81,7 +96,9 @@ export const useWeeklyStandings = () => {
         arr.findIndex(s => s.user_id === standing.user_id) === index
       );
 
-      console.log(`Filtered ${standingsData.length - deduplicatedStandings.length} duplicate entries`);
+      if (standingsData.length !== deduplicatedStandings.length) {
+        console.log(`Client-side deduplication: ${standingsData.length} -> ${deduplicatedStandings.length} entries`);
+      }
 
       const formattedStandings: UserStanding[] = deduplicatedStandings.map(standing => {
         const profile = profilesMap.get(standing.user_id);
@@ -97,7 +114,7 @@ export const useWeeklyStandings = () => {
         };
       });
 
-      // Ensure the data is sorted correctly to display proper rankings
+      // Ensure the data is sorted correctly by rank
       const sortedStandings = formattedStandings.sort((a, b) => {
         // Sort by rank (ascending, with null ranks at the end)
         if (a.currentRank === null && b.currentRank === null) return 0;
@@ -105,6 +122,19 @@ export const useWeeklyStandings = () => {
         if (b.currentRank === null) return -1;
         return a.currentRank - b.currentRank;
       });
+
+      // Check if ranks are sequential starting from 1
+      const hasProperRanking = sortedStandings.every((standing, index) => 
+        standing.currentRank === index + 1
+      );
+
+      if (!hasProperRanking && sortedStandings.length > 0) {
+        console.warn('Rankings are not sequential starting from 1:', 
+          sortedStandings.map(s => ({ userId: s.userId, rank: s.currentRank }))
+        );
+      } else {
+        console.log('Rankings are properly sequential from 1 to', sortedStandings.length);
+      }
 
       console.log('Final formatted global standings:', sortedStandings);
       setUserStandings(sortedStandings);

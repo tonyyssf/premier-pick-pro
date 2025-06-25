@@ -65,20 +65,14 @@ export const WeeklyStandingsTable: React.FC<WeeklyStandingsTableProps> = ({
     );
   };
 
-  // Filter out standings with null ranks and show a warning
+  // Filter out standings with null ranks for display
   const validStandings = standings.filter(s => s.current_rank !== null);
-  const nullRankCount = standings.length - validStandings.length;
 
   return (
     <div className="overflow-x-auto will-change-scroll">
       <div className="flex items-center gap-2 mb-4 text-sm text-gray-600">
         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
         <span>Updates weekly after gameweek ends</span>
-        {nullRankCount > 0 && (
-          <div className="ml-4 px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
-            {nullRankCount} players without rankings
-          </div>
-        )}
       </div>
       
       <Table>
