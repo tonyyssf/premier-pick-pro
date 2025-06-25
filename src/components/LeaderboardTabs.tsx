@@ -30,10 +30,14 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="leagues" className="w-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="leagues">My League Rankings</TabsTrigger>
-          <TabsTrigger value="global">Global Leaderboard</TabsTrigger>
+          <TabsTrigger value="leagues" className="text-xs sm:text-sm">
+            My League Rankings
+          </TabsTrigger>
+          <TabsTrigger value="global" className="text-xs sm:text-sm">
+            Global Leaderboard
+          </TabsTrigger>
         </TabsList>
         
         <RefreshStandingsButton onRefreshComplete={onRefreshNeeded} />
