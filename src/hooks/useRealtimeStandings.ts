@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +35,8 @@ export const useWeeklyStandings = () => {
 
   const loadGlobalStandings = async () => {
     try {
+      console.log('Loading global standings...');
+      
       // Get the global standings data (where league_id is NULL)
       const { data: standingsData, error: standingsError } = await supabase
         .from('standings')
@@ -45,21 +46,44 @@ export const useWeeklyStandings = () => {
 
       if (standingsError) throw standingsError;
 
-      // Get all user IDs from standings
-      const userIds = standingsData.map(standing => standing.user_id);
+      console.log('Raw global standings data:', standingsData);
 
-      // Fetch profile data for all users
+      // Check for duplicate user entries
+      const userIds = standingsData.map(s => s.user_id);
+      const uniqueUserIds = [...new Set(userIds)];
+      if (userIds.length !== uniqueUserIds.length) {
+        console.error('Duplicate user entries found in global standings!', {
+          totalEntries: userIds.length,
+          uniqueUsers: uniqueUserIds.length,
+          duplicates: userIds.filter((id, index) => userIds.indexOf(id) !== index)
+        });
+        
+        toast({
+          title: "Data Integrity Issue",
+          description: "Duplicate entries detected in global standings. Please refresh rankings.",
+          variant: "destructive",
+        });
+      }
+
+      // Get all user IDs from standings
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, name')
-        .in('id', userIds);
+        .in('id', uniqueUserIds);
 
       if (profilesError) throw profilesError;
 
       // Create a map of user profiles for quick lookup
       const profilesMap = new Map(profilesData.map(profile => [profile.id, profile]));
 
-      const formattedStandings: UserStanding[] = standingsData.map(standing => {
+      // Filter out duplicates by keeping only the first occurrence of each user_id
+      const deduplicatedStandings = standingsData.filter((standing, index, arr) => 
+        arr.findIndex(s => s.user_id === standing.user_id) === index
+      );
+
+      console.log(`Filtered ${standingsData.length - deduplicatedStandings.length} duplicate entries`);
+
+      const formattedStandings: UserStanding[] = deduplicatedStandings.map(standing => {
         const profile = profilesMap.get(standing.user_id);
         return {
           id: standing.id,
@@ -73,7 +97,7 @@ export const useWeeklyStandings = () => {
         };
       });
 
-      // Sort alphabetically by username when points and correct picks are tied
+      // Sort properly to ensure correct ranking display
       const sortedStandings = formattedStandings.sort((a, b) => {
         // First sort by points (descending)
         if (a.totalPoints !== b.totalPoints) {
@@ -89,6 +113,7 @@ export const useWeeklyStandings = () => {
         return usernameA.localeCompare(usernameB);
       });
 
+      console.log('Final formatted global standings:', sortedStandings);
       setUserStandings(sortedStandings);
     } catch (error: any) {
       console.error('Error loading global standings:', error);

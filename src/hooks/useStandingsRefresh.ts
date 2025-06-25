@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +15,34 @@ export const useStandingsRefresh = () => {
     try {
       console.log('Initializing complete standings for user:', user.id);
       
+      // First, check for and clean up any duplicate global standings entries
+      const { data: duplicateCheck, error: duplicateError } = await supabase
+        .from('standings')
+        .select('id, user_id')
+        .is('league_id', null)
+        .eq('user_id', user.id);
+
+      if (duplicateError) {
+        console.error('Error checking for duplicates:', duplicateError);
+      } else if (duplicateCheck && duplicateCheck.length > 1) {
+        console.log(`Found ${duplicateCheck.length} duplicate global standings entries for user ${user.id}`);
+        
+        // Keep only the first entry, delete the rest
+        const idsToDelete = duplicateCheck.slice(1).map(entry => entry.id);
+        if (idsToDelete.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('standings')
+            .delete()
+            .in('id', idsToDelete);
+            
+          if (deleteError) {
+            console.error('Error deleting duplicate entries:', deleteError);
+          } else {
+            console.log(`Deleted ${idsToDelete.length} duplicate entries`);
+          }
+        }
+      }
+      
       // Call the database function to initialize complete standings for the current user
       const { data, error } = await supabase.rpc('initialize_user_complete_standings', {
         target_user_id: user.id
@@ -25,9 +52,18 @@ export const useStandingsRefresh = () => {
 
       console.log('Standings initialization result:', data);
       
+      // Additional cleanup: ensure no duplicate global entries exist system-wide
+      const { error: cleanupError } = await supabase.rpc('admin_refresh_rankings');
+      
+      if (cleanupError) {
+        console.error('Error during admin refresh:', cleanupError);
+      } else {
+        console.log('Admin refresh completed successfully');
+      }
+      
       toast({
         title: "Rankings Updated",
-        description: "Your standings have been refreshed successfully.",
+        description: "Your standings have been refreshed and duplicates removed.",
       });
 
       return true;
