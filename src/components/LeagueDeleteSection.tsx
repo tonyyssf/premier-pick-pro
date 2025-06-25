@@ -37,9 +37,9 @@ export const LeagueDeleteSection: React.FC<LeagueDeleteSectionProps> = ({
 
       if (membersError) throw membersError;
 
-      // Then, delete league standings
+      // Then, delete league standings from the unified standings table
       const { error: standingsError } = await supabase
-        .from('league_standings')
+        .from('standings')
         .delete()
         .eq('league_id', league.id);
 

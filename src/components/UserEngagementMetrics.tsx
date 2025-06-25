@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,10 +51,11 @@ export const UserEngagementMetrics: React.FC = () => {
       
       if (picksError) throw picksError;
 
-      // Get user standings for top performers - fix the query
+      // Get user standings for top performers - use the unified standings table
       const { data: standings, error: standingsError } = await supabase
-        .from('user_standings')
+        .from('standings')
         .select('user_id, total_points, current_rank')
+        .is('league_id', null) // Global standings only (not league-specific)
         .order('total_points', { ascending: false })
         .limit(10);
       
