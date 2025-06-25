@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Medal, Award, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -28,19 +28,9 @@ export const LeagueRankingCard: React.FC<LeagueRankingCardProps> = ({
   isExpanded,
   onToggleExpansion,
 }) => {
-  const getRankIcon = (rank: number | null) => {
+  const getRankDisplay = (rank: number | null) => {
     if (!rank) return <span className="text-lg font-bold text-gray-400">-</span>;
-    
-    switch (rank) {
-      case 1:
-        return <Trophy className="h-6 w-6 text-yellow-500" />;
-      case 2:
-        return <Medal className="h-6 w-6 text-gray-400" />;
-      case 3:
-        return <Award className="h-6 w-6 text-amber-600" />;
-      default:
-        return <span className="text-lg font-bold text-gray-600">#{rank}</span>;
-    }
+    return <span className="text-lg font-bold text-gray-600">#{rank}</span>;
   };
 
   return (
@@ -65,7 +55,7 @@ export const LeagueRankingCard: React.FC<LeagueRankingCardProps> = ({
                 <div className="text-right">
                   <p className="text-sm text-white/80">Your Rank</p>
                   <div className="flex items-center justify-end gap-2">
-                    {getRankIcon(league.user_rank)}
+                    {getRankDisplay(league.user_rank)}
                     {league.user_rank && (
                       <span className="text-sm text-white/70">
                         of {league.member_count}
