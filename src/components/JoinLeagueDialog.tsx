@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { inviteCodeSchema } from '@/utils/validation';
 import { findLeagueByInviteCode } from '@/utils/leagueInviteUtils';
+import { debugInviteCodeSearch } from '@/utils/debugInviteCode';
 import { z } from 'zod';
 
 interface JoinLeagueDialogProps {
@@ -72,10 +73,55 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       console.log('User ID:', user.id);
       console.log('Search code:', trimmedCode);
       
-      // Use the new utility function to find the league
-      const foundLeague = await findLeagueByInviteCode(trimmedCode);
+      // First run debug search to understand what's happening
+      const debugResult = await debugInviteCodeSearch(trimmedCode);
+      console.log('Debug result:', debugResult);
+      
+      // Try multiple approaches to find the league
+      let foundLeague = null;
+      
+      // Method 1: Use the RPC function
+      try {
+        foundLeague = await findLeagueByInviteCode(trimmedCode);
+        console.log('RPC method result:', foundLeague);
+      } catch (rpcError) {
+        console.log('RPC method failed:', rpcError);
+      }
+      
+      // Method 2: Direct query if RPC failed
+      if (!foundLeague) {
+        console.log('Trying direct query method...');
+        const { data: directResult, error: directError } = await supabase
+          .from('leagues')
+          .select('id, name, max_members, creator_id, invite_code')
+          .eq('invite_code', trimmedCode)
+          .maybeSingle();
+          
+        if (directError) {
+          console.error('Direct query error:', directError);
+        } else {
+          foundLeague = directResult;
+          console.log('Direct query result:', foundLeague);
+        }
+      }
+      
+      // Method 3: Case-insensitive search if still not found
+      if (!foundLeague) {
+        console.log('Trying case-insensitive search...');
+        const { data: allLeagues, error: allError } = await supabase
+          .from('leagues')
+          .select('id, name, max_members, creator_id, invite_code');
+          
+        if (!allError && allLeagues) {
+          foundLeague = allLeagues.find(league => 
+            league.invite_code?.toUpperCase().trim() === trimmedCode
+          );
+          console.log('Case-insensitive search result:', foundLeague);
+        }
+      }
 
       if (!foundLeague) {
+        console.log('No league found with any method');
         toast({
           title: "League Not Found",
           description: `No league found with invite code "${trimmedCode}". Please check the code and try again.`,
