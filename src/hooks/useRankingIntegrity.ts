@@ -18,8 +18,7 @@ export const useRankingIntegrity = () => {
   const checkRankingIntegrity = async () => {
     setIsChecking(true);
     try {
-      // Use explicit any type for the RPC call since the function isn't in the generated types yet
-      const { data, error } = await (supabase.rpc as any)('check_ranking_integrity');
+      const { data, error } = await supabase.rpc('check_ranking_integrity');
       
       if (error) throw error;
       
@@ -60,8 +59,7 @@ export const useRankingIntegrity = () => {
 
   const refreshAllRankings = async () => {
     try {
-      // Use explicit any type for the RPC call since the function isn't in the generated types yet
-      const { data, error } = await (supabase.rpc as any)('admin_refresh_rankings');
+      const { data, error } = await supabase.rpc('admin_refresh_rankings');
       
       if (error) throw error;
       
@@ -86,7 +84,7 @@ export const useRankingIntegrity = () => {
 
   const debugRankingData = async () => {
     try {
-      // Check global standings
+      // Check global standings from unified table
       const { data: globalStandings, error: globalError } = await supabase
         .from('standings')
         .select('*')
@@ -95,7 +93,7 @@ export const useRankingIntegrity = () => {
       
       if (globalError) throw globalError;
       
-      // Check league standings  
+      // Check league standings from unified table
       const { data: leagueStandings, error: leagueError } = await supabase
         .from('standings')
         .select('*, leagues(name)')
@@ -104,8 +102,8 @@ export const useRankingIntegrity = () => {
       
       if (leagueError) throw leagueError;
       
-      console.log('Global standings debug:', globalStandings);
-      console.log('League standings debug:', leagueStandings);
+      console.log('Global standings debug (unified table):', globalStandings);
+      console.log('League standings debug (unified table):', leagueStandings);
       
       // Check for users without global standings
       const { data: profiles, error: profilesError } = await supabase
@@ -121,7 +119,7 @@ export const useRankingIntegrity = () => {
       
       toast({
         title: "Debug Data Logged",
-        description: "Check console for detailed ranking data",
+        description: "Check console for detailed ranking data from unified standings table",
         variant: "default",
       });
       

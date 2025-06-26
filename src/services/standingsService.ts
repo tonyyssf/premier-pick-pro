@@ -3,33 +3,21 @@ import type { UserStanding, LeagueStanding } from '@/types/standings';
 
 export const standingsService = {
   async fetchGlobalStandings(): Promise<UserStanding[]> {
-    console.log('Loading global standings...');
+    console.log('Loading global standings from unified table...');
     
     // Get the global standings data (where league_id is NULL)
-    // Use DISTINCT ON to ensure only one entry per user
     const { data: standingsData, error: standingsError } = await supabase
       .from('standings')
       .select('*')
       .is('league_id', null)
-      .order('user_id, current_rank', { ascending: true });
+      .order('current_rank', { ascending: true, nullsFirst: false });
 
     if (standingsError) throw standingsError;
 
     console.log('Raw global standings data:', standingsData);
 
-    // Remove duplicates by user_id, keeping the one with the best rank (lowest number)
-    const uniqueStandingsMap = new Map();
-    standingsData.forEach(standing => {
-      const existingStanding = uniqueStandingsMap.get(standing.user_id);
-      if (!existingStanding || (standing.current_rank && (!existingStanding.current_rank || standing.current_rank < existingStanding.current_rank))) {
-        uniqueStandingsMap.set(standing.user_id, standing);
-      }
-    });
-
-    const uniqueStandings = Array.from(uniqueStandingsMap.values());
-
     // Get all unique user IDs
-    const uniqueUserIds = [...new Set(uniqueStandings.map(s => s.user_id))];
+    const uniqueUserIds = [...new Set(standingsData.map(s => s.user_id))];
 
     // Get user profiles
     const { data: profilesData, error: profilesError } = await supabase
@@ -42,7 +30,7 @@ export const standingsService = {
     // Create a map of user profiles for quick lookup
     const profilesMap = new Map(profilesData.map(profile => [profile.id, profile]));
 
-    const formattedStandings: UserStanding[] = uniqueStandings.map(standing => {
+    const formattedStandings: UserStanding[] = standingsData.map(standing => {
       const profile = profilesMap.get(standing.user_id);
       return {
         id: standing.id,
@@ -56,9 +44,8 @@ export const standingsService = {
       };
     });
 
-    // Ensure the data is sorted correctly by rank
+    // Sort by rank (ascending, with null ranks at the end)
     const sortedStandings = formattedStandings.sort((a, b) => {
-      // Sort by rank (ascending, with null ranks at the end)
       if (a.currentRank === null && b.currentRank === null) return 0;
       if (a.currentRank === null) return 1;
       if (b.currentRank === null) return -1;
@@ -70,6 +57,8 @@ export const standingsService = {
   },
 
   async fetchLeagueStandings(leagueId: string): Promise<LeagueStanding[]> {
+    console.log('Loading league standings from unified table for league:', leagueId);
+    
     // Get the league standings data (where league_id matches)
     const { data: standingsData, error: standingsError } = await supabase
       .from('standings')
@@ -118,7 +107,7 @@ export const standingsService = {
   },
 
   async refreshAllRankings(): Promise<void> {
-    console.log('Refreshing rankings on component mount...');
+    console.log('Refreshing rankings using unified standings table...');
     const { error: refreshError } = await supabase.rpc('refresh_all_rankings');
     if (refreshError) {
       console.error('Error refreshing rankings:', refreshError);
