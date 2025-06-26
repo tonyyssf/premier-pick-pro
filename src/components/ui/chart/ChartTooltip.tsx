@@ -16,6 +16,7 @@ interface ChartTooltipContentProps extends
   indicator?: "line" | "dot" | "dashed"
   nameKey?: string
   labelKey?: string
+  labelClassName?: string
   labelFormatter?: (value: any, payload: any[]) => React.ReactNode
   formatter?: (value: any, name: any, props: any, index: number, payload: any) => React.ReactNode
   label?: any
