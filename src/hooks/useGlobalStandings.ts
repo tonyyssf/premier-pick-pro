@@ -10,6 +10,10 @@ export const useGlobalStandings = () => {
 
   const loadGlobalStandings = async () => {
     try {
+      // First cleanup any duplicate global standings
+      await standingsService.cleanupDuplicateGlobalStandings();
+      
+      // Then load the clean standings
       const standings = await standingsService.fetchGlobalStandings();
       setUserStandings(standings);
     } catch (error: any) {
