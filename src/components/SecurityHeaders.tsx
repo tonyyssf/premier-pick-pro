@@ -10,7 +10,7 @@ export const SecurityHeaders: React.FC = () => {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://uocfjxteyrjnihemezgo.supabase.co wss://uocfjxteyrjnihemezgo.supabase.co",
+      "connect-src 'self' https://uocfjxteyrjnihemezgo.supabase.co wss://uocfjxteyrjnihemezgo.supabase.co https://o4509564147466240.ingest.us.sentry.io",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'"
