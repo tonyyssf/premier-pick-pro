@@ -17,8 +17,7 @@ export const LeagueShareSection: React.FC<LeagueShareSectionProps> = ({
   const { toast } = useToast();
 
   const generateSignupLink = () => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/auth?invite=${leagueId}`;
+    return `https://plpickem.com/auth?invite=${leagueId}`;
   };
 
   const copySignupLink = () => {

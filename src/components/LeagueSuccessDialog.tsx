@@ -40,7 +40,7 @@ export const LeagueSuccessDialog: React.FC<LeagueSuccessDialogProps> = ({
     }
   };
 
-  const shareUrl = `${window.location.origin}/leagues?join=${createdLeague.invite_code}`;
+  const shareUrl = `https://plpickem.com/leagues?join=${createdLeague.invite_code}`;
 
   return (
     <DialogContent className="sm:max-w-md">
