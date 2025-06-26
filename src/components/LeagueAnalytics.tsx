@@ -19,6 +19,7 @@ interface LeagueStats {
   publicLeagues: number;
   privateLeagues: number;
   totalMembers: number;
+  uniqueUsers: number;
   averageMembersPerLeague: number;
   leaguesBySize: Array<{ size: string; count: number }>;
   leagueCreationTrend: Array<{ date: string; count: number }>;
@@ -46,10 +47,10 @@ export const LeagueAnalytics: React.FC = () => {
       
       if (leaguesError) throw leaguesError;
 
-      // Get league member counts
+      // Get league member counts and unique users
       const { data: memberCounts, error: membersError } = await supabase
         .from('league_members')
-        .select('league_id');
+        .select('league_id, user_id');
       
       if (membersError) throw membersError;
 
@@ -61,7 +62,12 @@ export const LeagueAnalytics: React.FC = () => {
       const totalLeagues = leagues.length;
       const publicLeagues = leagues.filter(l => l.is_public).length;
       const privateLeagues = totalLeagues - publicLeagues;
-      const totalMembers = memberCounts.length;
+      const totalMembers = memberCounts.length; // Total memberships (can include duplicates across leagues)
+      
+      // Count unique users across all leagues
+      const uniqueUserIds = new Set(memberCounts.map(m => m.user_id));
+      const uniqueUsers = uniqueUserIds.size;
+      
       const averageMembersPerLeague = totalLeagues > 0 ? Math.round(totalMembers / totalLeagues * 10) / 10 : 0;
 
       // Calculate leagues by size
@@ -96,6 +102,7 @@ export const LeagueAnalytics: React.FC = () => {
         publicLeagues,
         privateLeagues,
         totalMembers,
+        uniqueUsers,
         averageMembersPerLeague,
         leaguesBySize,
         leagueCreationTrend,
@@ -147,11 +154,11 @@ export const LeagueAnalytics: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+            <CardTitle className="text-sm font-medium">Unique Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalMembers}</div>
+            <div className="text-2xl font-bold">{stats.uniqueUsers}</div>
             <p className="text-xs text-muted-foreground">
               Across all leagues
             </p>
@@ -160,13 +167,13 @@ export const LeagueAnalytics: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Members/League</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Memberships</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.averageMembersPerLeague}</div>
+            <div className="text-2xl font-bold">{stats.totalMembers}</div>
             <p className="text-xs text-muted-foreground">
-              Per league
+              Including multi-league users
             </p>
           </CardContent>
         </Card>
