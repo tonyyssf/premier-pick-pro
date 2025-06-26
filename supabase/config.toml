@@ -31,3 +31,6 @@ verify_jwt = false
 
 [functions.send-gameweek-reminders]
 verify_jwt = false
+
+[functions.health-check]
+verify_jwt = false
