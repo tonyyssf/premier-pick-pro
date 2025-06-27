@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,7 +6,11 @@ import { useToast } from '@/hooks/use-toast';
 import { sessionManager } from '@/utils/sessionSecurity';
 import { securityLogger } from '@/utils/securityLogger';
 import { enhancedAuthLimiter, checkEnhancedRateLimit } from '@/utils/enhancedRateLimiter';
-import { validateAndSanitizeInput, enhancedEmailSchema, enhancedPasswordSchema } from '@/utils/enhancedValidation';
+import { z } from 'zod';
+
+// Use standard validation schemas instead of overly strict enhanced ones
+const emailSchema = z.string().email('Invalid email format');
+const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 
 interface UserMetadata {
   username?: string;
@@ -125,15 +130,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      // Enhanced input validation
-      const validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
-      const validatedPassword = validateAndSanitizeInput(password, enhancedPasswordSchema);
+      // Use standard validation instead of overly strict enhanced validation
+      const emailValidation = emailSchema.safeParse(email);
+      const passwordValidation = passwordSchema.safeParse(password);
+      
+      if (!emailValidation.success) {
+        throw new Error(emailValidation.error.errors[0].message);
+      }
+      
+      if (!passwordValidation.success) {
+        throw new Error(passwordValidation.error.errors[0].message);
+      }
       
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
-        email: validatedEmail,
-        password: validatedPassword,
+        email: emailValidation.data,
+        password: passwordValidation.data,
         options: {
           emailRedirectTo: redirectUrl,
           data: metadata
@@ -146,7 +159,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           details: { 
             activity: 'signup_failed',
             error: error.message,
-            email: validatedEmail
+            email: emailValidation.data
           }
         });
         
@@ -160,7 +173,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           type: 'suspicious_activity',
           details: { 
             activity: 'signup_successful',
-            email: validatedEmail
+            email: emailValidation.data
           }
         });
         
@@ -181,7 +194,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       });
       
-      const error = new Error('Invalid email or password format');
+      const error = new Error(validationError.message);
       toast({
         title: "Validation Error",
         description: error.message,
@@ -223,11 +236,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      // Enhanced input validation
-      const validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
+      // Use standard validation for email
+      const emailValidation = emailSchema.safeParse(email);
+      
+      if (!emailValidation.success) {
+        throw new Error(emailValidation.error.errors[0].message);
+      }
       
       const { error } = await supabase.auth.signInWithPassword({
-        email: validatedEmail,
+        email: emailValidation.data,
         password: password, // Don't log password in validation
       });
 
@@ -237,7 +254,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           details: { 
             activity: 'signin_failed',
             error: error.message,
-            email: validatedEmail
+            email: emailValidation.data
           }
         });
         
@@ -251,7 +268,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           type: 'suspicious_activity',
           details: { 
             activity: 'signin_successful',
-            email: validatedEmail,
+            email: emailValidation.data,
             rememberMe
           }
         });
@@ -278,7 +295,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       });
       
-      const error = new Error('Invalid email format');
+      const error = new Error(validationError.message);
       toast({
         title: "Validation Error",
         description: error.message,
