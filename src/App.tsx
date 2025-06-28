@@ -105,17 +105,41 @@ const AppRoutes = () => {
   );
 };
 
+// Main App wrapper with auth state visibility control
+const AppContent = () => {
+  const { status } = useAuth();
+  
+  // Add CSS class to body to control visibility
+  React.useEffect(() => {
+    if (status === 'loading') {
+      document.body.classList.add('auth-loading');
+    } else {
+      document.body.classList.remove('auth-loading');
+    }
+    
+    return () => {
+      document.body.classList.remove('auth-loading');
+    };
+  }, [status]);
+
+  return (
+    <>
+      <SecurityHeaders />
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <PicksProvider>
         <TooltipProvider>
-          <SecurityHeaders />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
+          <AppContent />
         </TooltipProvider>
       </PicksProvider>
     </AuthProvider>
