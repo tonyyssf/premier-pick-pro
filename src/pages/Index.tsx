@@ -7,7 +7,6 @@ import { UserPickStatusCard } from '../components/UserPickStatusCard';
 import { StatsCards } from '../components/StatsCards';
 import { RecentResults } from '../components/RecentResults';
 import { FriendsLeaderboard } from '../components/FriendsLeaderboard';
-import { WeeklyPicks } from '../components/WeeklyPicks';
 import { BottomNavigation } from '../components/BottomNavigation';
 
 const Index = () => {
@@ -20,12 +19,6 @@ const Index = () => {
         <StatsCards />
         <RecentResults />
         <FriendsLeaderboard />
-        
-        {/* Weekly Picks Section - Hidden by default, shown when user clicks Make Pick */}
-        <div className="mt-8">
-          <WeeklyPicks />
-        </div>
-        
         <BottomNavigation />
       </div>
     </ProtectedRoute>

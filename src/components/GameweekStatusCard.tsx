@@ -2,9 +2,11 @@
 import React from 'react';
 import { usePicks } from '../contexts/PicksContext';
 import { Button } from './ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export const GameweekStatusCard: React.FC = () => {
   const { currentGameweek, hasPickForGameweek } = usePicks();
+  const navigate = useNavigate();
 
   if (!currentGameweek) return null;
 
@@ -25,13 +27,7 @@ export const GameweekStatusCard: React.FC = () => {
         </div>
         <Button 
           className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium"
-          onClick={() => {
-            // Scroll to weekly picks section
-            const picksSection = document.querySelector('[data-section="weekly-picks"]');
-            if (picksSection) {
-              picksSection.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}
+          onClick={() => navigate('/pick')}
         >
           {hasPickForCurrentGameweek ? 'View Pick' : 'Make Pick'}
         </Button>
