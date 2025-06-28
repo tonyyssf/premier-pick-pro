@@ -22,8 +22,8 @@ export const PickConfirmationModal: React.FC<PickConfirmationModalProps> = ({
   const winProbability = Math.floor(Math.random() * 40 + 30); // Mock probability
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
-      <div className="bg-gray-900 w-full max-w-md rounded-t-xl p-6 animate-slide-in-right">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 w-full max-w-md rounded-xl p-6 animate-slide-in-right mb-20">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white">Confirm Your Pick</h3>
           <button
