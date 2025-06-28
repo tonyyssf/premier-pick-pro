@@ -1,17 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePicks } from '../contexts/PicksContext';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
+import { Undo } from 'lucide-react';
 
 export const UserPickStatusCard: React.FC = () => {
-  const { currentGameweek, hasPickForGameweek, getCurrentPick, fixtures } = usePicks();
+  const { currentGameweek, hasPickForGameweek, getCurrentPick, fixtures, undoPick, canUndoPick } = usePicks();
   const navigate = useNavigate();
+  const [undoing, setUndoing] = useState(false);
 
   if (!currentGameweek) return null;
 
   const hasPickForCurrentGameweek = hasPickForGameweek(currentGameweek.id);
   const currentPick = getCurrentPick();
+  const canUndo = canUndoPick();
 
   const getPickInfo = () => {
     if (!currentPick || !fixtures.length) return null;
@@ -26,6 +29,12 @@ export const UserPickStatusCard: React.FC = () => {
     return { team, opponent, venue };
   };
 
+  const handleUndoPick = async () => {
+    setUndoing(true);
+    await undoPick();
+    setUndoing(false);
+  };
+
   const pickInfo = getPickInfo();
 
   return (
@@ -36,11 +45,24 @@ export const UserPickStatusCard: React.FC = () => {
       </div>
       
       {hasPickForCurrentGameweek && pickInfo ? (
-        <div className="bg-gray-700 rounded-lg p-4 text-center">
-          <div className="text-lg font-semibold mb-1">{pickInfo.team.name}</div>
-          <div className="text-gray-400 text-sm">
-            vs. {pickInfo.opponent.name} ({pickInfo.venue})
+        <div>
+          <div className="bg-gray-700 rounded-lg p-4 text-center mb-4">
+            <div className="text-lg font-semibold mb-1">{pickInfo.team.name}</div>
+            <div className="text-gray-400 text-sm">
+              vs. {pickInfo.opponent.name} ({pickInfo.venue})
+            </div>
           </div>
+          {canUndo && (
+            <Button 
+              onClick={handleUndoPick}
+              disabled={undoing}
+              variant="outline"
+              className="w-full bg-transparent border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white"
+            >
+              <Undo className="w-4 h-4 mr-2" />
+              {undoing ? 'Undoing...' : 'Undo Pick'}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="bg-gray-700 rounded-lg p-4 text-center">

@@ -10,8 +10,20 @@ export const PickGameweekCard: React.FC = () => {
   const hasPickForCurrentGameweek = hasPickForGameweek(currentGameweek.id);
   const now = new Date();
   const timeUntilDeadline = currentGameweek.deadline.getTime() - now.getTime();
-  const hoursLeft = Math.floor(timeUntilDeadline / (1000 * 60 * 60));
+  
+  const daysLeft = Math.floor(timeUntilDeadline / (1000 * 60 * 60 * 24));
+  const hoursLeft = Math.floor((timeUntilDeadline % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutesLeft = Math.floor((timeUntilDeadline % (1000 * 60 * 60)) / (1000 * 60));
+
+  const formatDeadline = () => {
+    if (daysLeft > 0) {
+      return `${daysLeft}d ${hoursLeft}h ${minutesLeft}m`;
+    } else if (hoursLeft > 0) {
+      return `${hoursLeft}h ${minutesLeft}m`;
+    } else {
+      return `${minutesLeft}m`;
+    }
+  };
 
   return (
     <div className="mx-4 mt-4 p-4 bg-gray-800 rounded-lg">
@@ -19,7 +31,7 @@ export const PickGameweekCard: React.FC = () => {
         <div>
           <h2 className="text-lg font-semibold text-white">Gameweek {currentGameweek.number}</h2>
           <p className="text-green-400 font-medium">
-            Deadline: {hoursLeft}h {minutesLeft}m
+            Deadline: {formatDeadline()}
           </p>
         </div>
         {!hasPickForCurrentGameweek && (
