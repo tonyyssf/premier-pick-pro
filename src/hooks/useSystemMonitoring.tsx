@@ -1,7 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { securityLogger } from '@/utils/securityLogger';
 
 interface SystemMetrics {
@@ -32,13 +31,9 @@ interface SystemMetrics {
 }
 
 export const useSystemMonitoring = () => {
-  const { user } = useAuth();
-
   const { data: metrics, isLoading, refetch } = useQuery({
-    queryKey: ['system-monitoring', user?.id],
+    queryKey: ['system-monitoring'],
     queryFn: async (): Promise<SystemMetrics> => {
-      if (!user) throw new Error('User not authenticated');
-
       // Get security logs from localStorage
       const securityLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
       
@@ -99,7 +94,6 @@ export const useSystemMonitoring = () => {
         })).reverse(),
       };
     },
-    enabled: !!user,
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 10000, // Consider data stale after 10 seconds
   });

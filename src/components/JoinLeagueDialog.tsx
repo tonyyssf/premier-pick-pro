@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { inviteCodeSchema } from '@/utils/validation';
 import { findLeagueByInviteCode } from '@/utils/leagueInviteUtils';
@@ -23,9 +23,11 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   
-  const { user, status } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Mock user data since authentication is removed
+  const user = { id: 'mock-user-id' };
 
   const validateInviteCode = (code: string) => {
     try {
@@ -52,28 +54,6 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Only proceed if we know the user is definitely authenticated (never during loading)
-    if (status === 'unauthenticated') {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to join a league.",
-        variant: "destructive",
-      });
-      setOpen(false);
-      navigate('/auth');
-      return;
-    }
-
-    // Don't proceed if still loading auth status
-    if (status === 'loading' || !user) {
-      toast({
-        title: "Please Wait",
-        description: "Please wait while we verify your authentication.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const trimmedCode = inviteCode.trim().toUpperCase();
     
     if (!validateInviteCode(trimmedCode)) {
