@@ -25,7 +25,7 @@ export const StatsCards: React.FC = () => {
   return (
     <div className="mx-4 mt-4 grid grid-cols-3 gap-3">
       <div className="bg-plpe-neutral-700 rounded-lg p-4 text-center text-plpe-white">
-        <div className="text-plpe-light-gray text-sm mb-1">Total Points</div>
+        <div className="text-plpe-light-gray text-sm mb-1">Points</div>
         <div className="text-2xl font-bold">{displayPoints}</div>
       </div>
       

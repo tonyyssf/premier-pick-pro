@@ -29,7 +29,7 @@ export const PickGameweekCard: React.FC = () => {
     <div className="mx-4 mt-4 p-4 bg-gray-800 rounded-lg">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-white">Gameweek {currentGameweek.number}</h2>
+          <h2 className="text-lg font-semibold text-white">Matchweek {currentGameweek.number}</h2>
           <p className="text-green-400 font-medium">
             Deadline: {formatDeadline()}
           </p>
