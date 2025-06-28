@@ -37,7 +37,7 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
     if (open) {
       checkUserLeagueCount();
     }
-  }, [open]);
+  }, [open, checkUserLeagueCount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,8 +66,16 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
     });
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      setOpen(true);
+    } else {
+      handleClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={open ? handleClose : setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <CreateLeagueDialogTrigger canCreateLeague={canCreateLeague} />
       </DialogTrigger>
