@@ -1,43 +1,24 @@
 
 import React, { useState } from 'react';
-import { Settings, LogOut, Menu, User } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useAdmin } from '@/hooks/useAdmin';
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { UserSettingsDialog } from '@/components/UserSettingsDialog';
 
 export const Navbar: React.FC = () => {
-  const { signOut, user } = useAuth();
-  const { isAdmin } = useAdmin();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Navigation items for authenticated users
-  const authenticatedNavigationItems = [
+  // All navigation items are now public
+  const navigationItems = [
     { to: "/how-to-play", label: "How to Play" },
     { to: "/", label: "My Picks" },
     { to: "/leagues", label: "Leagues" },
-    { to: "/leaderboards", label: "Leaderboards" }
+    { to: "/leaderboards", label: "Leaderboards" },
+    { to: "/admin", label: "Admin" }
   ];
-
-  // Navigation items for unauthenticated users
-  const unauthenticatedNavigationItems = [
-    { to: "/how-to-play", label: "How to Play" },
-    { to: "/leaderboards", label: "Leaderboards" }
-  ];
-
-  const navigationItems = user 
-    ? (isAdmin ? [...authenticatedNavigationItems, { to: "/admin", label: "Admin" }] : authenticatedNavigationItems)
-    : unauthenticatedNavigationItems;
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
@@ -48,7 +29,7 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to={user ? "/" : "/how-to-play"}>
+            <Link to="/">
               <img 
                 src="/lovable-uploads/4daf5c45-5994-4a33-a05e-7b987e09ed78.png" 
                 alt="PLPE Logo" 
@@ -99,98 +80,13 @@ export const Navbar: React.FC = () => {
                         {item.label}
                       </Link>
                     ))}
-                    
-                    <div className="border-t pt-4 mt-6 space-y-2">
-                      {user ? (
-                        <>
-                          <Button 
-                            onClick={() => {
-                              setSettingsOpen(true);
-                              closeMobileMenu();
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
-                          >
-                            <Settings className="h-4 w-4" />
-                            <span>Settings</span>
-                          </Button>
-                          
-                          <Button 
-                            onClick={() => {
-                              handleSignOut();
-                              closeMobileMenu();
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            <span>Sign Out</span>
-                          </Button>
-                        </>
-                      ) : (
-                        <Link to="/auth" onClick={closeMobileMenu}>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
-                          >
-                            <User className="h-4 w-4" />
-                            <span>Sign In</span>
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
             </div>
-
-            {/* Desktop Auth Controls */}
-            {user ? (
-              <>
-                <Button 
-                  onClick={() => setSettingsOpen(true)}
-                  variant="ghost" 
-                  size="icon"
-                  className="hidden md:block p-2 text-gray-600 hover:text-plpe-purple transition-colors"
-                >
-                  <Settings className="h-5 w-5" />
-                </Button>
-                
-                <Button 
-                  onClick={handleSignOut}
-                  variant="outline"
-                  size="sm"
-                  className="hidden md:flex items-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
-                </Button>
-              </>
-            ) : (
-              <Link to="/auth">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="hidden md:flex items-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
-                >
-                  <User className="h-4 w-4" />
-                  <span>Sign In</span>
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
       </div>
-      
-      {user && (
-        <UserSettingsDialog 
-          open={settingsOpen} 
-          onOpenChange={setSettingsOpen} 
-        />
-      )}
     </nav>
   );
 };
