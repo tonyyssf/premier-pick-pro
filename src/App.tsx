@@ -39,11 +39,13 @@ const AppRoutes = () => {
       <Route path="/leaderboards" element={<Leaderboards />} />
       <Route path="/auth" element={<Auth />} />
       
-      {/* Protected routes - require authentication */}
+      {/* Root route - show different content based on auth status */}
       <Route 
         path="/" 
-        element={user ? <Index /> : <Navigate to="/how-to-play" replace />} 
+        element={user ? <Index /> : <HowToPlay />} 
       />
+      
+      {/* Protected routes - require authentication */}
       <Route 
         path="/leagues" 
         element={user ? <Leagues /> : <Navigate to="/auth" replace />} 
