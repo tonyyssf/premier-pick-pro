@@ -150,7 +150,7 @@ const Leaderboards = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-plpe-neutral-900">
+      <div className="min-h-screen bg-white">
         <div className="p-4 bg-plpe-gradient header">
           <h1 className="text-2xl font-bold text-plpe-white text-center">Leaderboard</h1>
         </div>

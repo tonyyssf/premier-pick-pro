@@ -7,9 +7,9 @@ import { BottomNavigation } from '../components/BottomNavigation';
 const History = () => {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-white">
         <div className="p-4">
-          <h1 className="text-xl font-bold text-white mb-6">Pick History</h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-6">Pick History</h1>
         </div>
         
         <div className="pb-20">
