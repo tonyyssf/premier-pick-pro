@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ProtectedRoute } from '../components/ProtectedRoute';
-import { PickHeader } from '../components/PickHeader';
+import { UnifiedHeader } from '../components/UnifiedHeader';
 import { PickGameweekCard } from '../components/PickGameweekCard';
 import { PickFixturesList } from '../components/PickFixturesList';
 import { BottomNavigation } from '../components/BottomNavigation';
@@ -10,7 +10,7 @@ const Pick = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-900 text-white">
-        <PickHeader />
+        <UnifiedHeader title="Picks" />
         <PickGameweekCard />
         <PickFixturesList />
         <BottomNavigation />

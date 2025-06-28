@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { UnifiedHeader } from '@/components/UnifiedHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -151,9 +152,7 @@ const Leaderboards = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-plpe-neutral-900">
-        <div className="p-4 bg-plpe-gradient header">
-          <h1 className="text-2xl font-bold text-plpe-white text-center">Leaderboard</h1>
-        </div>
+        <UnifiedHeader title="Leaderboard" />
         
         {isMobile ? (
           <MobileLeaderboardView 
