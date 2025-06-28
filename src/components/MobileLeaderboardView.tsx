@@ -89,7 +89,7 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-plpe-neutral-900 min-h-screen">
       <MobileLeaderboardTabs 
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -110,10 +110,10 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
               />
             </>
           ) : (
-            <div className="mb-6 bg-gray-800 rounded-lg p-4">
+            <div className="mb-6 bg-plpe-neutral-700 rounded-lg p-4">
               <div className="text-center">
-                <h3 className="text-white font-semibold mb-2">No Leagues Yet</h3>
-                <p className="text-gray-400 text-sm mb-4">
+                <h3 className="text-plpe-white font-semibold mb-2">No Leagues Yet</h3>
+                <p className="text-plpe-light-gray text-sm mb-4">
                   Create or join a league to compete with friends!
                 </p>
                 <div className="flex gap-2 justify-center">
@@ -140,8 +140,8 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
         </>
       ) : (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-lg mb-2">No standings yet</div>
-          <div className="text-gray-500 text-sm">
+          <div className="text-plpe-light-gray text-lg mb-2">No standings yet</div>
+          <div className="text-plpe-neutral-700 text-sm">
             {activeTab === 'friends' ? 'Join a league to see friend standings!' : 'Start making picks to see the leaderboard!'}
           </div>
         </div>

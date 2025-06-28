@@ -24,20 +24,20 @@ export const StatsCards: React.FC = () => {
 
   return (
     <div className="mx-4 mt-4 grid grid-cols-3 gap-3">
-      <div className="bg-gray-800 rounded-lg p-4 text-center text-white">
-        <div className="text-gray-400 text-sm mb-1">Total Points</div>
+      <div className="bg-plpe-neutral-700 rounded-lg p-4 text-center text-plpe-white">
+        <div className="text-plpe-light-gray text-sm mb-1">Total Points</div>
         <div className="text-2xl font-bold">{displayPoints}</div>
       </div>
       
-      <div className="bg-gray-800 rounded-lg p-4 text-center text-white">
-        <div className="text-gray-400 text-sm mb-1">Rank</div>
+      <div className="bg-plpe-neutral-700 rounded-lg p-4 text-center text-plpe-white">
+        <div className="text-plpe-light-gray text-sm mb-1">Rank</div>
         <div className="text-2xl font-bold">
           {displayRank ? `#${displayRank}` : '-'}
         </div>
       </div>
       
-      <div className="bg-gray-800 rounded-lg p-4 text-center text-white">
-        <div className="text-gray-400 text-sm mb-1">Teams Left</div>
+      <div className="bg-plpe-neutral-700 rounded-lg p-4 text-center text-plpe-white">
+        <div className="text-plpe-light-gray text-sm mb-1">Teams Left</div>
         <div className="text-2xl font-bold">{teamsLeft}</div>
       </div>
     </div>

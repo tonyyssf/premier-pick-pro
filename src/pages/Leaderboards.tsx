@@ -150,9 +150,9 @@ const Leaderboards = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-900">
-        <div className="p-4 bg-purple-900">
-          <h1 className="text-2xl font-bold text-white">Leaderboard</h1>
+      <div className="min-h-screen bg-plpe-neutral-900">
+        <div className="p-4 bg-plpe-gradient header">
+          <h1 className="text-2xl font-bold text-plpe-white">Leaderboard</h1>
         </div>
         
         {isMobile ? (
@@ -161,6 +161,8 @@ const Leaderboards = () => {
             leagues={leaguesWithRanks}
             selectedLeagueId={selectedLeagueId}
             onLeagueSelect={setSelectedLeagueId}
+            onLeagueCreated={handleLeagueCreated}
+            onLeagueJoined={handleLeagueJoined}
           />
         ) : (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,21 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// PLPE Brand Colors
+				plpe: {
+					purple: '#5A00E0',
+					blue: '#0077FF',
+					white: '#FFFFFF',
+					'light-gray': '#E0E0E0',
+					'neutral-900': '#1A1A1A',
+					'neutral-700': '#4A4A4A',
+					accent: '#FFD700'
 				}
+			},
+			backgroundImage: {
+				'plpe-gradient': 'linear-gradient(90deg, #5A00E0 0%, #0077FF 100%)',
+				'plpe-gradient-vertical': 'linear-gradient(180deg, #5A00E0 0%, #0077FF 100%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

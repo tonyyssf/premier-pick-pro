@@ -16,8 +16,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 259 100% 35%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 259 100% 44%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -46,47 +46,52 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Custom PLPE brand colors from logo */
-    --plpe-purple: 259 100% 35%;
-    --plpe-blue: 207 100% 50%;
-    --plpe-gradient: linear-gradient(135deg, hsl(259 100% 35%) 0%, hsl(207 100% 50%) 100%);
+    /* PLPE Brand Colors */
+    --plpe-purple: #5A00E0;
+    --plpe-blue: #0077FF;
+    --plpe-white: #FFFFFF;
+    --plpe-light-gray: #E0E0E0;
+    --plpe-neutral-900: #1A1A1A;
+    --plpe-neutral-700: #4A4A4A;
+    --plpe-accent: #FFD700;
+    --plpe-gradient: linear-gradient(90deg, var(--plpe-purple) 0%, var(--plpe-blue) 100%);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 10%;
+    --foreground: 0 0% 100%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 29%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 29%;
+    --muted-foreground: 0 0% 88%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 29%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 0 0% 29%;
+    --input: 0 0% 29%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-primary: 210 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-accent: 0 0% 15.9%;
+    --sidebar-accent-foreground: 0 0% 88%;
+    --sidebar-border: 0 0% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -98,6 +103,8 @@
 
   body {
     @apply bg-background text-foreground;
+    background-color: var(--plpe-neutral-900);
+    color: var(--plpe-white);
     /* Performance optimizations for mobile */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -131,31 +138,79 @@
 
 @layer utilities {
   .bg-plpe-gradient {
-    background: linear-gradient(135deg, hsl(259 100% 35%) 0%, hsl(207 100% 50%) 100%);
+    background: var(--plpe-gradient);
   }
   
   .text-plpe-purple {
-    color: hsl(259 100% 35%);
+    color: var(--plpe-purple);
   }
   
   .text-plpe-blue {
-    color: hsl(207 100% 50%);
+    color: var(--plpe-blue);
+  }
+  
+  .text-plpe-white {
+    color: var(--plpe-white);
+  }
+  
+  .text-plpe-light-gray {
+    color: var(--plpe-light-gray);
+  }
+  
+  .text-plpe-neutral-700 {
+    color: var(--plpe-neutral-700);
+  }
+  
+  .text-plpe-accent {
+    color: var(--plpe-accent);
   }
   
   .bg-plpe-purple {
-    background-color: hsl(259 100% 35%);
+    background-color: var(--plpe-purple);
   }
   
   .bg-plpe-blue {
-    background-color: hsl(207 100% 50%);
+    background-color: var(--plpe-blue);
+  }
+  
+  .bg-plpe-white {
+    background-color: var(--plpe-white);
+  }
+  
+  .bg-plpe-light-gray {
+    background-color: var(--plpe-light-gray);
+  }
+  
+  .bg-plpe-neutral-900 {
+    background-color: var(--plpe-neutral-900);
+  }
+  
+  .bg-plpe-neutral-700 {
+    background-color: var(--plpe-neutral-700);
+  }
+  
+  .bg-plpe-accent {
+    background-color: var(--plpe-accent);
   }
   
   .border-plpe-purple {
-    border-color: hsl(259 100% 35%);
+    border-color: var(--plpe-purple);
   }
   
   .border-plpe-blue {
-    border-color: hsl(207 100% 50%);
+    border-color: var(--plpe-blue);
+  }
+  
+  .border-plpe-light-gray {
+    border-color: var(--plpe-light-gray);
+  }
+
+  .hover\:bg-plpe-blue:hover {
+    background-color: var(--plpe-blue);
+  }
+
+  .hover\:bg-plpe-purple:hover {
+    background-color: var(--plpe-purple);
   }
 
   /* Mobile-first responsive utilities */
@@ -206,5 +261,27 @@
     min-width: 48px;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .header {
+    background: var(--plpe-gradient);
+  }
+
+  .button-primary {
+    background-color: var(--plpe-purple);
+    color: var(--plpe-white);
+  }
+
+  .button-primary:hover {
+    background-color: var(--plpe-blue);
+  }
+
+  .pill {
+    background-color: var(--plpe-accent);
+    color: var(--plpe-neutral-900);
+  }
+
+  .text-secondary {
+    color: var(--plpe-light-gray);
   }
 }
