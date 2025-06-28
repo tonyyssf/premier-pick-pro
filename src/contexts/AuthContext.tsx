@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +23,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, metadata?: UserMetadata) => Promise<{ error: any }>;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  loading: boolean;
+  isLoading: boolean; // Renamed from 'loading' for clarity
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,13 +31,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Start with true to prevent race condition
   const { toast } = useToast();
 
   useEffect(() => {
     console.log('Setting up auth state listener...');
     
-    // Set up auth state listener
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id || 'no user');
@@ -61,11 +60,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        setIsLoading(false); // Set loading to false after auth state is determined
       }
     );
 
-    // Check for existing session
+    // THEN check for existing session
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -87,7 +86,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           details: { activity: 'session_init_error', error: String(error) }
         });
       } finally {
-        setLoading(false);
+        // Only set loading to false if onAuthStateChange hasn't already done so
+        setIsLoading(false);
       }
     };
 
@@ -364,7 +364,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signUp,
       signIn,
       signOut,
-      loading,
+      isLoading, // Renamed from 'loading'
     }}>
       {children}
     </AuthContext.Provider>

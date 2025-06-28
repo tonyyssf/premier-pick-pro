@@ -19,9 +19,10 @@ const queryClient = new QueryClient();
 
 // Component to handle routing logic based on auth state
 const AppRoutes = () => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth(); // Use renamed isLoading
 
-  if (loading) {
+  // Show loading spinner while session is being restored
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -39,10 +40,10 @@ const AppRoutes = () => {
       <Route path="/leaderboards" element={<Leaderboards />} />
       <Route path="/auth" element={<Auth />} />
       
-      {/* Root route - show different content based on auth status */}
+      {/* Root route - redirect unauthenticated users to /how-to-play */}
       <Route 
         path="/" 
-        element={user ? <Index /> : <HowToPlay />} 
+        element={user ? <Index /> : <Navigate to="/how-to-play" replace />} 
       />
       
       {/* Protected routes - require authentication */}
