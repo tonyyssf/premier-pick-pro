@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, CheckCircle, Trophy, History } from 'lucide-react';
@@ -9,7 +8,7 @@ export const BottomNavigation: React.FC = () => {
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
-    { path: '/pick', icon: CheckCircle, label: 'Pick' },
+    { path: '/pick', icon: CheckCircle, label: 'Picks' },
     { path: '/leaderboards', icon: Trophy, label: 'Leaderboard' },
     { path: '/history', icon: History, label: 'History' },
   ];
