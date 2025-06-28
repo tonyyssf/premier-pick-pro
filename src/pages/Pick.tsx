@@ -1,19 +1,18 @@
 
 import React from 'react';
 import { ProtectedRoute } from '../components/ProtectedRoute';
-import { WeeklyPicks } from '../components/WeeklyPicks';
+import { PickHeader } from '../components/PickHeader';
+import { PickGameweekCard } from '../components/PickGameweekCard';
+import { PickFixturesList } from '../components/PickFixturesList';
 import { BottomNavigation } from '../components/BottomNavigation';
 
 const Pick = () => {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-900">
-        <div className="p-4">
-          <h1 className="text-xl font-bold text-white mb-6">Make Your Pick</h1>
-        </div>
-        
-        <WeeklyPicks />
-        
+      <div className="min-h-screen bg-gray-900 text-white">
+        <PickHeader />
+        <PickGameweekCard />
+        <PickFixturesList />
         <BottomNavigation />
       </div>
     </ProtectedRoute>
