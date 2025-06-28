@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PodiumLeaderboard } from './PodiumLeaderboard';
 import { LeaderboardList } from './LeaderboardList';
@@ -97,11 +98,17 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
       {activeTab === 'friends' && (
         <>
           {leagues.length > 0 ? (
-            <LeagueSelector
-              leagues={leagues}
-              selectedLeagueId={selectedLeagueId}
-              onLeagueSelect={onLeagueSelect}
-            />
+            <>
+              <LeagueSelector
+                leagues={leagues}
+                selectedLeagueId={selectedLeagueId}
+                onLeagueSelect={onLeagueSelect}
+              />
+              <div className="flex gap-2 justify-center mb-6">
+                <CreateLeagueDialog onLeagueCreated={onLeagueCreated} />
+                <JoinLeagueDialog onLeagueJoined={onLeagueJoined} />
+              </div>
+            </>
           ) : (
             <div className="mb-6 bg-gray-800 rounded-lg p-4">
               <div className="text-center">
