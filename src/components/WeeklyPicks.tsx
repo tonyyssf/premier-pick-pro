@@ -3,11 +3,14 @@ import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
 import { GameweekHeader } from './GameweekHeader';
 import { PickConfirmationCard } from './PickConfirmationCard';
+import { AuthPrompt } from './AuthPrompt';
 import { usePicks } from '../contexts/PicksContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const WeeklyPicks: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [undoing, setUndoing] = useState(false);
+  const { user } = useAuth();
   const { 
     fixtures, 
     currentGameweek, 
@@ -20,6 +23,19 @@ export const WeeklyPicks: React.FC = () => {
     loading, 
     fixturesLoading 
   } = usePicks();
+
+  // Show auth prompt if user is not authenticated
+  if (!user) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
+        <AuthPrompt 
+          title="Sign In to Make Picks"
+          description="Create an account to start making your weekly picks and compete with friends!"
+          feature="make picks"
+        />
+      </div>
+    );
+  }
 
   const currentPick = getCurrentPick();
   const hasAlreadyPicked = currentGameweek ? hasPickForGameweek(currentGameweek.id) : false;

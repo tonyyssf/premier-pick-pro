@@ -50,7 +50,7 @@ const AppRoutes = () => {
       <Route path="/leaderboards" element={<Leaderboards />} />
       <Route path="/auth" element={<Auth />} />
       
-      {/* Root route - redirect unauthenticated users to /how-to-play */}
+      {/* Root route - default to how-to-play for unauthenticated users, my-picks for authenticated */}
       <Route 
         path="/" 
         element={

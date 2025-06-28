@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +26,7 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const validateInviteCode = (code: string) => {
     try {
@@ -54,9 +56,11 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "You must be logged in to join a league.",
+        description: "Please sign in to join a league.",
         variant: "destructive",
       });
+      setOpen(false);
+      navigate('/auth');
       return;
     }
 
