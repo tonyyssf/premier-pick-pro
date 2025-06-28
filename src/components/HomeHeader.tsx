@@ -6,7 +6,7 @@ export const HomeHeader: React.FC = () => {
   return (
     <div className="flex items-center justify-between p-4 bg-plpe-gradient header text-plpe-white">
       <img 
-        src="/lovable-uploads/b0aabd14-48e9-497b-9b7e-86ab9970099f.png" 
+        src="/lovable-uploads/b66df162-0193-4960-a848-95ddbeb972e5.png" 
         alt="PLPE Logo" 
         className="h-8 w-auto"
       />
