@@ -3,53 +3,34 @@ import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
 import { GameweekHeader } from './GameweekHeader';
 import { PickConfirmationCard } from './PickConfirmationCard';
-import { usePicks } from '../contexts/PicksContext';
 
 export const WeeklyPicks: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [undoing, setUndoing] = useState(false);
-  const { 
-    fixtures, 
-    currentGameweek, 
-    submitPick, 
-    undoPick,
-    canUndoPick,
-    getTeamUsedCount, 
-    hasPickForGameweek, 
-    getCurrentPick, 
-    loading, 
-    fixturesLoading 
-  } = usePicks();
-
-  const currentPick = getCurrentPick();
-  const hasAlreadyPicked = currentGameweek ? hasPickForGameweek(currentGameweek.id) : false;
-  const canUndo = canUndoPick();
+  
+  // Mock data for now since we removed authentication
+  const loading = false;
+  const fixturesLoading = false;
+  const fixtures: any[] = [];
+  const currentGameweek = null;
+  const currentPick = null;
+  const hasAlreadyPicked = false;
+  const canUndo = false;
 
   const handleTeamSelect = async (fixtureId: string, teamId: string) => {
-    if (submitting) return;
-    
-    setSubmitting(true);
-    await submitPick(fixtureId, teamId);
-    setSubmitting(false);
+    console.log('Team selected:', { fixtureId, teamId });
   };
 
   const handleUndoPick = async () => {
-    setUndoing(true);
-    await undoPick();
-    setUndoing(false);
+    console.log('Undo pick');
   };
 
   const getCurrentPickInfo = () => {
-    if (!currentPick) return null;
-    
-    const fixture = fixtures.find(f => f.id === currentPick.fixtureId);
-    if (!fixture) return null;
-    
-    const team = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.homeTeam : fixture.awayTeam;
-    const opponent = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.awayTeam : fixture.homeTeam;
-    const venue = fixture.homeTeam.id === currentPick.pickedTeamId ? 'Home' : 'Away';
-    
-    return { team, opponent, venue, fixture };
+    return null;
+  };
+
+  const getTeamUsedCount = (teamId: string) => {
+    return 0;
   };
 
   if (loading || fixturesLoading) {
