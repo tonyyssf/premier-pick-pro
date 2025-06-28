@@ -90,7 +90,7 @@ export const CreateLeagueForm: React.FC<CreateLeagueFormProps> = ({
       </div>
       
       <div className="flex space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1 text-gray-900">
           Cancel
         </Button>
         <Button type="submit" disabled={isLoading} className="flex-1">
