@@ -23,7 +23,7 @@ export const WeeklyPicks: React.FC = () => {
     fixturesLoading 
   } = usePicks();
 
-  // Show auth prompt only if definitively unauthenticated
+  // Show auth prompt only if definitively unauthenticated (never during loading)
   if (status === 'unauthenticated') {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
@@ -36,7 +36,7 @@ export const WeeklyPicks: React.FC = () => {
     );
   }
 
-  // Show loading if auth status is still loading
+  // Show loading if auth status is still loading (should be rare with bootloader)
   if (status === 'loading') {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">

@@ -52,8 +52,8 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Only proceed if we know the user is definitely not authenticated
-    if (status !== 'authenticated' || !user) {
+    // Only proceed if we know the user is definitely authenticated (never during loading)
+    if (status === 'unauthenticated') {
       toast({
         title: "Authentication Required",
         description: "Please sign in to join a league.",
@@ -61,6 +61,16 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
       });
       setOpen(false);
       navigate('/auth');
+      return;
+    }
+
+    // Don't proceed if still loading auth status
+    if (status === 'loading' || !user) {
+      toast({
+        title: "Please Wait",
+        description: "Please wait while we verify your authentication.",
+        variant: "destructive",
+      });
       return;
     }
 
