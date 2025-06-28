@@ -41,10 +41,19 @@ export const JoinLeagueForm: React.FC<JoinLeagueFormProps> = ({
       </div>
       
       <div className="flex space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel} 
+          className="flex-1 text-gray-900 border-gray-300 hover:bg-gray-50"
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading} className="flex-1">
+        <Button 
+          type="submit" 
+          disabled={isLoading} 
+          className="flex-1 bg-plpe-purple text-white hover:bg-plpe-blue"
+        >
           {isLoading ? 'Joining...' : 'Join League'}
         </Button>
       </div>
