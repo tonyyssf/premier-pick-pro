@@ -31,7 +31,7 @@ export const AuthPrompt: React.FC<AuthPromptProps> = ({
           <CardDescription className="text-gray-600">
             {description}
           </CardDescription>
-        </CardDescription>
+        </CardHeader>
         <CardContent className="space-y-4">
           <Button 
             onClick={() => navigate('/auth')}
