@@ -11,7 +11,7 @@ interface AdminOnlyProps {
 }
 
 export const AdminOnly: React.FC<AdminOnlyProps> = ({ children }) => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth(); // Use renamed isLoading
   const { isAdmin, isLoading: adminLoading } = useAdmin();
 
   if (authLoading || adminLoading) {
