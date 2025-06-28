@@ -19,6 +19,7 @@ const Leaderboards = () => {
   const [leaguesWithRanks, setLeaguesWithRanks] = useState<LeagueWithRank[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [leagueStandings, setLeagueStandings] = useState<{ [leagueId: string]: any[] }>({});
+  const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(null);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -62,19 +63,26 @@ const Leaderboards = () => {
           // Get league standings for the MobileLeaderboardView
           const { data: standings } = await supabase
             .from('standings')
-            .select(`
-              *,
-              profiles(username, name)
-            `)
+            .select('*')
             .eq('league_id', league.id)
             .order('current_rank', { ascending: true, nullsFirst: false });
 
           if (standings) {
+            // Get user profiles separately
+            const userIds = standings.map(s => s.user_id);
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('id, username, name')
+              .in('id', userIds);
+
+            const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
             const formattedStandings = standings.map(standing => ({
               ...standing,
-              username: standing.profiles?.username,
-              name: standing.profiles?.name,
+              username: profilesMap.get(standing.user_id)?.username,
+              name: profilesMap.get(standing.user_id)?.name,
             }));
+
             setLeagueStandings(prev => ({
               ...prev,
               [league.id]: formattedStandings
@@ -116,7 +124,12 @@ const Leaderboards = () => {
           <h1 className="text-2xl font-bold text-white">Leaderboard</h1>
         </div>
         
-        <MobileLeaderboardView leagueStandings={leagueStandings} />
+        <MobileLeaderboardView 
+          leagueStandings={leagueStandings}
+          leagues={leaguesWithRanks}
+          selectedLeagueId={selectedLeagueId}
+          onLeagueSelect={setSelectedLeagueId}
+        />
         
         <BottomNavigation />
       </div>

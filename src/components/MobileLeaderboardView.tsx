@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { PodiumLeaderboard } from './PodiumLeaderboard';
 import { LeaderboardList } from './LeaderboardList';
 import { MobileLeaderboardTabs } from './MobileLeaderboardTabs';
+import { LeagueSelector } from './LeagueSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeeklyStandings } from '@/hooks/useRealtimeStandings';
 import { StandingsLoadingState } from './StandingsLoadingState';
@@ -18,12 +19,26 @@ interface Standing {
   name?: string;
 }
 
+interface League {
+  id: string;
+  name: string;
+  description: string | null;
+  member_count?: number;
+  user_rank: number | null;
+}
+
 interface MobileLeaderboardViewProps {
   leagueStandings?: { [leagueId: string]: any[] };
+  leagues?: League[];
+  selectedLeagueId?: string | null;  
+  onLeagueSelect?: (leagueId: string | null) => void;
 }
 
 export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
-  leagueStandings = {}
+  leagueStandings = {},
+  leagues = [],
+  selectedLeagueId,
+  onLeagueSelect
 }) => {
   const [activeTab, setActiveTab] = useState<'friends' | 'global'>('friends');
   const { user } = useAuth();
@@ -41,12 +56,27 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
     name: standing.name,
   }));
 
-  // For friends tab, we'll use the first league's standings or create mock data
-  const friendsStandings: Standing[] = Object.keys(leagueStandings).length > 0 
-    ? Object.values(leagueStandings)[0] || []
-    : formattedGlobalStandings.slice(0, 8); // Show subset as "friends"
+  // Determine which standings to show based on active tab and selected league
+  const getCurrentStandings = (): Standing[] => {
+    if (activeTab === 'global') {
+      return formattedGlobalStandings;
+    }
+    
+    // Friends tab - show selected league or first available league
+    if (selectedLeagueId && leagueStandings[selectedLeagueId]) {
+      return leagueStandings[selectedLeagueId];
+    }
+    
+    // If no specific league selected, show first available league or subset of global
+    const firstLeagueId = Object.keys(leagueStandings)[0];
+    if (firstLeagueId) {
+      return leagueStandings[firstLeagueId];
+    }
+    
+    return formattedGlobalStandings.slice(0, 8); // Show subset as fallback
+  };
 
-  const currentStandings = activeTab === 'friends' ? friendsStandings : formattedGlobalStandings;
+  const currentStandings = getCurrentStandings();
 
   if (loading && currentStandings.length === 0) {
     return <StandingsLoadingState />;
@@ -58,6 +88,14 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
+      
+      {activeTab === 'friends' && leagues.length > 0 && (
+        <LeagueSelector
+          leagues={leagues}
+          selectedLeagueId={selectedLeagueId}
+          onLeagueSelect={onLeagueSelect}
+        />
+      )}
       
       {currentStandings.length > 0 ? (
         <>
@@ -75,7 +113,7 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
         <div className="text-center py-12">
           <div className="text-gray-400 text-lg mb-2">No standings yet</div>
           <div className="text-gray-500 text-sm">
-            Start making picks to see the leaderboard!
+            {activeTab === 'friends' ? 'Join a league to see friend standings!' : 'Start making picks to see the leaderboard!'}
           </div>
         </div>
       )}
