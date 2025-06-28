@@ -19,10 +19,18 @@ const queryClient = new QueryClient();
 
 // Component to handle routing logic based on auth state
 const AppRoutes = () => {
-  const { user, isLoading } = useAuth(); // Use renamed isLoading
+  const { user, isLoading } = useAuth();
+
+  // Add debugging logs
+  console.log('AppRoutes - Auth state:', { 
+    user: user?.id || 'no user', 
+    isLoading,
+    currentPath: window.location.pathname 
+  });
 
   // Show loading spinner while session is being restored
   if (isLoading) {
+    console.log('AppRoutes - Showing loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -32,6 +40,8 @@ const AppRoutes = () => {
       </div>
     );
   }
+
+  console.log('AppRoutes - Rendering routes, user authenticated:', !!user);
 
   return (
     <Routes>
@@ -43,7 +53,19 @@ const AppRoutes = () => {
       {/* Root route - redirect unauthenticated users to /how-to-play */}
       <Route 
         path="/" 
-        element={user ? <Index /> : <Navigate to="/how-to-play" replace />} 
+        element={
+          user ? (
+            (() => {
+              console.log('AppRoutes - Rendering Index for authenticated user');
+              return <Index />;
+            })()
+          ) : (
+            (() => {
+              console.log('AppRoutes - Redirecting unauthenticated user to /how-to-play');
+              return <Navigate to="/how-to-play" replace />;
+            })()
+          )
+        } 
       />
       
       {/* Protected routes - require authentication */}

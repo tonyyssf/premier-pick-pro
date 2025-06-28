@@ -35,12 +35,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('Setting up auth state listener...');
+    console.log('AuthProvider - Setting up auth state listener...');
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id || 'no user');
+        console.log('AuthProvider - Auth state changed:', event, session?.user?.id || 'no user');
         
         if (event === 'SIGNED_IN' && session?.user) {
           securityLogger.log({
@@ -61,40 +61,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false); // Set loading to false after auth state is determined
+        
+        console.log('AuthProvider - Updated state:', { 
+          user: session?.user?.id || 'no user', 
+          isLoading: false 
+        });
       }
     );
 
     // THEN check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('AuthProvider - Checking for existing session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('AuthProvider - Error getting session:', error);
           securityLogger.log({
             type: 'auth_failure',
             details: { activity: 'session_init_failed', error: error.message }
           });
         } else {
-          console.log('Initial session check:', session?.user?.id || 'no session');
-          setSession(session);
-          setUser(session?.user ?? null);
+          console.log('AuthProvider - Initial session check:', session?.user?.id || 'no session');
+          // Don't set state here if onAuthStateChange will handle it
+          // setSession(session);
+          // setUser(session?.user ?? null);
         }
       } catch (error) {
-        console.error('Failed to get initial session:', error);
+        console.error('AuthProvider - Failed to get initial session:', error);
         securityLogger.log({
           type: 'auth_failure',
           details: { activity: 'session_init_error', error: String(error) }
         });
       } finally {
-        // Only set loading to false if onAuthStateChange hasn't already done so
-        setIsLoading(false);
+        // Set a timeout to ensure we don't stay in loading state forever
+        setTimeout(() => {
+          console.log('AuthProvider - Timeout fallback, setting isLoading to false');
+          setIsLoading(false);
+        }, 1000);
       }
     };
 
     initializeAuth();
 
     return () => {
-      console.log('Cleaning up auth subscription...');
+      console.log('AuthProvider - Cleaning up auth subscription...');
       subscription.unsubscribe();
     };
   }, []);
