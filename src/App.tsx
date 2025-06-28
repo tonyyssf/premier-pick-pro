@@ -19,17 +19,17 @@ const queryClient = new QueryClient();
 
 // Component to handle routing logic based on auth state
 const AppRoutes = () => {
-  const { user, isLoading } = useAuth();
+  const { user, status } = useAuth();
 
   // Add debugging logs
   console.log('AppRoutes - Auth state:', { 
     user: user?.id || 'no user', 
-    isLoading,
+    status,
     currentPath: window.location.pathname 
   });
 
   // Show loading spinner while session is being restored
-  if (isLoading) {
+  if (status === 'loading') {
     console.log('AppRoutes - Showing loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -41,7 +41,7 @@ const AppRoutes = () => {
     );
   }
 
-  console.log('AppRoutes - Rendering routes, user authenticated:', !!user);
+  console.log('AppRoutes - Rendering routes, status:', status);
 
   return (
     <Routes>
@@ -50,20 +50,25 @@ const AppRoutes = () => {
       <Route path="/leaderboards" element={<Leaderboards />} />
       <Route path="/auth" element={<Auth />} />
       
-      {/* Root route - default to how-to-play for unauthenticated users, my-picks for authenticated */}
+      {/* Root route - use true redirects instead of render switches */}
       <Route 
         path="/" 
         element={
-          user ? (
+          status === 'authenticated' ? (
             (() => {
               console.log('AppRoutes - Rendering Index for authenticated user');
               return <Index />;
             })()
-          ) : (
+          ) : status === 'unauthenticated' ? (
             (() => {
               console.log('AppRoutes - Redirecting unauthenticated user to /how-to-play');
               return <Navigate to="/how-to-play" replace />;
             })()
+          ) : (
+            // This should never happen since we handle loading above, but just in case
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple mx-auto"></div>
+            </div>
           )
         } 
       />
@@ -71,11 +76,31 @@ const AppRoutes = () => {
       {/* Protected routes - require authentication */}
       <Route 
         path="/leagues" 
-        element={user ? <Leagues /> : <Navigate to="/auth" replace />} 
+        element={
+          status === 'authenticated' ? (
+            <Leagues />
+          ) : status === 'unauthenticated' ? (
+            <Navigate to="/auth" replace />
+          ) : (
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple mx-auto"></div>
+            </div>
+          )
+        } 
       />
       <Route 
         path="/admin" 
-        element={user ? <Admin /> : <Navigate to="/auth" replace />} 
+        element={
+          status === 'authenticated' ? (
+            <Admin />
+          ) : status === 'unauthenticated' ? (
+            <Navigate to="/auth" replace />
+          ) : (
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple mx-auto"></div>
+            </div>
+          )
+        } 
       />
       
       {/* Catch all route */}

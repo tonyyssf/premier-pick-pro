@@ -17,13 +17,17 @@ interface UserMetadata {
   phone_number?: string;
 }
 
+type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  status: AuthStatus;
   signUp: (email: string, password: string, metadata?: UserMetadata) => Promise<{ error: any }>;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  isLoading: boolean; // Renamed from 'loading' for clarity
+  // Keep isLoading for backward compatibility but deprecate it
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,8 +35,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Start with true to prevent race condition
+  const [status, setStatus] = useState<AuthStatus>('loading');
   const { toast } = useToast();
+
+  // Backward compatibility - derive isLoading from status
+  const isLoading = status === 'loading';
 
   useEffect(() => {
     console.log('AuthProvider - Setting up auth state listener...');
@@ -58,18 +65,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           sessionManager.destroy();
         }
         
+        // Update all auth state together
         setSession(session);
         setUser(session?.user ?? null);
-        setIsLoading(false); // Set loading to false after auth state is determined
+        setStatus(session?.user ? 'authenticated' : 'unauthenticated');
         
         console.log('AuthProvider - Updated state:', { 
           user: session?.user?.id || 'no user', 
-          isLoading: false 
+          status: session?.user ? 'authenticated' : 'unauthenticated'
         });
       }
     );
 
-    // THEN check for existing session
+    // Wait for one full getSession() round-trip *after* listener is live
     const initializeAuth = async () => {
       try {
         console.log('AuthProvider - Checking for existing session...');
@@ -80,11 +88,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             type: 'auth_failure',
             details: { activity: 'session_init_failed', error: error.message }
           });
+          // On error, set to unauthenticated since we can't determine the session
+          setStatus('unauthenticated');
         } else {
           console.log('AuthProvider - Initial session check:', session?.user?.id || 'no session');
-          // Don't set state here if onAuthStateChange will handle it
-          // setSession(session);
-          // setUser(session?.user ?? null);
+          // Only set unauthenticated if no session, let onAuthStateChange handle the rest
+          if (!session) {
+            setStatus('unauthenticated');
+          }
         }
       } catch (error) {
         console.error('AuthProvider - Failed to get initial session:', error);
@@ -92,20 +103,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           type: 'auth_failure',
           details: { activity: 'session_init_error', error: String(error) }
         });
-      } finally {
-        // Set a timeout to ensure we don't stay in loading state forever
-        setTimeout(() => {
-          console.log('AuthProvider - Timeout fallback, setting isLoading to false');
-          setIsLoading(false);
-        }, 1000);
+        setStatus('unauthenticated');
       }
     };
 
     initializeAuth();
 
+    // Set a timeout to ensure we don't stay in loading state forever
+    const timeoutId = setTimeout(() => {
+      if (status === 'loading') {
+        console.log('AuthProvider - Timeout fallback, setting status to unauthenticated');
+        setStatus('unauthenticated');
+      }
+    }, 2000);
+
     return () => {
       console.log('AuthProvider - Cleaning up auth subscription...');
       subscription.unsubscribe();
+      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -337,6 +352,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // Clear local state anyway
           setSession(null);
           setUser(null);
+          setStatus('unauthenticated');
           toast({
             title: "Signed Out",
             description: "You have been signed out.",
@@ -360,6 +376,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Force clear local state on any error
       setSession(null);
       setUser(null);
+      setStatus('unauthenticated');
       toast({
         title: "Signed Out",
         description: "You have been signed out.",
@@ -371,10 +388,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <AuthContext.Provider value={{
       user,
       session,
+      status,
       signUp,
       signIn,
       signOut,
-      isLoading, // Renamed from 'loading'
+      isLoading, // Keep for backward compatibility
     }}>
       {children}
     </AuthContext.Provider>

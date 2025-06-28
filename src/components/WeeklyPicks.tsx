@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
 import { GameweekHeader } from './GameweekHeader';
@@ -10,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export const WeeklyPicks: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [undoing, setUndoing] = useState(false);
-  const { user } = useAuth();
+  const { status } = useAuth();
   const { 
     fixtures, 
     currentGameweek, 
@@ -24,8 +23,8 @@ export const WeeklyPicks: React.FC = () => {
     fixturesLoading 
   } = usePicks();
 
-  // Show auth prompt if user is not authenticated
-  if (!user) {
+  // Show auth prompt only if definitively unauthenticated
+  if (status === 'unauthenticated') {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
         <AuthPrompt 
@@ -33,6 +32,18 @@ export const WeeklyPicks: React.FC = () => {
           description="Create an account to start making your weekly picks and compete with friends!"
           feature="make picks"
         />
+      </div>
+    );
+  }
+
+  // Show loading if auth status is still loading
+  if (status === 'loading') {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple"></div>
+          <span className="ml-3 text-gray-600">Loading...</span>
+        </div>
       </div>
     );
   }

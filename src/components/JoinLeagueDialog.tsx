@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,7 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   
-  const { user } = useAuth();
+  const { user, status } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -53,7 +52,8 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    // Only proceed if we know the user is definitely not authenticated
+    if (status !== 'authenticated' || !user) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to join a league.",
