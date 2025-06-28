@@ -99,10 +99,6 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
         <>
           {leagues.length > 0 ? (
             <>
-              <div className="flex gap-2 justify-center mb-6">
-                <CreateLeagueDialog onLeagueCreated={onLeagueCreated} />
-                <JoinLeagueDialog onLeagueJoined={onLeagueJoined} />
-              </div>
               <LeagueSelector
                 leagues={leagues}
                 selectedLeagueId={selectedLeagueId}
@@ -116,10 +112,6 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
                 <p className="text-plpe-light-gray text-sm mb-4">
                   Create or join a league to compete with friends!
                 </p>
-                <div className="flex gap-2 justify-center">
-                  <CreateLeagueDialog onLeagueCreated={onLeagueCreated} />
-                  <JoinLeagueDialog onLeagueJoined={onLeagueJoined} />
-                </div>
               </div>
             </div>
           )}
@@ -144,6 +136,13 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
           <div className="text-plpe-neutral-700 text-sm">
             {activeTab === 'friends' ? 'Join a league to see friend standings!' : 'Start making picks to see the leaderboard!'}
           </div>
+        </div>
+      )}
+
+      {activeTab === 'friends' && (
+        <div className="flex gap-2 justify-center mt-6">
+          <CreateLeagueDialog onLeagueCreated={onLeagueCreated} />
+          <JoinLeagueDialog onLeagueJoined={onLeagueJoined} />
         </div>
       )}
     </div>

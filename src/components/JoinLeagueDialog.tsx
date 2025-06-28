@@ -230,8 +230,8 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center space-x-2">
-          <UserPlus className="h-4 w-4" />
+        <Button variant="outline" className="flex items-center space-x-2 text-black border-black hover:bg-black hover:text-white">
+          <UserPlus className="h-4 w-4 text-black" />
           <span>Join League</span>
         </Button>
       </DialogTrigger>

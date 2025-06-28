@@ -20,7 +20,7 @@ export const MobileLeaderboardTabs: React.FC<MobileLeaderboardTabsProps> = ({
             : 'text-gray-400 hover:text-white'
         }`}
       >
-        Friends
+        Leagues
       </button>
       <button
         onClick={() => onTabChange('global')}
