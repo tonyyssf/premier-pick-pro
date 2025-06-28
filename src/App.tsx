@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PicksProvider } from "@/contexts/PicksContext";
 import { SecurityHeaders } from "@/components/SecurityHeaders";
+import { AuthGuard } from "@/components/AuthGuard";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Leagues from "./pages/Leagues";
@@ -20,24 +21,26 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <PicksProvider>
-        <TooltipProvider>
-          <SecurityHeaders />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/leagues" element={<Leagues />} />
-              <Route path="/leaderboards" element={<Leaderboards />} />
-              <Route path="/how-to-play" element={<HowToPlay />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </PicksProvider>
+      <AuthGuard>
+        <PicksProvider>
+          <TooltipProvider>
+            <SecurityHeaders />
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/leagues" element={<Leagues />} />
+                <Route path="/leaderboards" element={<Leaderboards />} />
+                <Route path="/how-to-play" element={<HowToPlay />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </PicksProvider>
+      </AuthGuard>
     </AuthProvider>
   </QueryClientProvider>
 );

@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { WeeklyPicks } from '../components/WeeklyPicks';
 import { UserScoreDisplay } from '../components/UserScoreDisplay';
@@ -8,21 +8,18 @@ import { UserPickHistory } from '../components/UserPickHistory';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-plpe-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!user) {
+      navigate('/how-to-play', { replace: true });
+    }
+  }, [user, navigate]);
 
+  // If user is not authenticated, don't render anything (navigation will handle redirect)
   if (!user) {
-    return <Navigate to="/how-to-play" replace />;
+    return null;
   }
 
   return (
