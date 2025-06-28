@@ -42,13 +42,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isLoading = status === 'loading';
 
   useEffect(() => {
-    console.log('AuthProvider - Setting up auth state listener...');
+    console.log('AuthProvider - Initializing auth state listener...');
+    
+    let isInitialized = false;
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('AuthProvider - Auth state changed:', event, session?.user?.id || 'no user');
+        console.log('AuthProvider - Auth state changed:', { 
+          event, 
+          userId: session?.user?.id || 'no user',
+          timestamp: new Date().toISOString()
+        });
         
+        // Update all auth state together
+        setSession(session);
+        setUser(session?.user ?? null);
+        const newStatus = session?.user ? 'authenticated' : 'unauthenticated';
+        setStatus(newStatus);
+        
+        console.log('AuthProvider - Updated state:', { 
+          user: session?.user?.id || 'no user', 
+          status: newStatus,
+          isInitialized
+        });
+
+        // Log specific auth events
         if (event === 'SIGNED_IN' && session?.user) {
           securityLogger.log({
             type: 'auth_failure',
@@ -64,39 +83,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
           sessionManager.destroy();
         }
-        
-        // Update all auth state together
-        setSession(session);
-        setUser(session?.user ?? null);
-        setStatus(session?.user ? 'authenticated' : 'unauthenticated');
-        
-        console.log('AuthProvider - Updated state:', { 
-          user: session?.user?.id || 'no user', 
-          status: session?.user ? 'authenticated' : 'unauthenticated'
-        });
       }
     );
 
-    // Wait for one full getSession() round-trip *after* listener is live
+    // Get initial session after setting up the listener
     const initializeAuth = async () => {
       try {
-        console.log('AuthProvider - Checking for existing session...');
+        console.log('AuthProvider - Getting initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error('AuthProvider - Error getting session:', error);
           securityLogger.log({
             type: 'auth_failure',
             details: { activity: 'session_init_failed', error: error.message }
           });
-          // On error, set to unauthenticated since we can't determine the session
           setStatus('unauthenticated');
+          setUser(null);
+          setSession(null);
         } else {
-          console.log('AuthProvider - Initial session check:', session?.user?.id || 'no session');
-          // Only set unauthenticated if no session, let onAuthStateChange handle the rest
-          if (!session) {
+          console.log('AuthProvider - Initial session result:', {
+            hasSession: !!session,
+            userId: session?.user?.id || 'no user',
+            timestamp: new Date().toISOString()
+          });
+          
+          // The onAuthStateChange will handle the state update
+          // But if no session, we need to set unauthenticated immediately
+          if (!session && !isInitialized) {
+            console.log('AuthProvider - No initial session, setting unauthenticated');
             setStatus('unauthenticated');
+            setUser(null);
+            setSession(null);
           }
         }
+        
+        isInitialized = true;
       } catch (error) {
         console.error('AuthProvider - Failed to get initial session:', error);
         securityLogger.log({
@@ -104,18 +126,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           details: { activity: 'session_init_error', error: String(error) }
         });
         setStatus('unauthenticated');
+        setUser(null);
+        setSession(null);
+        isInitialized = true;
       }
     };
 
     initializeAuth();
 
-    // Set a timeout to ensure we don't stay in loading state forever
+    // Fallback timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      if (status === 'loading') {
+      if (!isInitialized) {
         console.log('AuthProvider - Timeout fallback, setting status to unauthenticated');
         setStatus('unauthenticated');
+        setUser(null);
+        setSession(null);
+        isInitialized = true;
       }
-    }, 2000);
+    }, 3000);
 
     return () => {
       console.log('AuthProvider - Cleaning up auth subscription...');
