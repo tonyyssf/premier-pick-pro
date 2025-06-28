@@ -52,7 +52,7 @@ export const JoinLeagueForm: React.FC<JoinLeagueFormProps> = ({
         <Button 
           type="submit" 
           disabled={isLoading} 
-          className="flex-1 bg-plpe-purple text-white hover:bg-plpe-blue"
+          className="flex-1 bg-plpe-purple text-plpe-white hover:bg-plpe-blue hover:text-plpe-white"
         >
           {isLoading ? 'Joining...' : 'Join League'}
         </Button>
