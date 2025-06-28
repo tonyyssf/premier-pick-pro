@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MobileLeaderboardView } from '@/components/MobileLeaderboardView';
 import { LeaderboardTabs } from '@/components/LeaderboardTabs';
 import { BottomNavigation } from '@/components/BottomNavigation';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LeagueWithRank {
   id: string;
@@ -26,7 +25,7 @@ const Leaderboards = () => {
   
   const { user } = useAuth();
   const { toast } = useToast();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   const fetchLeaguesWithRanks = async () => {
     if (!user) return;
