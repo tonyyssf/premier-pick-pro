@@ -67,13 +67,6 @@ export const AuthScreen: React.FC = () => {
     }
   };
 
-  const handleSocialAuth = (provider: 'google' | 'apple') => {
-    toast({
-      title: "Coming Soon",
-      description: `${provider} authentication will be available soon`,
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col px-8 py-12">
       {/* Logo */}
@@ -159,35 +152,6 @@ export const AuthScreen: React.FC = () => {
           {isSignUp ? 'Sign Up' : 'Sign In'}
         </Button>
       </form>
-
-      {/* Social Auth Divider */}
-      <div className="flex items-center mb-8">
-        <div className="flex-1 border-t border-gray-700"></div>
-        <span className="px-4 text-gray-500 text-sm">or continue with</span>
-        <div className="flex-1 border-t border-gray-700"></div>
-      </div>
-
-      {/* Social Auth Buttons */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => handleSocialAuth('google')}
-          className="bg-transparent border-gray-700 text-white hover:bg-gray-800 h-14 rounded-xl"
-        >
-          <span className="mr-2">G</span>
-          Google
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => handleSocialAuth('apple')}
-          className="bg-transparent border-gray-700 text-white hover:bg-gray-800 h-14 rounded-xl"
-        >
-          <span className="mr-2">🍎</span>
-          Apple
-        </Button>
-      </div>
 
       {/* Switch Auth Mode */}
       <div className="text-center">
