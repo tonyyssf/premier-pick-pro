@@ -19,8 +19,6 @@ export const PickConfirmationModal: React.FC<PickConfirmationModalProps> = ({
   onCancel,
   submitting
 }) => {
-  const winProbability = Math.floor(Math.random() * 40 + 30); // Mock probability
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 w-full max-w-md rounded-xl p-6 animate-slide-in-right mb-20">
@@ -46,9 +44,6 @@ export const PickConfirmationModal: React.FC<PickConfirmationModalProps> = ({
               <div className="text-white font-semibold text-lg">{pick.team.name}</div>
               <div className="text-gray-400">vs. {pick.opponent.name} ({pick.venue})</div>
             </div>
-          </div>
-          <div className="text-gray-300">
-            Win probability: <span className="text-white font-medium">{winProbability}%</span>
           </div>
         </div>
         

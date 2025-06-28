@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { usePicks } from '../contexts/PicksContext';
 import { StreamlinedFixtureCard } from './StreamlinedFixtureCard';
 import { PickConfirmationModal } from './PickConfirmationModal';
+import { Button } from './ui/button';
+import { Undo } from 'lucide-react';
 
 export const PickFixturesList: React.FC = () => {
   const [selectedPick, setSelectedPick] = useState<{
@@ -13,11 +15,14 @@ export const PickFixturesList: React.FC = () => {
     venue: string;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [undoing, setUndoing] = useState(false);
   
   const { 
     fixtures, 
     currentGameweek, 
     submitPick, 
+    undoPick,
+    canUndoPick,
     getTeamUsedCount, 
     hasPickForGameweek, 
     getCurrentPick, 
@@ -27,6 +32,7 @@ export const PickFixturesList: React.FC = () => {
 
   const currentPick = getCurrentPick();
   const hasAlreadyPicked = currentGameweek ? hasPickForGameweek(currentGameweek.id) : false;
+  const canUndo = canUndoPick();
 
   const handleTeamSelect = (fixtureId: string, teamId: string) => {
     const fixture = fixtures.find(f => f.id === fixtureId);
@@ -55,6 +61,12 @@ export const PickFixturesList: React.FC = () => {
     setSelectedPick(null);
   };
 
+  const handleUndoPick = async () => {
+    setUndoing(true);
+    await undoPick();
+    setUndoing(false);
+  };
+
   if (loading || fixturesLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -76,14 +88,26 @@ export const PickFixturesList: React.FC = () => {
     if (fixture) {
       const team = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.homeTeam : fixture.awayTeam;
       const opponent = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.awayTeam : fixture.homeTeam;
+      const venue = fixture.homeTeam.id === currentPick.pickedTeamId ? 'H' : 'A';
       
       return (
-        <div className="p-4">
-          <div className="bg-gray-800 rounded-lg p-4 text-center">
+        <div className="p-4 pb-20">
+          <div className="bg-gray-800 rounded-lg p-4 text-center mb-4">
             <h3 className="text-lg font-semibold mb-2">Your Pick</h3>
             <div className="text-purple-400 font-medium">{team.name}</div>
-            <div className="text-gray-400 text-sm">vs. {opponent.name}</div>
+            <div className="text-gray-400 text-sm">vs. {opponent.name} ({venue})</div>
           </div>
+          {canUndo && (
+            <Button 
+              onClick={handleUndoPick}
+              disabled={undoing}
+              variant="outline"
+              className="w-full bg-transparent border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white"
+            >
+              <Undo className="w-4 h-4 mr-2" />
+              {undoing ? 'Undoing...' : 'Undo Pick'}
+            </Button>
+          )}
         </div>
       );
     }

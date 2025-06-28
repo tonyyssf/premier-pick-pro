@@ -39,8 +39,7 @@ export const StreamlinedFixtureCard: React.FC<StreamlinedFixtureCardProps> = ({
     venue: string;
     usedCount: number;
     isDisabled: boolean;
-    winProbability: number;
-  }> = ({ team, opponent, venue, usedCount, isDisabled, winProbability }) => (
+  }> = ({ team, opponent, venue, usedCount, isDisabled }) => (
     <button
       className={`
         w-full flex items-center justify-between p-3 rounded-lg transition-colors
@@ -70,22 +69,15 @@ export const StreamlinedFixtureCard: React.FC<StreamlinedFixtureCardProps> = ({
         </div>
       </div>
       
-      <div className="flex items-center space-x-3">
-        <span className="text-gray-300 font-medium">{winProbability}%</span>
-        <div className="w-8 h-8 rounded-full border-2 border-gray-500 flex items-center justify-center">
-          {isDisabled ? (
-            <X className="w-4 h-4 text-red-500" />
-          ) : (
-            <div className="w-4 h-4 rounded-full bg-transparent" />
-          )}
-        </div>
+      <div className="w-8 h-8 rounded-full border-2 border-gray-500 flex items-center justify-center">
+        {isDisabled ? (
+          <X className="w-4 h-4 text-red-500" />
+        ) : (
+          <div className="w-4 h-4 rounded-full bg-transparent" />
+        )}
       </div>
     </button>
   );
-
-  // Mock win probabilities - in real app these would come from API
-  const homeWinProbability = Math.floor(Math.random() * 40 + 30); // 30-70%
-  const awayWinProbability = Math.floor(Math.random() * 40 + 30); // 30-70%
 
   return (
     <div className="mx-4 space-y-2">
@@ -95,7 +87,6 @@ export const StreamlinedFixtureCard: React.FC<StreamlinedFixtureCardProps> = ({
         venue="H"
         usedCount={maxUses - homeTeamUsedCount}
         isDisabled={isHomeTeamDisabled}
-        winProbability={homeWinProbability}
       />
       <TeamRow
         team={fixture.awayTeam}
@@ -103,7 +94,6 @@ export const StreamlinedFixtureCard: React.FC<StreamlinedFixtureCardProps> = ({
         venue="A"
         usedCount={maxUses - awayTeamUsedCount}
         isDisabled={isAwayTeamDisabled}
-        winProbability={awayWinProbability}
       />
     </div>
   );
