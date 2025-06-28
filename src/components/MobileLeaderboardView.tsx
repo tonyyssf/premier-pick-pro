@@ -4,6 +4,8 @@ import { PodiumLeaderboard } from './PodiumLeaderboard';
 import { LeaderboardList } from './LeaderboardList';
 import { MobileLeaderboardTabs } from './MobileLeaderboardTabs';
 import { LeagueSelector } from './LeagueSelector';
+import { CreateLeagueDialog } from './CreateLeagueDialog';
+import { JoinLeagueDialog } from './JoinLeagueDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeeklyStandings } from '@/hooks/useRealtimeStandings';
 import { StandingsLoadingState } from './StandingsLoadingState';
@@ -32,13 +34,17 @@ interface MobileLeaderboardViewProps {
   leagues?: League[];
   selectedLeagueId?: string | null;  
   onLeagueSelect?: (leagueId: string | null) => void;
+  onLeagueCreated?: () => void;
+  onLeagueJoined?: () => void;
 }
 
 export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
   leagueStandings = {},
   leagues = [],
   selectedLeagueId,
-  onLeagueSelect
+  onLeagueSelect,
+  onLeagueCreated,
+  onLeagueJoined
 }) => {
   const [activeTab, setActiveTab] = useState<'friends' | 'global'>('friends');
   const { user } = useAuth();
@@ -89,12 +95,29 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
         onTabChange={setActiveTab}
       />
       
-      {activeTab === 'friends' && leagues.length > 0 && (
-        <LeagueSelector
-          leagues={leagues}
-          selectedLeagueId={selectedLeagueId}
-          onLeagueSelect={onLeagueSelect}
-        />
+      {activeTab === 'friends' && (
+        <>
+          {leagues.length > 0 ? (
+            <LeagueSelector
+              leagues={leagues}
+              selectedLeagueId={selectedLeagueId}
+              onLeagueSelect={onLeagueSelect}
+            />
+          ) : (
+            <div className="mb-6 bg-gray-800 rounded-lg p-4">
+              <div className="text-center">
+                <h3 className="text-white font-semibold mb-2">No Leagues Yet</h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  Create or join a league to compete with friends!
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <CreateLeagueDialog onLeagueCreated={onLeagueCreated} />
+                  <JoinLeagueDialog onLeagueJoined={onLeagueJoined} />
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
       
       {currentStandings.length > 0 ? (

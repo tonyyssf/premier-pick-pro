@@ -5,7 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { MobileLeaderboardView } from '@/components/MobileLeaderboardView';
+import { LeaderboardTabs } from '@/components/LeaderboardTabs';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { useMobile } from '@/hooks/use-mobile';
 
 interface LeagueWithRank {
   id: string;
@@ -20,9 +22,11 @@ const Leaderboards = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [leagueStandings, setLeagueStandings] = useState<{ [leagueId: string]: any[] }>({});
   const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(null);
+  const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set());
   
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useMobile();
 
   const fetchLeaguesWithRanks = async () => {
     if (!user) return;
@@ -113,6 +117,34 @@ const Leaderboards = () => {
     }
   };
 
+  const handleToggleExpansion = (leagueId: string) => {
+    setExpandedLeagues(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(leagueId)) {
+        newSet.delete(leagueId);
+      } else {
+        newSet.add(leagueId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleLeagueCreated = () => {
+    fetchLeaguesWithRanks();
+    toast({
+      title: "Success",
+      description: "League created successfully! Refreshing your leagues...",
+    });
+  };
+
+  const handleLeagueJoined = () => {
+    fetchLeaguesWithRanks();
+    toast({
+      title: "Success", 
+      description: "Joined league successfully! Refreshing your leagues...",
+    });
+  };
+
   useEffect(() => {
     fetchLeaguesWithRanks();
   }, [user]);
@@ -124,12 +156,26 @@ const Leaderboards = () => {
           <h1 className="text-2xl font-bold text-white">Leaderboard</h1>
         </div>
         
-        <MobileLeaderboardView 
-          leagueStandings={leagueStandings}
-          leagues={leaguesWithRanks}
-          selectedLeagueId={selectedLeagueId}
-          onLeagueSelect={setSelectedLeagueId}
-        />
+        {isMobile ? (
+          <MobileLeaderboardView 
+            leagueStandings={leagueStandings}
+            leagues={leaguesWithRanks}
+            selectedLeagueId={selectedLeagueId}
+            onLeagueSelect={setSelectedLeagueId}
+          />
+        ) : (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <LeaderboardTabs
+              leaguesWithRanks={leaguesWithRanks}
+              isLoading={isLoading}
+              expandedLeagues={expandedLeagues}
+              onToggleExpansion={handleToggleExpansion}
+              onRefreshNeeded={fetchLeaguesWithRanks}
+              onLeagueCreated={handleLeagueCreated}
+              onLeagueJoined={handleLeagueJoined}
+            />
+          </div>
+        )}
         
         <BottomNavigation />
       </div>
