@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PodiumLeaderboard } from './PodiumLeaderboard';
 import { LeaderboardList } from './LeaderboardList';
