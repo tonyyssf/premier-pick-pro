@@ -1,7 +1,5 @@
 
 import React, { useState } from 'react';
-import { PodiumLeaderboard } from './PodiumLeaderboard';
-import { LeaderboardList } from './LeaderboardList';
 import { MobileLeaderboardTabs } from './MobileLeaderboardTabs';
 import { LeagueSelector } from './LeagueSelector';
 import { CreateLeagueDialog } from './CreateLeagueDialog';
@@ -9,6 +7,7 @@ import { JoinLeagueDialog } from './JoinLeagueDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeeklyStandings } from '@/hooks/useRealtimeStandings';
 import { StandingsLoadingState } from './StandingsLoadingState';
+import { WeeklyStandingsTable } from './WeeklyStandingsTable';
 
 interface Standing {
   id: string;
@@ -84,6 +83,11 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
 
   const currentStandings = getCurrentStandings();
 
+  // Get selected league info for header
+  const selectedLeague = leagues.find(league => league.id === selectedLeagueId);
+  const firstLeague = leagues[0];
+  const displayLeague = selectedLeague || firstLeague;
+
   if (loading && currentStandings.length === 0) {
     return <StandingsLoadingState />;
   }
@@ -104,6 +108,33 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
                 selectedLeagueId={selectedLeagueId}
                 onLeagueSelect={onLeagueSelect}
               />
+              
+              {/* League Header with member count and user rank */}
+              {displayLeague && (
+                <div className="bg-plpe-neutral-800 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-plpe-white font-semibold text-lg">{displayLeague.name}</h3>
+                      <div className="flex items-center gap-4 text-plpe-light-gray text-sm">
+                        <span>👥 {displayLeague.member_count || 0} members</span>
+                        {displayLeague.user_rank && (
+                          <span>Your Rank: #{displayLeague.user_rank}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* League Standings Header */}
+              {displayLeague && (
+                <div className="mb-4">
+                  <h4 className="text-plpe-white font-semibold mb-2">
+                    {displayLeague.name} Standings
+                    <span className="text-sm font-normal text-plpe-light-gray ml-2">(Weekly Updates)</span>
+                  </h4>
+                </div>
+              )}
             </>
           ) : (
             <div className="mb-6 bg-plpe-neutral-700 rounded-lg p-4">
@@ -119,17 +150,13 @@ export const MobileLeaderboardView: React.FC<MobileLeaderboardViewProps> = ({
       )}
       
       {currentStandings.length > 0 ? (
-        <>
-          <PodiumLeaderboard 
+        <div className="bg-plpe-neutral-800 rounded-lg overflow-hidden">
+          <WeeklyStandingsTable 
             standings={currentStandings}
             currentUserId={user?.id}
+            isLoading={loading}
           />
-          <LeaderboardList 
-            standings={currentStandings}
-            currentUserId={user?.id}
-            startFrom={4}
-          />
-        </>
+        </div>
       ) : (
         <div className="text-center py-12">
           <div className="text-plpe-light-gray text-lg mb-2">No standings yet</div>
