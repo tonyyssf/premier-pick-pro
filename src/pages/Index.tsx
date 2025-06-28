@@ -6,7 +6,6 @@ import { GameweekStatusCard } from '../components/GameweekStatusCard';
 import { UserPickStatusCard } from '../components/UserPickStatusCard';
 import { StatsCards } from '../components/StatsCards';
 import { RecentResults } from '../components/RecentResults';
-import { FriendsLeaderboard } from '../components/FriendsLeaderboard';
 import { BottomNavigation } from '../components/BottomNavigation';
 
 const Index = () => {
@@ -18,7 +17,6 @@ const Index = () => {
         <UserPickStatusCard />
         <StatsCards />
         <RecentResults />
-        <FriendsLeaderboard />
         <BottomNavigation />
       </div>
     </ProtectedRoute>
