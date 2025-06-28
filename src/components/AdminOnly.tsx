@@ -11,10 +11,10 @@ interface AdminOnlyProps {
 }
 
 export const AdminOnly: React.FC<AdminOnlyProps> = ({ children }) => {
-  const { user, status } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useAdmin();
 
-  if (status === 'loading' || adminLoading) {
+  if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -25,7 +25,7 @@ export const AdminOnly: React.FC<AdminOnlyProps> = ({ children }) => {
     );
   }
 
-  if (status === 'unauthenticated') {
+  if (!user) {
     return <Navigate to="/auth" replace />;
   }
 

@@ -7,8 +7,6 @@ import { AuthHeader } from '@/components/AuthHeader';
 import { AuthTabs } from '@/components/AuthTabs';
 
 const Auth = () => {
-  console.log('Auth component rendered');
-  
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -17,7 +15,6 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('Auth - User detected, redirecting to /');
       navigate('/');
     }
   }, [user, navigate]);

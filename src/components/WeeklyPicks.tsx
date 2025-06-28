@@ -3,34 +3,53 @@ import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
 import { GameweekHeader } from './GameweekHeader';
 import { PickConfirmationCard } from './PickConfirmationCard';
+import { usePicks } from '../contexts/PicksContext';
 
 export const WeeklyPicks: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [undoing, setUndoing] = useState(false);
-  
-  // Mock data for now since we removed authentication
-  const loading = false;
-  const fixturesLoading = false;
-  const fixtures: any[] = [];
-  const currentGameweek = null;
-  const currentPick = null;
-  const hasAlreadyPicked = false;
-  const canUndo = false;
+  const { 
+    fixtures, 
+    currentGameweek, 
+    submitPick, 
+    undoPick,
+    canUndoPick,
+    getTeamUsedCount, 
+    hasPickForGameweek, 
+    getCurrentPick, 
+    loading, 
+    fixturesLoading 
+  } = usePicks();
+
+  const currentPick = getCurrentPick();
+  const hasAlreadyPicked = currentGameweek ? hasPickForGameweek(currentGameweek.id) : false;
+  const canUndo = canUndoPick();
 
   const handleTeamSelect = async (fixtureId: string, teamId: string) => {
-    console.log('Team selected:', { fixtureId, teamId });
+    if (submitting) return; // Prevent double submission
+    
+    setSubmitting(true);
+    await submitPick(fixtureId, teamId);
+    setSubmitting(false);
   };
 
   const handleUndoPick = async () => {
-    console.log('Undo pick');
+    setUndoing(true);
+    await undoPick();
+    setUndoing(false);
   };
 
   const getCurrentPickInfo = () => {
-    return null;
-  };
-
-  const getTeamUsedCount = (teamId: string) => {
-    return 0;
+    if (!currentPick) return null;
+    
+    const fixture = fixtures.find(f => f.id === currentPick.fixtureId);
+    if (!fixture) return null;
+    
+    const team = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.homeTeam : fixture.awayTeam;
+    const opponent = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.awayTeam : fixture.homeTeam;
+    const venue = fixture.homeTeam.id === currentPick.pickedTeamId ? 'Home' : 'Away';
+    
+    return { team, opponent, venue, fixture };
   };
 
   if (loading || fixturesLoading) {

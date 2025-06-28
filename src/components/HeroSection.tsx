@@ -1,21 +1,14 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Target, Users } from 'lucide-react';
 import { GameRulesModal } from './GameRulesModal';
-import { useAuth } from '@/contexts/AuthContext';
 
 export const HeroSection: React.FC = () => {
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const handleStartPlaying = () => {
-    if (user) {
-      navigate('/');
-    } else {
-      navigate('/auth');
-    }
+    navigate('/');
   };
 
   const handleHowItWorks = () => {
@@ -39,7 +32,7 @@ export const HeroSection: React.FC = () => {
                 onClick={handleStartPlaying}
                 className="bg-white text-plpe-purple px-8 py-3 rounded-lg font-semibold hover:bg-purple-50 transition-colors shadow-lg"
               >
-                {user ? 'Go to My Picks' : 'Sign Up to Play'}
+                Start Playing
               </button>
               <button 
                 onClick={handleHowItWorks}
@@ -68,20 +61,6 @@ export const HeroSection: React.FC = () => {
                 <p className="text-purple-100">Join private leagues with friends or climb the global leaderboard!</p>
               </div>
             </div>
-
-            {!user && (
-              <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-2xl mx-auto">
-                <p className="text-purple-100 text-lg mb-4">
-                  Ready to test your Premier League knowledge?
-                </p>
-                <button 
-                  onClick={() => navigate('/auth')}
-                  className="bg-white text-plpe-purple px-6 py-2 rounded-lg font-semibold hover:bg-purple-50 transition-colors"
-                >
-                  Create Your Account
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>

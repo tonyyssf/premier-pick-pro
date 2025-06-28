@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { inviteCodeSchema } from '@/utils/validation';
 import { findLeagueByInviteCode } from '@/utils/leagueInviteUtils';
@@ -23,11 +23,8 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   
+  const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Mock user data since authentication is removed
-  const user = { id: 'mock-user-id' };
 
   const validateInviteCode = (code: string) => {
     try {
@@ -54,6 +51,15 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to join a league.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const trimmedCode = inviteCode.trim().toUpperCase();
     
     if (!validateInviteCode(trimmedCode)) {

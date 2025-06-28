@@ -1,19 +1,38 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { adminSyncLimiter, checkRateLimit } from '@/utils/rateLimiter';
 
 export const useAdmin = () => {
-  // Since we removed authentication, we'll return a mock admin status
+  const { user } = useAuth();
+
   const { data: isAdmin, isLoading } = useQuery({
-    queryKey: ['admin-check'],
+    queryKey: ['admin-check', user?.id],
     queryFn: async () => {
-      // Mock admin check - in a real app you'd check authentication
-      return true;
+      if (!user) return false;
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+      }
+      
+      return data?.role === 'admin';
     },
+    enabled: !!user,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const checkSyncRateLimit = () => {
-    return { allowed: true, timeUntilReset: 0 };
+    if (!user) return { allowed: false, timeUntilReset: 0 };
+    
+    return checkRateLimit(adminSyncLimiter, user.id);
   };
 
   return {

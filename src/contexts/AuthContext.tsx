@@ -5,11 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { sessionManager } from '@/utils/sessionSecurity';
 import { securityLogger } from '@/utils/securityLogger';
 import { enhancedAuthLimiter, checkEnhancedRateLimit } from '@/utils/enhancedRateLimiter';
-import { z } from 'zod';
-
-// Use standard validation schemas instead of overly strict enhanced ones
-const emailSchema = z.string().email('Invalid email format');
-const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
+import { validateAndSanitizeInput, enhancedEmailSchema, enhancedPasswordSchema } from '@/utils/enhancedValidation';
 
 interface UserMetadata {
   username?: string;
@@ -17,64 +13,31 @@ interface UserMetadata {
   phone_number?: string;
 }
 
-type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  status: AuthStatus;
   signUp: (email: string, password: string, metadata?: UserMetadata) => Promise<{ error: any }>;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  // Keep isLoading for backward compatibility but deprecate it
-  isLoading: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-  initialSession?: Session | null;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSession }) => {
-  const [user, setUser] = useState<User | null>(initialSession?.user ?? null);
-  const [session, setSession] = useState<Session | null>(initialSession ?? null);
-  const [status, setStatus] = useState<AuthStatus>(
-    initialSession?.user ? 'authenticated' : 'unauthenticated'
-  );
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Backward compatibility - derive isLoading from status
-  const isLoading = status === 'loading';
-
   useEffect(() => {
-    console.log('AuthProvider - Initializing with initial session:', {
-      hasSession: !!initialSession,
-      userId: initialSession?.user?.id || 'no user'
-    });
+    console.log('Setting up auth state listener...');
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('AuthProvider - Auth state changed:', { 
-          event, 
-          userId: session?.user?.id || 'no user',
-          timestamp: new Date().toISOString()
-        });
+        console.log('Auth state changed:', event, session?.user?.id || 'no user');
         
-        // Update all auth state together
-        setSession(session);
-        setUser(session?.user ?? null);
-        const newStatus = session?.user ? 'authenticated' : 'unauthenticated';
-        setStatus(newStatus);
-        
-        console.log('AuthProvider - Updated state:', { 
-          user: session?.user?.id || 'no user', 
-          status: newStatus
-        });
-
-        // Log specific auth events
         if (event === 'SIGNED_IN' && session?.user) {
           securityLogger.log({
             type: 'auth_failure',
@@ -90,14 +53,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
           });
           sessionManager.destroy();
         }
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
+    // Check for existing session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+          securityLogger.log({
+            type: 'auth_failure',
+            details: { activity: 'session_init_failed', error: error.message }
+          });
+        } else {
+          console.log('Initial session check:', session?.user?.id || 'no session');
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Failed to get initial session:', error);
+        securityLogger.log({
+          type: 'auth_failure',
+          details: { activity: 'session_init_error', error: String(error) }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
     return () => {
-      console.log('AuthProvider - Cleaning up auth subscription...');
+      console.log('Cleaning up auth subscription...');
       subscription.unsubscribe();
     };
-  }, [initialSession]);
+  }, []);
 
   const signUp = async (email: string, password: string, metadata?: UserMetadata) => {
     // Rate limiting check
@@ -130,23 +125,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
     }
 
     try {
-      // Use standard validation instead of overly strict enhanced validation
-      const emailValidation = emailSchema.safeParse(email);
-      const passwordValidation = passwordSchema.safeParse(password);
-      
-      if (!emailValidation.success) {
-        throw new Error(emailValidation.error.errors[0].message);
-      }
-      
-      if (!passwordValidation.success) {
-        throw new Error(passwordValidation.error.errors[0].message);
-      }
+      // Enhanced input validation
+      const validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
+      const validatedPassword = validateAndSanitizeInput(password, enhancedPasswordSchema);
       
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
-        email: emailValidation.data,
-        password: passwordValidation.data,
+        email: validatedEmail,
+        password: validatedPassword,
         options: {
           emailRedirectTo: redirectUrl,
           data: metadata
@@ -159,7 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
           details: { 
             activity: 'signup_failed',
             error: error.message,
-            email: emailValidation.data
+            email: validatedEmail
           }
         });
         
@@ -173,7 +160,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
           type: 'suspicious_activity',
           details: { 
             activity: 'signup_successful',
-            email: emailValidation.data
+            email: validatedEmail
           }
         });
         
@@ -194,7 +181,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
         }
       });
       
-      const error = new Error(validationError.message);
+      const error = new Error('Invalid email or password format');
       toast({
         title: "Validation Error",
         description: error.message,
@@ -236,15 +223,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
     }
 
     try {
-      // Use standard validation for email
-      const emailValidation = emailSchema.safeParse(email);
-      
-      if (!emailValidation.success) {
-        throw new Error(emailValidation.error.errors[0].message);
-      }
+      // Enhanced input validation
+      const validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
       
       const { error } = await supabase.auth.signInWithPassword({
-        email: emailValidation.data,
+        email: validatedEmail,
         password: password, // Don't log password in validation
       });
 
@@ -254,7 +237,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
           details: { 
             activity: 'signin_failed',
             error: error.message,
-            email: emailValidation.data
+            email: validatedEmail
           }
         });
         
@@ -268,7 +251,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
           type: 'suspicious_activity',
           details: { 
             activity: 'signin_successful',
-            email: emailValidation.data,
+            email: validatedEmail,
             rememberMe
           }
         });
@@ -295,7 +278,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
         }
       });
       
-      const error = new Error(validationError.message);
+      const error = new Error('Invalid email format');
       toast({
         title: "Validation Error",
         description: error.message,
@@ -327,7 +310,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
           // Clear local state anyway
           setSession(null);
           setUser(null);
-          setStatus('unauthenticated');
           toast({
             title: "Signed Out",
             description: "You have been signed out.",
@@ -351,7 +333,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
       // Force clear local state on any error
       setSession(null);
       setUser(null);
-      setStatus('unauthenticated');
       toast({
         title: "Signed Out",
         description: "You have been signed out.",
@@ -363,11 +344,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialSes
     <AuthContext.Provider value={{
       user,
       session,
-      status,
       signUp,
       signIn,
       signOut,
-      isLoading, // Keep for backward compatibility
+      loading,
     }}>
       {children}
     </AuthContext.Provider>
