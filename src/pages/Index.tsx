@@ -12,7 +12,7 @@ import { BottomNavigation } from '../components/BottomNavigation';
 const Index = () => {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-plpe-neutral-900">
         <HomeHeader />
         <GameweekStatusCard />
         <UserPickStatusCard />

@@ -103,8 +103,8 @@
 
   body {
     @apply bg-background text-foreground;
-    background-color: #FFFFFF;
-    color: #1A1A1A;
+    background-color: var(--plpe-neutral-900);
+    color: var(--plpe-white);
     /* Performance optimizations for mobile */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

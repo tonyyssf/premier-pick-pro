@@ -68,7 +68,7 @@ export const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col px-8 py-12">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col px-8 py-12">
       {/* Logo */}
       <div className="flex justify-center mb-12">
         <div className="w-20 h-20 rounded-full bg-plpe-purple flex items-center justify-center">
@@ -78,10 +78,10 @@ export const AuthScreen: React.FC = () => {
 
       {/* Title */}
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold mb-2 text-gray-900">
+        <h1 className="text-3xl font-bold mb-2">
           {isSignUp ? 'Create your account' : 'Welcome back'}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-400">
           {isSignUp ? 'Join Premier League Pick\'em today' : 'Sign in to continue playing'}
         </p>
       </div>
@@ -91,26 +91,26 @@ export const AuthScreen: React.FC = () => {
         {isSignUp && (
           <>
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-gray-900 text-base">Full Name</Label>
+              <Label htmlFor="name" className="text-white text-base">Full Name</Label>
               <Input
                 id="name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Enter your full name"
-                className="bg-white border-gray-300 text-gray-900 placeholder-gray-500 h-14 text-base rounded-xl focus:border-plpe-purple focus:ring-plpe-purple"
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-14 text-base rounded-xl focus:border-plpe-purple focus:ring-plpe-purple"
                 required={isSignUp}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-gray-900 text-base">Display Name</Label>
+              <Label htmlFor="username" className="text-white text-base">Display Name</Label>
               <Input
                 id="username"
                 type="text"
                 value={formData.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
                 placeholder="Pick'Em Pro"
-                className="bg-white border-gray-300 text-gray-900 placeholder-gray-500 h-14 text-base rounded-xl focus:border-plpe-purple focus:ring-plpe-purple"
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-14 text-base rounded-xl focus:border-plpe-purple focus:ring-plpe-purple"
                 required={isSignUp}
               />
             </div>
@@ -118,27 +118,27 @@ export const AuthScreen: React.FC = () => {
         )}
         
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-gray-900 text-base">Email</Label>
+          <Label htmlFor="email" className="text-white text-base">Email</Label>
           <Input
             id="email"
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
             placeholder="your@email.com"
-            className="bg-white border-gray-300 text-gray-900 placeholder-gray-500 h-14 text-base rounded-xl focus:border-plpe-purple focus:ring-plpe-purple"
+            className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-14 text-base rounded-xl focus:border-plpe-purple focus:ring-plpe-purple"
             required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-gray-900 text-base">Password</Label>
+          <Label htmlFor="password" className="text-white text-base">Password</Label>
           <Input
             id="password"
             type="password"
             value={formData.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
             placeholder="••••••••"
-            className="bg-white border-gray-300 text-gray-900 placeholder-gray-500 h-14 text-base rounded-xl focus:border-plpe-purple focus:ring-plpe-purple"
+            className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-14 text-base rounded-xl focus:border-plpe-purple focus:ring-plpe-purple"
             required
           />
         </div>
@@ -155,7 +155,7 @@ export const AuthScreen: React.FC = () => {
 
       {/* Switch Auth Mode */}
       <div className="text-center">
-        <span className="text-gray-600">
+        <span className="text-gray-400">
           {isSignUp ? 'Already have an account?' : "Don't have an account?"}
         </span>
         <Button
