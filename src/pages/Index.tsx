@@ -1,23 +1,33 @@
 
 import React from 'react';
-import { Layout } from '../components/Layout';
-import { WeeklyPicks } from '../components/WeeklyPicks';
-import { UserScoreDisplay } from '../components/UserScoreDisplay';
 import { ProtectedRoute } from '../components/ProtectedRoute';
-import { UserPickHistory } from '../components/UserPickHistory';
+import { HomeHeader } from '../components/HomeHeader';
+import { GameweekStatusCard } from '../components/GameweekStatusCard';
+import { UserPickStatusCard } from '../components/UserPickStatusCard';
+import { StatsCards } from '../components/StatsCards';
+import { RecentResults } from '../components/RecentResults';
+import { FriendsLeaderboard } from '../components/FriendsLeaderboard';
+import { WeeklyPicks } from '../components/WeeklyPicks';
+import { BottomNavigation } from '../components/BottomNavigation';
 
 const Index = () => {
   return (
     <ProtectedRoute>
-      <Layout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <UserScoreDisplay />
+      <div className="min-h-screen bg-gray-900">
+        <HomeHeader />
+        <GameweekStatusCard />
+        <UserPickStatusCard />
+        <StatsCards />
+        <RecentResults />
+        <FriendsLeaderboard />
+        
+        {/* Weekly Picks Section - Hidden by default, shown when user clicks Make Pick */}
+        <div className="mt-8">
+          <WeeklyPicks />
         </div>
-        <WeeklyPicks />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <UserPickHistory />
-        </div>
-      </Layout>
+        
+        <BottomNavigation />
+      </div>
     </ProtectedRoute>
   );
 };
