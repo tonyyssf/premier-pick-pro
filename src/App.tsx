@@ -44,15 +44,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Component to handle routing logic
-const AppRoutes = () => {
+// Home route component that handles root path logic
+const HomeRoute = () => {
   const { status } = useAuth();
 
-  console.log('AppRoutes - Current status:', status, 'Current path:', window.location.pathname);
+  console.log('HomeRoute - Current status:', status);
 
-  // Show loading spinner while session is being restored
+  // While loading, show loading screen
   if (status === 'loading') {
-    console.log('AppRoutes - Showing loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -63,24 +62,25 @@ const AppRoutes = () => {
     );
   }
 
+  // Once auth is resolved, redirect based on status
+  if (status === 'authenticated') {
+    return <Index />;
+  } else {
+    return <Navigate to="/how-to-play" replace />;
+  }
+};
+
+// Component to handle routing logic
+const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public routes - always accessible */}
+      {/* Public routes - completely independent of auth state */}
       <Route path="/how-to-play" element={<HowToPlay />} />
       <Route path="/leaderboards" element={<Leaderboards />} />
       <Route path="/auth" element={<Auth />} />
       
-      {/* Root route logic */}
-      <Route 
-        path="/" 
-        element={
-          status === 'authenticated' ? (
-            <Index />
-          ) : (
-            <Navigate to="/how-to-play" replace />
-          )
-        } 
-      />
+      {/* Root route with smart redirect logic */}
+      <Route path="/" element={<HomeRoute />} />
       
       {/* Protected routes */}
       <Route 
