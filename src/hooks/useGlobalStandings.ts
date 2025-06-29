@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { standingsService } from '@/services/standingsService';
 import type { UserStanding } from '@/types/standings';
@@ -8,7 +8,7 @@ export const useGlobalStandings = () => {
   const [userStandings, setUserStandings] = useState<UserStanding[]>([]);
   const { toast } = useToast();
 
-  const loadGlobalStandings = async () => {
+  const loadGlobalStandings = useCallback(async () => {
     try {
       // First cleanup any duplicate global standings
       await standingsService.cleanupDuplicateGlobalStandings();
@@ -24,7 +24,7 @@ export const useGlobalStandings = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
   return {
     userStandings,

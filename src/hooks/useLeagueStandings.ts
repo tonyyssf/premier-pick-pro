@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { standingsService } from '@/services/standingsService';
 import type { LeagueStanding } from '@/types/standings';
@@ -8,7 +8,7 @@ export const useLeagueStandings = () => {
   const [leagueStandings, setLeagueStandings] = useState<{ [leagueId: string]: LeagueStanding[] }>({});
   const { toast } = useToast();
 
-  const loadLeagueStandings = async (leagueId: string) => {
+  const loadLeagueStandings = useCallback(async (leagueId: string) => {
     try {
       const standings = await standingsService.fetchLeagueStandings(leagueId);
       setLeagueStandings(prev => ({
@@ -23,7 +23,7 @@ export const useLeagueStandings = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
   return {
     leagueStandings,
