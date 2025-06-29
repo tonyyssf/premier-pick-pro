@@ -10,7 +10,6 @@ interface League {
   description: string | null;
   invite_code: string;
   creator_id: string;
-  is_public: boolean;
   max_members: number | null;
   created_at: string;
   member_count?: number;

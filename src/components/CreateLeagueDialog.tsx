@@ -35,8 +35,7 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    isPublic: false,
-    maxMembers: 50
+    maxMembers: 20
   });
   
   const { user } = useAuth();
@@ -145,7 +144,6 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
           name: sanitizedData.name,
           description: sanitizedData.description || null,
           creator_id: user.id,
-          is_public: sanitizedData.isPublic,
           max_members: sanitizedData.maxMembers
         })
         .select('id, name, invite_code')
@@ -189,8 +187,7 @@ export const CreateLeagueDialog: React.FC<CreateLeagueDialogProps> = ({ onLeague
     setFormData({
       name: '',
       description: '',
-      isPublic: false,
-      maxMembers: 50
+      maxMembers: 20
     });
   };
 

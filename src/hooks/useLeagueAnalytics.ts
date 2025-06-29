@@ -10,7 +10,7 @@ export const useLeagueAnalytics = () => {
       // Get basic league stats
       const { data: leagues, error: leaguesError } = await supabase
         .from('leagues')
-        .select('id, is_public, created_at, max_members');
+        .select('id, created_at, max_members');
       
       if (leaguesError) throw leaguesError;
 
@@ -27,8 +27,9 @@ export const useLeagueAnalytics = () => {
       }, {} as Record<string, number>);
 
       const totalLeagues = leagues.length;
-      const publicLeagues = leagues.filter(l => l.is_public).length;
-      const privateLeagues = totalLeagues - publicLeagues;
+      // Since we removed public/private leagues, all leagues are now private by default
+      const publicLeagues = 0;
+      const privateLeagues = totalLeagues;
       const totalMembers = memberCounts.length; // Total memberships (can include duplicates across leagues)
       
       // Count unique users across all leagues
@@ -41,15 +42,15 @@ export const useLeagueAnalytics = () => {
       const leaguesBySize = [
         { size: '1-5 members', count: 0 },
         { size: '6-15 members', count: 0 },
-        { size: '16-30 members', count: 0 },
-        { size: '31+ members', count: 0 },
+        { size: '16-20 members', count: 0 },
+        { size: '20 members', count: 0 }, // Updated to reflect 20 max
       ];
 
       Object.values(memberCountsByLeague).forEach(count => {
         if (count <= 5) leaguesBySize[0].count++;
         else if (count <= 15) leaguesBySize[1].count++;
-        else if (count <= 30) leaguesBySize[2].count++;
-        else leaguesBySize[3].count++;
+        else if (count < 20) leaguesBySize[2].count++;
+        else leaguesBySize[3].count++; // Exactly 20 members
       });
 
       // Calculate creation trend (last 7 days)
