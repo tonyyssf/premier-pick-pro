@@ -177,7 +177,6 @@ export type Database = {
           description: string | null
           id: string
           invite_code: string
-          is_public: boolean | null
           max_members: number | null
           name: string
           updated_at: string
@@ -188,7 +187,6 @@ export type Database = {
           description?: string | null
           id?: string
           invite_code?: string
-          is_public?: boolean | null
           max_members?: number | null
           name: string
           updated_at?: string
@@ -199,7 +197,6 @@ export type Database = {
           description?: string | null
           id?: string
           invite_code?: string
-          is_public?: boolean | null
           max_members?: number | null
           name?: string
           updated_at?: string
@@ -477,7 +474,6 @@ export type Database = {
           description: string | null
           id: string
           invite_code: string
-          is_public: boolean | null
           max_members: number | null
           name: string
           updated_at: string

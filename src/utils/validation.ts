@@ -38,8 +38,7 @@ export const inviteCodeSchema = z
 export const createLeagueSchema = z.object({
   name: leagueNameSchema,
   description: leagueDescriptionSchema,
-  isPublic: z.boolean(),
-  maxMembers: z.number().min(2).max(500).int()
+  maxMembers: z.number().min(2).max(20).int()
 });
 
 export const joinLeagueSchema = z.object({

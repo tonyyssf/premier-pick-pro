@@ -4,12 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 
 interface FormData {
   name: string;
   description: string;
-  isPublic: boolean;
   maxMembers: number;
 }
 
@@ -72,21 +70,13 @@ export const CreateLeagueForm: React.FC<CreateLeagueFormProps> = ({
           id="maxMembers"
           type="number"
           min="2"
-          max="500"
+          max="20"
           value={formData.maxMembers}
           onChange={(e) => onInputChange('maxMembers', parseInt(e.target.value))}
           className={errors.maxMembers ? 'border-red-500' : ''}
         />
         {errors.maxMembers && <p className="text-sm text-red-500 mt-1">{errors.maxMembers}</p>}
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="isPublic"
-          checked={formData.isPublic}
-          onCheckedChange={(checked) => onInputChange('isPublic', checked)}
-        />
-        <Label htmlFor="isPublic">Make league public</Label>
+        <p className="text-xs text-gray-500 mt-1">Maximum of 20 members allowed per league</p>
       </div>
       
       <div className="flex space-x-2 pt-4">

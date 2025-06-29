@@ -12,7 +12,6 @@ interface League {
   description: string | null;
   invite_code: string;
   creator_id: string;
-  is_public: boolean;
   max_members: number | null;
   created_at: string;
   member_count?: number;
@@ -56,8 +55,7 @@ export const LeagueDialogContent: React.FC<LeagueDialogContentProps> = ({
   // League settings form state
   const [leagueName, setLeagueName] = useState(league.name);
   const [leagueDescription, setLeagueDescription] = useState(league.description || '');
-  const [isPublic, setIsPublic] = useState(league.is_public);
-  const [maxMembers, setMaxMembers] = useState(league.max_members?.toString() || '');
+  const [maxMembers, setMaxMembers] = useState(league.max_members?.toString() || '20');
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -134,8 +132,7 @@ export const LeagueDialogContent: React.FC<LeagueDialogContentProps> = ({
       const updates: any = {
         name: leagueName,
         description: leagueDescription || null,
-        is_public: isPublic,
-        max_members: maxMembers ? parseInt(maxMembers) : null,
+        max_members: maxMembers ? parseInt(maxMembers) : 20,
         updated_at: new Date().toISOString()
       };
 
@@ -245,8 +242,6 @@ export const LeagueDialogContent: React.FC<LeagueDialogContentProps> = ({
       setLeagueName={setLeagueName}
       leagueDescription={leagueDescription}
       setLeagueDescription={setLeagueDescription}
-      isPublic={isPublic}
-      setIsPublic={setIsPublic}
       maxMembers={maxMembers}
       setMaxMembers={setMaxMembers}
       isLoading={isLoading}

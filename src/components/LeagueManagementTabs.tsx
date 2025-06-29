@@ -10,7 +10,6 @@ interface League {
   description: string | null;
   invite_code: string;
   creator_id: string;
-  is_public: boolean;
   max_members: number | null;
   created_at: string;
   member_count?: number;
@@ -39,8 +38,6 @@ interface LeagueManagementTabsProps {
   setLeagueName: (name: string) => void;
   leagueDescription: string;
   setLeagueDescription: (description: string) => void;
-  isPublic: boolean;
-  setIsPublic: (isPublic: boolean) => void;
   maxMembers: string;
   setMaxMembers: (maxMembers: string) => void;
   isLoading: boolean;
@@ -59,8 +56,6 @@ export const LeagueManagementTabs: React.FC<LeagueManagementTabsProps> = ({
   setLeagueName,
   leagueDescription,
   setLeagueDescription,
-  isPublic,
-  setIsPublic,
   maxMembers,
   setMaxMembers,
   isLoading,
@@ -83,8 +78,6 @@ export const LeagueManagementTabs: React.FC<LeagueManagementTabsProps> = ({
             setLeagueName={setLeagueName}
             leagueDescription={leagueDescription}
             setLeagueDescription={setLeagueDescription}
-            isPublic={isPublic}
-            setIsPublic={setIsPublic}
             maxMembers={maxMembers}
             setMaxMembers={setMaxMembers}
             isLoading={isLoading}

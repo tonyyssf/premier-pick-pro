@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { LeagueCard } from '@/components/LeagueCard';
@@ -16,7 +17,6 @@ interface League {
   description: string | null;
   invite_code: string;
   creator_id: string;
-  is_public: boolean;
   max_members: number | null;
   created_at: string;
   member_count?: number;
@@ -26,7 +26,7 @@ interface League {
 
 const Leagues = () => {
   const [myLeagues, setMyLeagues] = useState<League[]>([]);
-  const [publicLeagues, setPublicLeagues] = useState<League[]>([]);
+  const [allLeagues, setAllLeagues] = useState<League[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [joiningLeague, setJoiningLeague] = useState<string | null>(null);
   const [leavingLeague, setLeavingLeague] = useState<string | null>(null);
@@ -52,18 +52,17 @@ const Leagues = () => {
 
       if (userLeaguesError) throw userLeaguesError;
 
-      // Fetch public leagues
-      const { data: publicLeaguesData, error: publicLeaguesError } = await supabase
+      // Fetch all leagues to show in the browse tab
+      const { data: allLeaguesData, error: allLeaguesError } = await supabase
         .from('leagues')
-        .select('*')
-        .eq('is_public', true);
+        .select('*');
 
-      if (publicLeaguesError) throw publicLeaguesError;
+      if (allLeaguesError) throw allLeaguesError;
 
       // Get member counts for all leagues
       const allLeagueIds = [
         ...userLeagues.map(l => l.id),
-        ...publicLeaguesData.map(l => l.id)
+        ...allLeaguesData.map(l => l.id)
       ].filter((id, index, arr) => arr.indexOf(id) === index);
 
       const memberCounts = await Promise.all(
@@ -89,9 +88,9 @@ const Leagues = () => {
         is_member: true
       }));
 
-      // Process public leagues and filter out ones user is already in
+      // Process all leagues and filter out ones user is already in for the browse tab
       const userLeagueIds = new Set(userLeagues.map(l => l.id));
-      const processedPublicLeagues = publicLeaguesData
+      const processedAllLeagues = allLeaguesData
         .filter(league => !userLeagueIds.has(league.id))
         .map(league => ({
           ...league,
@@ -101,8 +100,8 @@ const Leagues = () => {
         }));
 
       setMyLeagues(processedUserLeagues);
-      setPublicLeagues(processedPublicLeagues);
-      console.log('Fetched leagues:', { userLeagues: processedUserLeagues, publicLeagues: processedPublicLeagues });
+      setAllLeagues(processedAllLeagues);
+      console.log('Fetched leagues:', { userLeagues: processedUserLeagues, allLeagues: processedAllLeagues });
     } catch (error: any) {
       console.error('Error fetching leagues:', error);
       toast({
@@ -194,7 +193,7 @@ const Leagues = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Leagues</h1>
             <p className="text-gray-600 mb-6">
-              Create or join leagues to compete with your friends!
+              Create or join leagues to compete with your friends! All leagues have a maximum of 20 members.
             </p>
             
             <div className="flex space-x-4">
@@ -206,7 +205,7 @@ const Leagues = () => {
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="my-leagues">My Leagues ({myLeagues.length})</TabsTrigger>
-              <TabsTrigger value="public-leagues">Public Leagues ({publicLeagues.length})</TabsTrigger>
+              <TabsTrigger value="browse-leagues">Browse Leagues ({allLeagues.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="my-leagues" className="mt-6">
@@ -232,17 +231,17 @@ const Leagues = () => {
               )}
             </TabsContent>
             
-            <TabsContent value="public-leagues" className="mt-6">
+            <TabsContent value="browse-leagues" className="mt-6">
               {isLoading ? (
-                <LoadingSpinner message="Loading public leagues..." />
-              ) : publicLeagues.length === 0 ? (
+                <LoadingSpinner message="Loading leagues..." />
+              ) : allLeagues.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-600 mb-4">No public leagues available.</p>
-                  <p className="text-sm text-gray-500">Create the first public league for others to join!</p>
+                  <p className="text-gray-600 mb-4">No other leagues available to join.</p>
+                  <p className="text-sm text-gray-500">Create a new league for others to join!</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {publicLeagues.map((league) => (
+                  {allLeagues.map((league) => (
                     <LeagueCard
                       key={league.id}
                       league={league}

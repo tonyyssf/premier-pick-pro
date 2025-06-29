@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Crown, Globe, Lock } from 'lucide-react';
+import { Users, Crown } from 'lucide-react';
 import { ManageLeagueDialog } from './ManageLeagueDialog';
 import { LeagueMembersList } from './LeagueMembersList';
 
@@ -14,7 +14,6 @@ interface LeagueCardProps {
     description: string | null;
     invite_code: string;
     creator_id: string;
-    is_public: boolean;
     max_members: number | null;
     created_at: string;
     member_count?: number;
@@ -36,6 +35,9 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({
   isJoining = false,
   isLeaving = false
 }) => {
+  const isAtCapacity = league.member_count && league.max_members && 
+                      league.member_count >= league.max_members;
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -47,11 +49,6 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({
                 <Crown className="h-3 w-3" />
                 <span>Creator</span>
               </Badge>
-            )}
-            {league.is_public ? (
-              <Globe className="h-4 w-4 text-green-600" />
-            ) : (
-              <Lock className="h-4 w-4 text-gray-500" />
             )}
           </div>
         </div>
@@ -67,6 +64,9 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({
               {league.member_count || 0}
               {league.max_members && ` / ${league.max_members}`} members
             </span>
+            {isAtCapacity && (
+              <Badge variant="outline" className="text-xs">Full</Badge>
+            )}
           </div>
           <div className="text-xs text-gray-500">
             Code: <span className="font-mono font-semibold">{league.invite_code}</span>
@@ -88,11 +88,11 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({
           {!league.is_member && !league.is_creator && onJoin && (
             <Button 
               onClick={() => onJoin(league.id)} 
-              disabled={isJoining}
+              disabled={isJoining || isAtCapacity}
               className="flex-1"
               size="sm"
             >
-              {isJoining ? 'Joining...' : 'Join League'}
+              {isJoining ? 'Joining...' : isAtCapacity ? 'League Full' : 'Join League'}
             </Button>
           )}
           
