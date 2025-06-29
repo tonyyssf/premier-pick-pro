@@ -48,27 +48,18 @@ export const LeaderboardSection: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="bg-plpe-gradient px-6 py-4">
               <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                Top Players
+                All Players
                 <span className="text-sm font-normal">(Weekly Updates)</span>
               </h3>
             </div>
             
             <div className="p-6">
               <WeeklyStandingsTable 
-                standings={formattedStandings.slice(0, 10)} 
+                standings={formattedStandings} 
                 currentUserId={user?.id}
                 isLoading={loading}
               />
             </div>
-
-            {currentUserStanding && currentUserStanding.currentRank && currentUserStanding.currentRank > 10 && (
-              <div className="border-t bg-gray-50 px-6 py-4">
-                <div className="text-center text-gray-600">
-                  <span className="font-semibold">Your Position: </span>
-                  #{currentUserStanding.currentRank} with {currentUserStanding.totalPoints} points
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>

@@ -36,7 +36,7 @@ export const WeeklyStandingsTable: React.FC<WeeklyStandingsTableProps> = ({
   }
 
   const getDisplayName = (standing: Standing) => {
-    return standing.username || standing.name || `Player ${standing.user_id.slice(0, 8)}`;
+    return standing.username || 'No Username';
   };
 
   // Filter out standings with null ranks for display
