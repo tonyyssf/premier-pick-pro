@@ -1,24 +1,23 @@
 
 import React from 'react';
+import { Layout } from '../components/Layout';
+import { WeeklyPicks } from '../components/WeeklyPicks';
+import { UserScoreDisplay } from '../components/UserScoreDisplay';
 import { ProtectedRoute } from '../components/ProtectedRoute';
-import { UnifiedHeader } from '../components/UnifiedHeader';
-import { GameweekStatusCard } from '../components/GameweekStatusCard';
-import { UserPickStatusCard } from '../components/UserPickStatusCard';
-import { StatsCards } from '../components/StatsCards';
-import { RecentResults } from '../components/RecentResults';
-import { BottomNavigation } from '../components/BottomNavigation';
+import { UserPickHistory } from '../components/UserPickHistory';
 
 const Index = () => {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-plpe-neutral-900">
-        <UnifiedHeader title="PLPE" />
-        <GameweekStatusCard />
-        <UserPickStatusCard />
-        <StatsCards />
-        <RecentResults />
-        <BottomNavigation />
-      </div>
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <UserScoreDisplay />
+        </div>
+        <WeeklyPicks />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <UserPickHistory />
+        </div>
+      </Layout>
     </ProtectedRoute>
   );
 };

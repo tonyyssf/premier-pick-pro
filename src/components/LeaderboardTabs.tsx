@@ -1,13 +1,9 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Plus, UserPlus } from 'lucide-react';
 import { LeagueRankingsList } from '@/components/LeagueRankingsList';
 import { LeaderboardSection } from '@/components/LeaderboardSection';
 import { RefreshStandingsButton } from '@/components/RefreshStandingsButton';
-import { CreateLeagueDialog } from '@/components/CreateLeagueDialog';
-import { JoinLeagueDialog } from '@/components/JoinLeagueDialog';
 
 interface LeagueWithRank {
   id: string;
@@ -23,8 +19,6 @@ interface LeaderboardTabsProps {
   expandedLeagues: Set<string>;
   onToggleExpansion: (leagueId: string) => void;
   onRefreshNeeded?: () => void;
-  onLeagueCreated?: () => void;
-  onLeagueJoined?: () => void;
 }
 
 export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
@@ -33,8 +27,6 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
   expandedLeagues,
   onToggleExpansion,
   onRefreshNeeded,
-  onLeagueCreated,
-  onLeagueJoined,
 }) => {
   return (
     <Tabs defaultValue="leagues" className="w-full">
@@ -48,15 +40,7 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
           </TabsTrigger>
         </TabsList>
         
-        <div className="flex items-center gap-2">
-          {leaguesWithRanks.length > 0 && (
-            <>
-              <CreateLeagueDialog onLeagueCreated={onLeagueCreated} />
-              <JoinLeagueDialog onLeagueJoined={onLeagueJoined} />
-            </>
-          )}
-          <RefreshStandingsButton onRefreshComplete={onRefreshNeeded} />
-        </div>
+        <RefreshStandingsButton onRefreshComplete={onRefreshNeeded} />
       </div>
 
       <TabsContent value="leagues" className="mt-6">
@@ -65,8 +49,6 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
           isLoading={isLoading}
           expandedLeagues={expandedLeagues}
           onToggleExpansion={onToggleExpansion}
-          onLeagueCreated={onLeagueCreated}
-          onLeagueJoined={onLeagueJoined}
         />
       </TabsContent>
 

@@ -1,13 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
+import { Layout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { UnifiedHeader } from '@/components/UnifiedHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { MobileLeaderboardView } from '@/components/MobileLeaderboardView';
+import { LeaderboardHeader } from '@/components/LeaderboardHeader';
 import { LeaderboardTabs } from '@/components/LeaderboardTabs';
-import { BottomNavigation } from '@/components/BottomNavigation';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LeagueWithRank {
   id: string;
@@ -20,13 +19,10 @@ interface LeagueWithRank {
 const Leaderboards = () => {
   const [leaguesWithRanks, setLeaguesWithRanks] = useState<LeagueWithRank[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [leagueStandings, setLeagueStandings] = useState<{ [leagueId: string]: any[] }>({});
-  const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(null);
   const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set());
   
   const { user } = useAuth();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   const fetchLeaguesWithRanks = async () => {
     if (!user) return;
@@ -64,35 +60,6 @@ const Leaderboards = () => {
             .eq('user_id', user.id)
             .maybeSingle();
 
-          // Get league standings for the MobileLeaderboardView
-          const { data: standings } = await supabase
-            .from('standings')
-            .select('*')
-            .eq('league_id', league.id)
-            .order('current_rank', { ascending: true, nullsFirst: false });
-
-          if (standings) {
-            // Get user profiles separately
-            const userIds = standings.map(s => s.user_id);
-            const { data: profiles } = await supabase
-              .from('profiles')
-              .select('id, username, name')
-              .in('id', userIds);
-
-            const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-
-            const formattedStandings = standings.map(standing => ({
-              ...standing,
-              username: profilesMap.get(standing.user_id)?.username,
-              name: profilesMap.get(standing.user_id)?.name,
-            }));
-
-            setLeagueStandings(prev => ({
-              ...prev,
-              [league.id]: formattedStandings
-            }));
-          }
-
           return {
             id: league.id,
             name: league.name,
@@ -104,6 +71,8 @@ const Leaderboards = () => {
       );
 
       setLeaguesWithRanks(leaguesWithRankData);
+      // Expand all leagues by default
+      setExpandedLeagues(new Set(leaguesWithRankData.map(league => league.id)));
       console.log('Fetched leagues with ranks from unified standings:', leaguesWithRankData);
     } catch (error: any) {
       console.error('Error fetching leagues with ranks:', error);
@@ -117,7 +86,12 @@ const Leaderboards = () => {
     }
   };
 
-  const handleToggleExpansion = (leagueId: string) => {
+  useEffect(() => {
+    fetchLeaguesWithRanks();
+    // No real-time subscriptions for weekly updates
+  }, [user]);
+
+  const toggleLeagueExpansion = (leagueId: string) => {
     setExpandedLeagues(prev => {
       const newSet = new Set(prev);
       if (newSet.has(leagueId)) {
@@ -129,56 +103,25 @@ const Leaderboards = () => {
     });
   };
 
-  const handleLeagueCreated = () => {
+  const handleRefreshNeeded = () => {
+    // Refresh the leagues data after standings refresh
     fetchLeaguesWithRanks();
-    toast({
-      title: "Success",
-      description: "League created successfully! Refreshing your leagues...",
-    });
   };
-
-  const handleLeagueJoined = () => {
-    fetchLeaguesWithRanks();
-    toast({
-      title: "Success", 
-      description: "Joined league successfully! Refreshing your leagues...",
-    });
-  };
-
-  useEffect(() => {
-    fetchLeaguesWithRanks();
-  }, [user]);
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-plpe-neutral-900">
-        <UnifiedHeader title="Leaderboard" />
-        
-        {isMobile ? (
-          <MobileLeaderboardView 
-            leagueStandings={leagueStandings}
-            leagues={leaguesWithRanks}
-            selectedLeagueId={selectedLeagueId}
-            onLeagueSelect={setSelectedLeagueId}
-            onLeagueCreated={handleLeagueCreated}
-            onLeagueJoined={handleLeagueJoined}
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <LeaderboardHeader />
+          <LeaderboardTabs
+            leaguesWithRanks={leaguesWithRanks}
+            isLoading={isLoading}
+            expandedLeagues={expandedLeagues}
+            onToggleExpansion={toggleLeagueExpansion}
+            onRefreshNeeded={handleRefreshNeeded}
           />
-        ) : (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <LeaderboardTabs
-              leaguesWithRanks={leaguesWithRanks}
-              isLoading={isLoading}
-              expandedLeagues={expandedLeagues}
-              onToggleExpansion={handleToggleExpansion}
-              onRefreshNeeded={fetchLeaguesWithRanks}
-              onLeagueCreated={handleLeagueCreated}
-              onLeagueJoined={handleLeagueJoined}
-            />
-          </div>
-        )}
-        
-        <BottomNavigation />
-      </div>
+        </div>
+      </Layout>
     </ProtectedRoute>
   );
 };

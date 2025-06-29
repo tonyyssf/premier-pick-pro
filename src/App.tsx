@@ -7,16 +7,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PicksProvider } from "@/contexts/PicksContext";
 import { SecurityHeaders } from "@/components/SecurityHeaders";
-import { OnboardingGuard } from "@/components/OnboardingGuard";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Pick from "./pages/Pick";
 import Leagues from "./pages/Leagues";
 import Leaderboards from "./pages/Leaderboards";
-import History from "./pages/History";
 import HowToPlay from "./pages/HowToPlay";
 import Admin from "./pages/Admin";
-import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,20 +26,15 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <OnboardingGuard>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/pick" element={<Pick />} />
-                <Route path="/leagues" element={<Leagues />} />
-                <Route path="/leaderboards" element={<Leaderboards />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/how-to-play" element={<HowToPlay />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </OnboardingGuard>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/leagues" element={<Leagues />} />
+              <Route path="/leaderboards" element={<Leaderboards />} />
+              <Route path="/how-to-play" element={<HowToPlay />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </PicksProvider>

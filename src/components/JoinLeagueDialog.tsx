@@ -230,18 +230,18 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center space-x-2 text-black border-black hover:bg-black hover:text-white">
-          <UserPlus className="h-4 w-4 text-black" />
+        <Button variant="outline" className="flex items-center space-x-2">
+          <UserPlus className="h-4 w-4" />
           <span>Join League</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-gray-900">Join a League</DialogTitle>
+          <DialogTitle>Join a League</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="inviteCode" className="text-gray-900">Invite Code</Label>
+            <Label htmlFor="inviteCode">Invite Code</Label>
             <Input
               id="inviteCode"
               value={inviteCode}
@@ -249,7 +249,7 @@ export const JoinLeagueDialog: React.FC<JoinLeagueDialogProps> = ({ onLeagueJoin
               placeholder="Enter 6-character code"
               maxLength={6}
               required
-              className={`font-mono text-gray-900 placeholder:text-gray-500 ${error ? 'border-red-500' : ''}`}
+              className={`font-mono ${error ? 'border-red-500' : ''}`}
             />
             {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
             <p className="text-sm text-gray-600 mt-1">
