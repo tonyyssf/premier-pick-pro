@@ -3,7 +3,6 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LeagueRankingsList } from '@/components/LeagueRankingsList';
 import { LeaderboardSection } from '@/components/LeaderboardSection';
-import { RefreshStandingsButton } from '@/components/RefreshStandingsButton';
 
 interface LeagueWithRank {
   id: string;
@@ -18,7 +17,6 @@ interface LeaderboardTabsProps {
   isLoading: boolean;
   expandedLeagues: Set<string>;
   onToggleExpansion: (leagueId: string) => void;
-  onRefreshNeeded?: () => void;
 }
 
 export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
@@ -26,7 +24,6 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
   isLoading,
   expandedLeagues,
   onToggleExpansion,
-  onRefreshNeeded,
 }) => {
   return (
     <Tabs defaultValue="leagues" className="w-full">
@@ -39,8 +36,6 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
             Global Leaderboard
           </TabsTrigger>
         </TabsList>
-        
-        <RefreshStandingsButton onRefreshComplete={onRefreshNeeded} />
       </div>
 
       <TabsContent value="leagues" className="mt-6">

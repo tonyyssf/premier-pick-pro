@@ -25,7 +25,7 @@ const Leagues = () => {
     setIsLoading(true);
     
     try {
-      // Fetch only leagues user is a member of or created
+      // Fetch only leagues user is a member of - simplified query
       const { data: userLeagues, error: userLeaguesError } = await supabase
         .from('leagues')
         .select(`
@@ -35,13 +35,22 @@ const Leagues = () => {
           creator_id,
           invite_code,
           max_members,
-          created_at,
-          updated_at,
-          league_members!inner(user_id)
+          created_at
         `)
-        .eq('league_members.user_id', user.id);
+        .in('id', 
+          await supabase
+            .from('league_members')
+            .select('league_id')
+            .eq('user_id', user.id)
+            .then(({ data }) => data?.map(m => m.league_id) || [])
+        );
 
       if (userLeaguesError) throw userLeaguesError;
+
+      if (!userLeagues || userLeagues.length === 0) {
+        setMyLeagues([]);
+        return;
+      }
 
       // Get member counts for user's leagues
       const memberCounts = await Promise.all(

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { standingsService } from '@/services/standingsService';
 import { useGlobalStandings } from './useGlobalStandings';
 import { useLeagueStandings } from './useLeagueStandings';
 
@@ -16,29 +15,24 @@ export const useWeeklyStandings = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Initial load with automatic refresh
-    const loadDataWithRefresh = async () => {
+    const loadData = async () => {
       setLoading(true);
-      
-      // First refresh all rankings to ensure they're correct
       try {
-        await standingsService.refreshAllRankings();
+        await loadGlobalStandings();
       } catch (error) {
-        console.error('Error during initial refresh:', error);
+        console.error('Error loading standings:', error);
         toast({
-          title: "Error Refreshing Rankings",
-          description: "There was an issue refreshing the rankings. Please try again later.",
+          title: "Error Loading Standings",
+          description: "There was an issue loading the standings. Please try again later.",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false);
       }
-      
-      // Then load the standings
-      await loadGlobalStandings();
-      setLoading(false);
     };
 
-    loadDataWithRefresh();
-  }, [user]);
+    loadData();
+  }, [user, loadGlobalStandings, toast]);
 
   return {
     userStandings,
