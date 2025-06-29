@@ -28,21 +28,37 @@ const Leagues = () => {
     setIsLoading(true);
     
     try {
-      // Fetch leagues user is a member of or created
+      // Fetch leagues user is a member of or created - explicitly select columns
       const { data: userLeagues, error: userLeaguesError } = await supabase
         .from('leagues')
         .select(`
-          *,
+          id,
+          name,
+          description,
+          creator_id,
+          invite_code,
+          max_members,
+          created_at,
+          updated_at,
           league_members!inner(user_id)
         `)
         .eq('league_members.user_id', user.id);
 
       if (userLeaguesError) throw userLeaguesError;
 
-      // Fetch all leagues to show in the browse tab
+      // Fetch all leagues to show in the browse tab - explicitly select columns
       const { data: allLeaguesData, error: allLeaguesError } = await supabase
         .from('leagues')
-        .select('*');
+        .select(`
+          id,
+          name,
+          description,
+          creator_id,
+          invite_code,
+          max_members,
+          created_at,
+          updated_at
+        `);
 
       if (allLeaguesError) throw allLeaguesError;
 
