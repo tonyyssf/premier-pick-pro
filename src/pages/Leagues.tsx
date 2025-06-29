@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { LeagueCard } from '@/components/LeagueCard';
@@ -10,19 +9,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-
-interface League {
-  id: string;
-  name: string;
-  description: string | null;
-  invite_code: string;
-  creator_id: string;
-  max_members: number | null;
-  created_at: string;
-  member_count?: number;
-  is_creator?: boolean;
-  is_member?: boolean;
-}
+import type { League } from '@/types/league';
 
 const Leagues = () => {
   const [myLeagues, setMyLeagues] = useState<League[]>([]);
@@ -238,18 +225,6 @@ const Leagues = () => {
                 <div className="text-center py-12">
                   <p className="text-gray-600 mb-4">No other leagues available to join.</p>
                   <p className="text-sm text-gray-500">Create a new league for others to join!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {allLeagues.map((league) => (
-                    <LeagueCard
-                      key={league.id}
-                      league={league}
-                      onJoin={handleJoinLeague}
-                      onLeagueUpdated={fetchLeagues}
-                      isJoining={joiningLeague === league.id}
-                    />
-                  ))}
                 </div>
               )}
             </TabsContent>

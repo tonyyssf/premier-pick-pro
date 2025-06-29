@@ -6,20 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Crown } from 'lucide-react';
 import { ManageLeagueDialog } from './ManageLeagueDialog';
 import { LeagueMembersList } from './LeagueMembersList';
+import type { League } from '@/types/league';
 
 interface LeagueCardProps {
-  league: {
-    id: string;
-    name: string;
-    description: string | null;
-    invite_code: string;
-    creator_id: string;
-    max_members: number | null;
-    created_at: string;
-    member_count?: number;
-    is_creator?: boolean;
-    is_member?: boolean;
-  };
+  league: League;
   onJoin?: (leagueId: string) => void;
   onLeave?: (leagueId: string) => void;
   onLeagueUpdated?: () => void;

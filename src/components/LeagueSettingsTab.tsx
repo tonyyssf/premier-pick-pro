@@ -4,20 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { LeagueInviteCodeSection } from './LeagueInviteCodeSection';
 import { LeagueShareSection } from './LeagueShareSection';
 import { LeagueDeleteSection } from './LeagueDeleteSection';
-
-interface League {
-  id: string;
-  name: string;
-  description: string | null;
-  invite_code: string;
-  creator_id: string;
-  is_public: boolean;
-  max_members: number | null;
-}
+import type { League } from '@/types/league';
 
 interface LeagueSettingsTabProps {
   league: League;
@@ -25,8 +15,6 @@ interface LeagueSettingsTabProps {
   setLeagueName: (name: string) => void;
   leagueDescription: string;
   setLeagueDescription: (description: string) => void;
-  isPublic: boolean;
-  setIsPublic: (isPublic: boolean) => void;
   maxMembers: string;
   setMaxMembers: (maxMembers: string) => void;
   isLoading: boolean;
@@ -40,8 +28,6 @@ export const LeagueSettingsTab: React.FC<LeagueSettingsTabProps> = ({
   setLeagueName,
   leagueDescription,
   setLeagueDescription,
-  isPublic,
-  setIsPublic,
   maxMembers,
   setMaxMembers,
   isLoading,
@@ -72,25 +58,18 @@ export const LeagueSettingsTab: React.FC<LeagueSettingsTabProps> = ({
           />
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="is-public"
-            checked={isPublic}
-            onCheckedChange={setIsPublic}
-          />
-          <Label htmlFor="is-public">Make league public</Label>
-        </div>
-
         <div>
-          <Label htmlFor="max-members">Maximum Members (optional)</Label>
+          <Label htmlFor="max-members">Maximum Members</Label>
           <Input
             id="max-members"
             type="number"
             value={maxMembers}
             onChange={(e) => setMaxMembers(e.target.value)}
-            placeholder="Leave empty for unlimited"
+            placeholder="Maximum 20 members"
             min="1"
+            max="20"
           />
+          <p className="text-xs text-gray-500 mt-1">Maximum of 20 members allowed per league</p>
         </div>
 
         <LeagueInviteCodeSection inviteCode={league.invite_code} />

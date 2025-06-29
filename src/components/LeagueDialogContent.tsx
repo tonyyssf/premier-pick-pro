@@ -1,34 +1,10 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { LeagueAccessDenied } from './LeagueAccessDenied';
 import { LeagueManagementTabs } from './LeagueManagementTabs';
-
-interface League {
-  id: string;
-  name: string;
-  description: string | null;
-  invite_code: string;
-  creator_id: string;
-  max_members: number | null;
-  created_at: string;
-  member_count?: number;
-  is_creator?: boolean;
-  is_member?: boolean;
-}
-
-interface LeagueMember {
-  id: string;
-  user_id: string;
-  joined_at: string;
-  profiles: {
-    username: string | null;
-    name: string | null;
-    email: string | null;
-  } | null;
-}
+import type { League, LeagueMember } from '@/types/league';
 
 interface LeagueDialogContentProps {
   league: League;

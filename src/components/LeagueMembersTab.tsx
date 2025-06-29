@@ -4,22 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Trash2, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface LeagueMember {
-  id: string;
-  user_id: string;
-  joined_at: string;
-  profiles: {
-    username: string | null;
-    name: string | null;
-    email: string | null;
-  } | null;
-}
-
-interface League {
-  id: string;
-  creator_id: string;
-}
+import type { League, LeagueMember } from '@/types/league';
 
 interface LeagueMembersTabProps {
   league: League;
