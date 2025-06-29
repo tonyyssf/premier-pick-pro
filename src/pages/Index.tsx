@@ -10,19 +10,12 @@ const Index = () => {
   return (
     <ProtectedRoute>
       <Layout>
-        <div className="space-y-6 sm:space-y-8">
-          {/* User score - mobile optimized */}
-          <div className="pt-4 sm:pt-6">
-            <UserScoreDisplay />
-          </div>
-          
-          {/* Weekly picks */}
-          <WeeklyPicks />
-          
-          {/* Pick history */}
-          <div className="pb-4 sm:pb-8">
-            <UserPickHistory />
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <UserScoreDisplay />
+        </div>
+        <WeeklyPicks />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <UserPickHistory />
         </div>
       </Layout>
     </ProtectedRoute>
