@@ -42,20 +42,10 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
       console.log('=== FETCHING LEAGUE MEMBERS ===');
       console.log('League ID:', leagueId);
       
-      // Simplified query that only fetches what we need without triggering any functions
+      // First fetch league members
       const { data: leagueMembers, error: membersError } = await supabase
         .from('league_members')
-        .select(`
-          id,
-          user_id,
-          joined_at,
-          profiles:user_id (
-            id,
-            username,
-            name,
-            email
-          )
-        `)
+        .select('id, user_id, joined_at')
         .eq('league_id', leagueId)
         .order('joined_at', { ascending: true });
 
@@ -70,19 +60,34 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
         return;
       }
 
-      // Transform the data to match our interface
-      const membersWithProfiles = leagueMembers.map(member => ({
-        id: member.id,
-        user_id: member.user_id,
-        joined_at: member.joined_at,
-        profiles: member.profiles ? {
-          username: member.profiles.username,
-          name: member.profiles.name,
-          email: member.profiles.email
-        } : null
-      }));
+      // Get user IDs to fetch profiles
+      const userIds = leagueMembers.map(member => member.user_id);
 
-      console.log('Processed members with profiles:', membersWithProfiles);
+      // Fetch profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, name, email')
+        .in('id', userIds);
+
+      console.log('Fetched profiles:', profiles);
+      console.log('Profiles error:', profilesError);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const membersWithProfiles = leagueMembers.map(member => {
+        const profile = profiles?.find(p => p.id === member.user_id);
+        return {
+          ...member,
+          profiles: profile ? {
+            username: profile.username,
+            name: profile.name,
+            email: profile.email
+          } : null
+        };
+      });
+
+      console.log('Combined members with profiles:', membersWithProfiles);
       setMembers(membersWithProfiles);
     } catch (error: any) {
       console.error('Error fetching members:', error);
