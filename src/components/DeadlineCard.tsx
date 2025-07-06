@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Clock, AlertTriangle, CheckCircle, Zap } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 
 interface DeadlineCardProps {
@@ -46,51 +46,71 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNu
       setTimeRemaining(calculateTimeRemaining());
     };
 
-    // Update immediately
     updateTimer();
-
-    // Set up interval to update every second
     const interval = setInterval(updateTimer, 1000);
-
     return () => clearInterval(interval);
   }, [deadline]);
 
-  const getCardStyle = () => {
+  const getUrgencyLevel = () => {
     const { totalMs } = timeRemaining;
     const hoursRemaining = totalMs / (1000 * 60 * 60);
 
-    if (totalMs <= 0) {
-      return {
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
-        textColor: 'text-red-800',
-        iconColor: 'text-red-600',
-        icon: CheckCircle
-      };
-    } else if (hoursRemaining <= 2) {
-      return {
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
-        textColor: 'text-red-800',
-        iconColor: 'text-red-600',
-        icon: AlertTriangle
-      };
-    } else if (hoursRemaining <= 24) {
-      return {
-        bgColor: 'bg-yellow-50',
-        borderColor: 'border-yellow-200',
-        textColor: 'text-yellow-800',
-        iconColor: 'text-yellow-600',
-        icon: Clock
-      };
-    } else {
-      return {
-        bgColor: 'bg-plpe-purple/5',
-        borderColor: 'border-plpe-purple/20',
-        textColor: 'text-plpe-purple',
-        iconColor: 'text-plpe-purple',
-        icon: Clock
-      };
+    if (totalMs <= 0) return 'expired';
+    if (hoursRemaining <= 1) return 'critical';
+    if (hoursRemaining <= 4) return 'urgent';
+    if (hoursRemaining <= 24) return 'warning';
+    return 'normal';
+  };
+
+  const getCardStyle = () => {
+    const urgency = getUrgencyLevel();
+    
+    switch (urgency) {
+      case 'expired':
+        return {
+          bgColor: 'bg-red-100',
+          borderColor: 'border-red-400',
+          textColor: 'text-red-900',
+          iconColor: 'text-red-600',
+          icon: CheckCircle,
+          ringColor: 'ring-red-200'
+        };
+      case 'critical':
+        return {
+          bgColor: 'bg-red-50 animate-pulse',
+          borderColor: 'border-red-500',
+          textColor: 'text-red-900',
+          iconColor: 'text-red-600',
+          icon: Zap,
+          ringColor: 'ring-red-300'
+        };
+      case 'urgent':
+        return {
+          bgColor: 'bg-orange-50',
+          borderColor: 'border-orange-400',
+          textColor: 'text-orange-900',
+          iconColor: 'text-orange-600',
+          icon: AlertTriangle,
+          ringColor: 'ring-orange-200'
+        };
+      case 'warning':
+        return {
+          bgColor: 'bg-yellow-50',
+          borderColor: 'border-yellow-400',
+          textColor: 'text-yellow-900',
+          iconColor: 'text-yellow-600',
+          icon: Clock,
+          ringColor: 'ring-yellow-200'
+        };
+      default:
+        return {
+          bgColor: 'bg-plpe-purple/5',
+          borderColor: 'border-plpe-purple/30',
+          textColor: 'text-plpe-purple',
+          iconColor: 'text-plpe-purple',
+          icon: Clock,
+          ringColor: 'ring-plpe-purple/20'
+        };
     }
   };
 
@@ -102,7 +122,7 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNu
     const { days, hours, minutes, seconds, totalMs } = timeRemaining;
 
     if (totalMs <= 0) {
-      return 'Deadline has passed';
+      return 'Deadline passed';
     }
 
     if (days > 0) {
@@ -114,39 +134,59 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNu
     }
   };
 
-  const getDeadlineMessage = () => {
-    const { totalMs } = timeRemaining;
-
-    if (totalMs <= 0) {
-      return 'No more picks can be made for this gameweek';
+  const getUrgencyMessage = () => {
+    const urgency = getUrgencyLevel();
+    
+    switch (urgency) {
+      case 'expired':
+        return 'Deadline has passed - no more picks can be made';
+      case 'critical':
+        return 'URGENT: Less than 1 hour remaining!';
+      case 'urgent':
+        return 'Deadline approaching soon - make your pick now!';
+      case 'warning':
+        return 'Deadline today - don\'t forget to make your pick';
+      default:
+        return 'Time remaining to make your pick';
     }
-
-    return 'Time remaining to make your pick';
   };
 
   const style = getCardStyle();
   const IconComponent = style.icon;
+  const urgency = getUrgencyLevel();
 
   return (
-    <Card className={`${style.bgColor} ${style.borderColor} border-l-4 mb-6`}>
-      <CardContent className="p-4">
+    <Card className={`
+      ${style.bgColor} ${style.borderColor} border-l-4 mb-6 shadow-lg
+      ${urgency === 'critical' ? 'ring-4 ' + style.ringColor : ''}
+      ${urgency === 'urgent' ? 'ring-2 ' + style.ringColor : ''}
+    `}>
+      <CardContent className="p-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <IconComponent className={`h-6 w-6 ${style.iconColor}`} />
+          <div className="flex items-center space-x-4">
+            <div className={`p-3 rounded-full ${style.bgColor} ${style.borderColor} border-2`}>
+              <IconComponent className={`h-8 w-8 ${style.iconColor}`} />
+            </div>
             <div>
-              <h3 className={`text-lg font-semibold ${style.textColor}`}>
+              <h3 className={`text-xl font-bold ${style.textColor} mb-1`}>
                 Gameweek {gameweekNumber} Deadline
               </h3>
-              <p className={`text-sm ${style.textColor}/80`}>
-                {getDeadlineMessage()}
+              <p className={`text-sm ${style.textColor}/80 font-medium`}>
+                {getUrgencyMessage()}
               </p>
+              {urgency === 'critical' && (
+                <p className="text-sm font-bold text-red-700 mt-1 animate-pulse">
+                  ⚡ Make your pick immediately!
+                </p>
+              )}
             </div>
           </div>
+          
           <div className="text-right">
-            <div className={`text-2xl font-bold ${style.textColor} font-mono`}>
+            <div className={`text-3xl font-bold ${style.textColor} font-mono mb-2`}>
               {getTimeDisplay()}
             </div>
-            <p className={`text-sm ${style.textColor}/80`}>
+            <div className={`text-sm ${style.textColor}/80 mb-2`}>
               {deadline.toLocaleDateString('en-GB', {
                 weekday: 'short',
                 day: 'numeric',
@@ -154,9 +194,35 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNu
                 hour: '2-digit',
                 minute: '2-digit'
               })}
-            </p>
+            </div>
+            
+            {/* Progress bar for urgency */}
+            {urgency !== 'expired' && (
+              <div className="w-32 bg-gray-200 rounded-full h-2 mx-auto">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-1000 ${
+                    urgency === 'critical' ? 'bg-red-500' :
+                    urgency === 'urgent' ? 'bg-orange-500' :
+                    urgency === 'warning' ? 'bg-yellow-500' :
+                    'bg-green-500'
+                  }`}
+                  style={{ 
+                    width: `${Math.max(10, Math.min(100, (timeRemaining.totalMs / (1000 * 60 * 60 * 24)) * 100))}%` 
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
+        
+        {/* Additional context for mobile users */}
+        {urgency === 'urgent' || urgency === 'critical' ? (
+          <div className={`mt-4 p-3 rounded-lg ${style.bgColor} border ${style.borderColor}`}>
+            <p className={`text-sm ${style.textColor} font-medium text-center`}>
+              💡 Tip: Your pick will be locked when the first match of this gameweek starts
+            </p>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
