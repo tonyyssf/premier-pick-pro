@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { FixtureCard } from './FixtureCard';
 import { GameweekHeader } from './GameweekHeader';
 import { PickConfirmationCard } from './PickConfirmationCard';
+import { DeadlineCard } from './DeadlineCard';
 import { usePicks } from '../contexts/PicksContext';
 
 export const WeeklyPicks: React.FC = () => {
@@ -79,6 +80,11 @@ export const WeeklyPicks: React.FC = () => {
       <GameweekHeader 
         gameweek={currentGameweek} 
         title={hasAlreadyPicked ? "Your Pick" : "Make Your Pick"} 
+      />
+
+      <DeadlineCard 
+        deadline={currentGameweek.deadline} 
+        gameweekNumber={currentGameweek.number} 
       />
 
       {hasAlreadyPicked && currentPick ? (
