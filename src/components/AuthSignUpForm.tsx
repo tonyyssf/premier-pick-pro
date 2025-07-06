@@ -140,9 +140,14 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
           type="email"
           value={email}
           onChange={(e) => handleInputChange('email', e.target.value)}
-          placeholder="Enter your email"
+          placeholder="user@example.com"
           required
+          className={errors.email ? 'border-red-500' : ''}
         />
+        <p className="text-xs text-gray-500">
+          Please use a valid email format like user@example.com
+        </p>
+        {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
       </div>
       <PhoneNumberInput
         value={phoneNumber}
@@ -160,9 +165,12 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
           type="password"
           value={password}
           onChange={(e) => handleInputChange('password', e.target.value)}
-          placeholder="Create a password"
+          placeholder="Create a secure password"
           required
         />
+        <p className="text-xs text-gray-500">
+          Must be at least 8 characters with uppercase, lowercase, number, and special character
+        </p>
       </div>
       <Button 
         type="submit" 

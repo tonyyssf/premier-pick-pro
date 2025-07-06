@@ -66,36 +66,27 @@ export const enhancedUsernameSchema = z
     return !/(.)\1{3,}/.test(val); // No more than 3 consecutive identical characters
   }, 'Username contains too many consecutive identical characters');
 
+// Simplified email validation - more permissive and user-friendly
 export const enhancedEmailSchema = z
   .string()
-  .email('Invalid email format')
-  .max(320, 'Email address too long') // RFC 5321 limit
+  .min(1, 'Email is required')
+  .email('Please enter a valid email address (e.g., user@example.com)')
+  .max(320, 'Email address is too long')
   .refine((email) => {
-    // Additional email validation
+    // Basic format check - ensure it has @ and at least one dot after @
     const parts = email.split('@');
     if (parts.length !== 2) return false;
     
     const [local, domain] = parts;
     
-    // Check local part length (RFC 5321: 64 characters max)
-    if (local.length > 64) return false;
+    // Check local part isn't empty and isn't too long
+    if (local.length === 0 || local.length > 64) return false;
     
-    // Check domain part
-    if (domain.length > 253) return false;
+    // Check domain has at least one dot and isn't too long
+    if (domain.length === 0 || domain.length > 253 || !domain.includes('.')) return false;
     
-    // Basic domain validation
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    return domainRegex.test(domain);
-  }, 'Invalid email domain')
-  .refine((email) => {
-    // Check for disposable/temporary email domains
-    const disposableDomains = [
-      '10minutemail.com', 'tempmail.org', 'guerrillamail.com', 
-      'mailinator.com', 'throwaway.email'
-    ];
-    const domain = email.split('@')[1]?.toLowerCase();
-    return !disposableDomains.includes(domain);
-  }, 'Disposable email addresses are not allowed');
+    return true;
+  }, 'Please enter a valid email address (e.g., user@example.com)');
 
 export const enhancedPasswordSchema = z
   .string()
@@ -120,7 +111,7 @@ export const enhancedPasswordSchema = z
     return !hasSequence && !hasRepeating;
   }, 'Password contains predictable patterns');
 
-// XSS and injection prevention
+// XSS and injection prevention - now with better error logging
 export const validateAndSanitizeInput = (input: any, schema: z.ZodSchema) => {
   if (typeof input === 'string') {
     input = sanitizeHtml(input);
@@ -129,6 +120,16 @@ export const validateAndSanitizeInput = (input: any, schema: z.ZodSchema) => {
   const result = schema.safeParse(input);
   
   if (!result.success) {
+    // Log validation errors for debugging
+    console.error('Validation failed:', {
+      input: typeof input === 'string' ? input.substring(0, 50) + '...' : input,
+      errors: result.error.errors.map(e => ({
+        path: e.path,
+        message: e.message,
+        code: e.code
+      }))
+    });
+    
     throw new Error(`Validation failed: ${result.error.errors.map(e => e.message).join(', ')}`);
   }
   

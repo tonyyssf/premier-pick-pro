@@ -125,9 +125,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      // Enhanced input validation
-      const validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
-      const validatedPassword = validateAndSanitizeInput(password, enhancedPasswordSchema);
+      // Enhanced input validation with better error messages
+      let validatedEmail: string;
+      let validatedPassword: string;
+      
+      try {
+        validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
+      } catch (validationError: any) {
+        console.log('Email validation failed:', validationError.message);
+        const error = new Error('Please enter a valid email address (e.g., user@example.com)');
+        toast({
+          title: "Invalid Email Format",
+          description: "Please check your email address and try again. Make sure it includes @ and a domain (e.g., user@example.com)",
+          variant: "destructive",
+        });
+        return { error };
+      }
+      
+      try {
+        validatedPassword = validateAndSanitizeInput(password, enhancedPasswordSchema);
+      } catch (validationError: any) {
+        console.log('Password validation failed:', validationError.message);
+        const error = new Error(validationError.message);
+        toast({
+          title: "Password Requirements Not Met",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error };
+      }
       
       const redirectUrl = `${window.location.origin}/`;
       
@@ -150,9 +176,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         });
         
+        // Provide user-friendly error messages
+        let userMessage = error.message;
+        if (error.message.includes('already registered')) {
+          userMessage = 'An account with this email already exists. Try signing in instead.';
+        } else if (error.message.includes('email')) {
+          userMessage = 'Please check your email address and try again.';
+        }
+        
         toast({
           title: "Sign Up Failed",
-          description: error.message,
+          description: userMessage,
           variant: "destructive",
         });
       } else {
@@ -172,6 +206,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       return { error };
     } catch (validationError: any) {
+      console.error('Unexpected signup error:', validationError);
       securityLogger.log({
         type: 'invalid_input',
         details: { 
@@ -181,9 +216,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       });
       
-      const error = new Error('Invalid email or password format');
+      const error = new Error('Please check your email format and try again');
       toast({
-        title: "Validation Error",
+        title: "Signup Error",
         description: error.message,
         variant: "destructive",
       });
@@ -223,8 +258,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      // Enhanced input validation
-      const validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
+      // Simplified email validation for sign in - just check basic format
+      let validatedEmail: string;
+      
+      try {
+        validatedEmail = validateAndSanitizeInput(email, enhancedEmailSchema);
+      } catch (validationError: any) {
+        console.log('Email validation failed during signin:', validationError.message);
+        const error = new Error('Please enter a valid email address');
+        toast({
+          title: "Invalid Email",
+          description: "Please check your email address format",
+          variant: "destructive",
+        });
+        return { error };
+      }
       
       const { error } = await supabase.auth.signInWithPassword({
         email: validatedEmail,
@@ -269,6 +317,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       return { error };
     } catch (validationError: any) {
+      console.error('Unexpected signin error:', validationError);
       securityLogger.log({
         type: 'invalid_input',
         details: { 
@@ -278,9 +327,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       });
       
-      const error = new Error('Invalid email format');
+      const error = new Error('Please check your email format');
       toast({
-        title: "Validation Error",
+        title: "Sign In Error",
         description: error.message,
         variant: "destructive",
       });
