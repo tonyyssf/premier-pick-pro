@@ -46,9 +46,6 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
   const formatKickoffTime = (date: Date) => {
     return date.toLocaleString('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -69,19 +66,15 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     }
   };
 
-  const getTeamButtonClass = (team: Team, isDisabled: boolean, usedCount: number) => {
-    const isBeingSubmitted = localSubmitting === team.id;
+  const getTeamButtonClass = (teamId: string, isDisabled: boolean) => {
+    const isBeingSubmitted = localSubmitting === teamId;
     const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
     
     return `
-      flex-1 p-3 rounded-lg border-2 transition-all duration-200 text-left relative
+      flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 relative
       ${canSelect
-        ? 'border-gray-200 bg-white hover:border-plpe-purple hover:shadow-md hover:scale-[1.02] cursor-pointer'
-        : isDisabled
-        ? 'border-red-300 bg-red-50 cursor-not-allowed opacity-70'
-        : hasStarted
-        ? 'border-gray-400 bg-gray-100 cursor-not-allowed opacity-60'
-        : 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
+        ? 'hover:bg-plpe-purple/10 cursor-pointer'
+        : 'cursor-not-allowed opacity-60'
       }
       ${isBeingSubmitted ? 'ring-2 ring-plpe-purple ring-opacity-50' : ''}
     `;
@@ -89,20 +82,19 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
   const TeamButton: React.FC<{
     team: Team;
-    isHome: boolean;
-    usedCount: number;
     isDisabled: boolean;
-  }> = ({ team, isHome, usedCount, isDisabled }) => {
+    side: 'left' | 'right';
+  }> = ({ team, isDisabled, side }) => {
     const isBeingSubmitted = localSubmitting === team.id;
     const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
     
     return (
       <button
         type="button"
-        className={getTeamButtonClass(team, isDisabled, usedCount)}
+        className={getTeamButtonClass(team.id, isDisabled)}
         onClick={canSelect ? () => handleTeamSelect(team.id) : undefined}
         disabled={!canSelect}
-        aria-label={`Pick ${team.name} ${isHome ? 'home' : 'away'} team`}
+        aria-label={`Pick ${team.name}`}
       >
         {/* Loading spinner overlay */}
         {isBeingSubmitted && (
@@ -111,48 +103,34 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {/* Team color indicator */}
-            <div 
-              className="w-4 h-4 rounded-full border border-gray-300"
-              style={{ backgroundColor: team.teamColor || '#6B7280' }}
-            />
-            
-            <div>
-              <h4 className="font-semibold text-gray-900 text-sm">{team.name}</h4>
-              <p className="text-xs text-gray-600">{isHome ? 'Home' : 'Away'}</p>
-            </div>
-          </div>
+        <div className={`flex items-center space-x-3 ${side === 'right' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+          {/* Team color indicator */}
+          <div 
+            className="w-8 h-8 rounded-full border border-gray-300 flex-shrink-0"
+            style={{ backgroundColor: team.teamColor || '#6B7280' }}
+          />
           
-          <div className="flex items-center space-x-2">
+          <div className={`${side === 'right' ? 'text-right' : 'text-left'}`}>
+            <h4 className="font-semibold text-gray-900 text-base">{team.name}</h4>
+            
             {/* Usage indicator */}
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1 mt-1">
               <div className="flex space-x-1">
                 {[...Array(maxUses)].map((_, i) => (
                   <div
                     key={i}
                     className={`w-2 h-2 rounded-full ${
-                      i < usedCount ? 'bg-plpe-purple' : 'bg-gray-300'
+                      i < (team.id === fixture.homeTeam.id ? homeTeamUsedCount : awayTeamUsedCount) 
+                        ? 'bg-plpe-purple' 
+                        : 'bg-gray-300'
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-xs text-gray-600 ml-1">{usedCount}/{maxUses}</span>
+              <span className="text-xs text-gray-600 ml-1">
+                {team.id === fixture.homeTeam.id ? homeTeamUsedCount : awayTeamUsedCount}/{maxUses}
+              </span>
             </div>
-
-            {/* Status badges */}
-            {usedCount >= maxUses && (
-              <Badge variant="destructive" className="text-xs">
-                Max Used
-              </Badge>
-            )}
-            
-            {hasStarted && (
-              <Badge variant="outline" className="text-xs">
-                Started
-              </Badge>
-            )}
           </div>
         </div>
       </button>
@@ -161,68 +139,55 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
   return (
     <div className={`
-      bg-white rounded-lg border-2 p-4 transition-all duration-200
-      ${isUrgent ? 'border-yellow-300 bg-yellow-50' : hasStarted ? 'border-gray-400 bg-gray-50' : 'border-gray-200'}
+      bg-plpe-gradient rounded-lg p-4 mb-4
       ${submitting ? 'opacity-75' : ''}
     `}>
-      {/* Header with match info and status */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-4">
-          <div className="text-sm font-medium text-gray-900">
+      <div className="flex items-center justify-between text-white">
+        {/* Home Team */}
+        <div className="flex-1">
+          <TeamButton
+            team={fixture.homeTeam}
+            isDisabled={isHomeTeamDisabled}
+            side="left"
+          />
+        </div>
+        
+        {/* Kickoff Time */}
+        <div className="flex-shrink-0 px-8 text-center">
+          <div className="text-2xl font-bold">
             {formatKickoffTime(fixture.kickoffTime)}
           </div>
           
-          {/* Time remaining display */}
-          {hoursUntilKickoff > 0 && (
-            <div className="text-xs text-gray-600">
-              {hoursUntilKickoff < 1 
-                ? `${Math.ceil(timeUntilKickoff / (1000 * 60))} min`
-                : `${Math.ceil(hoursUntilKickoff)}h`
-              } until kickoff
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {isUrgent && (
-            <Badge variant="outline" className="text-yellow-600 border-yellow-300 bg-yellow-50">
-              <AlertTriangle className="h-3 w-3 mr-1" />
-              Urgent
-            </Badge>
-          )}
-          
-          {hasStarted ? (
-            <Badge variant="outline" className="text-gray-600">
-              <Clock className="h-3 w-3 mr-1" />
-              Started
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="text-green-700 bg-green-50 border-green-200">
-              {fixture.status}
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* Team selection area */}
-      <div className="space-y-3">
-        <TeamButton
-          team={fixture.homeTeam}
-          isHome={true}
-          usedCount={homeTeamUsedCount}
-          isDisabled={isHomeTeamDisabled}
-        />
-        
-        <div className="flex items-center justify-center">
-          <span className="text-gray-400 font-bold text-sm">VS</span>
+          {/* Status indicators */}
+          <div className="flex items-center justify-center space-x-2 mt-2">
+            {isUrgent && (
+              <Badge variant="outline" className="text-yellow-300 border-yellow-300 bg-yellow-900/20">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Urgent
+              </Badge>
+            )}
+            
+            {hasStarted ? (
+              <Badge variant="outline" className="text-gray-300 border-gray-300 bg-gray-900/20">
+                <Clock className="h-3 w-3 mr-1" />
+                Started
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-green-300 border-green-300 bg-green-900/20">
+                {fixture.status}
+              </Badge>
+            )}
+          </div>
         </div>
         
-        <TeamButton
-          team={fixture.awayTeam}
-          isHome={false}
-          usedCount={awayTeamUsedCount}
-          isDisabled={isAwayTeamDisabled}
-        />
+        {/* Away Team */}
+        <div className="flex-1">
+          <TeamButton
+            team={fixture.awayTeam}
+            isDisabled={isAwayTeamDisabled}
+            side="right"
+          />
+        </div>
       </div>
     </div>
   );
