@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Settings, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,8 +23,8 @@ export const Navbar: React.FC = () => {
   // Filter navigation items based on admin status
   const baseNavigationItems = [
     { to: "/how-to-play", label: "How to Play" },
-    { to: "/", label: "My Picks" },
-    { to: "/leaderboards", label: "Leagues & Rankings" }
+    { to: "/", label: "Picks" },
+    { to: "/leaderboards", label: "Leagues" }
   ];
 
   const navigationItems = isAdmin 
