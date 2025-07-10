@@ -28,8 +28,8 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="my-leagues" className="w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 mb-4">
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto">
           <TabsTrigger value="my-leagues" className="text-xs sm:text-sm">
             My Leagues
           </TabsTrigger>
