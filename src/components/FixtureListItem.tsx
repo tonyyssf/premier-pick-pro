@@ -63,10 +63,20 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     return `
       flex items-center justify-center space-x-1 p-2 h-full transition-all duration-200 relative
       ${canSelect
-        ? 'hover:bg-gray-100 cursor-pointer'
+        ? 'cursor-pointer'
         : 'cursor-not-allowed opacity-60'
       }
       ${isBeingSubmitted ? 'ring-1 ring-plpe-purple ring-opacity-50' : ''}
+    `;
+  };
+
+  const getContainerClass = (teamId: string, isDisabled: boolean) => {
+    const isBeingSubmitted = localSubmitting === teamId;
+    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
+    
+    return `
+      flex items-center justify-center transition-all duration-200
+      ${canSelect ? 'hover:bg-gray-100' : ''}
     `;
   };
 
@@ -132,7 +142,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     `}>
       <div className="grid grid-cols-2 h-14">
         {/* Home Team - Left Half */}
-        <div className="flex items-center justify-center border-r border-gray-200">
+        <div className={`${getContainerClass(fixture.homeTeam.id, isHomeTeamDisabled)} border-r border-gray-200`}>
           <TeamButton
             team={fixture.homeTeam}
             isDisabled={isHomeTeamDisabled}
@@ -141,7 +151,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
         </div>
         
         {/* Away Team - Right Half */}
-        <div className="flex items-center justify-center">
+        <div className={getContainerClass(fixture.awayTeam.id, isAwayTeamDisabled)}>
           <TeamButton
             team={fixture.awayTeam}
             isDisabled={isAwayTeamDisabled}
