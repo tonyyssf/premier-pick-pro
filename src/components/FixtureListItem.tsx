@@ -127,7 +127,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
   return (
     <div className={`
-      bg-white border border-gray-200 rounded-lg overflow-hidden mb-2
+      bg-white border border-gray-200 rounded-lg overflow-hidden
       ${submitting ? 'opacity-75' : ''}
     `}>
       <div className="grid grid-cols-2 h-14">
