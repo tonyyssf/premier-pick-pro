@@ -61,12 +61,12 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
     
     return `
-      flex flex-col items-center justify-center space-y-1 sm:space-y-2 p-3 sm:p-4 h-full transition-all duration-200 relative
+      flex items-center justify-center space-x-1 p-2 h-full transition-all duration-200 relative
       ${canSelect
         ? 'hover:bg-gray-100 cursor-pointer'
         : 'cursor-not-allowed opacity-60'
       }
-      ${isBeingSubmitted ? 'ring-2 ring-plpe-purple ring-opacity-50' : ''}
+      ${isBeingSubmitted ? 'ring-1 ring-plpe-purple ring-opacity-50' : ''}
     `;
   };
 
@@ -89,45 +89,48 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
         {/* Loading spinner overlay */}
         {isBeingSubmitted && (
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-20">
-            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-plpe-purple"></div>
+            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-plpe-purple"></div>
           </div>
         )}
 
-        {/* Team color indicator */}
+        {/* Team color indicator - smaller */}
         <div 
-          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex-shrink-0"
+          className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
           style={{ backgroundColor: team.teamColor || '#6B7280' }}
         />
         
-        {/* Team name */}
-        <h4 className="font-medium text-gray-900 text-sm sm:text-base text-center leading-tight">{team.name}</h4>
+        {/* Team name - use shortName on mobile, full name on larger screens */}
+        <span className="font-medium text-gray-900 text-xs leading-tight truncate">
+          <span className="hidden sm:inline">{team.name}</span>
+          <span className="sm:hidden">{team.shortName}</span>
+        </span>
         
-        {/* Usage indicator */}
-        <div className="flex items-center space-x-1">
-          <div className="flex space-x-0.5">
-            {[...Array(maxUses)].map((_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${
-                  i < usedCount ? 'bg-plpe-purple' : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-xs sm:text-sm text-gray-600 ml-1">
-            {usedCount}/{maxUses}
-          </span>
+        {/* Usage dots - smaller and only show on larger screens */}
+        <div className="hidden sm:flex space-x-0.5">
+          {[...Array(maxUses)].map((_, i) => (
+            <div
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full ${
+                i < usedCount ? 'bg-plpe-purple' : 'bg-gray-300'
+              }`}
+            />
+          ))}
         </div>
+        
+        {/* Usage count - show on mobile instead of dots */}
+        <span className="text-xs text-gray-600 sm:hidden">
+          {usedCount}/{maxUses}
+        </span>
       </button>
     );
   };
 
   return (
     <div className={`
-      bg-white border border-gray-200 rounded-lg overflow-hidden
+      bg-white border border-gray-200 rounded-lg overflow-hidden mb-2
       ${submitting ? 'opacity-75' : ''}
     `}>
-      <div className="grid grid-cols-2 min-h-[100px] sm:min-h-[120px]">
+      <div className="grid grid-cols-2 h-14">
         {/* Home Team - Left Half */}
         <div className="flex items-center justify-center border-r border-gray-200">
           <TeamButton
