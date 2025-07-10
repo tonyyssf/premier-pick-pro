@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { FixtureCard } from './FixtureCard';
+import { FixtureListItem } from './FixtureListItem';
 import { GameweekHeader } from './GameweekHeader';
 import { PickConfirmationCard } from './PickConfirmationCard';
 import { DeadlineCard } from './DeadlineCard';
@@ -143,7 +142,7 @@ export const WeeklyPicks: React.FC = () => {
   const deadlinePassed = new Date() > currentGameweek.deadline;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-section="weekly-picks">
       <GameweekHeader 
         gameweek={currentGameweek} 
         title={hasAlreadyPicked ? "Your Pick" : "Make Your Pick"} 
@@ -239,9 +238,10 @@ export const WeeklyPicks: React.FC = () => {
             </Card>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+          {/* Fixture list */}
+          <div className="space-y-4 mb-8">
             {fixtures.map((fixture) => (
-              <FixtureCard
+              <FixtureListItem
                 key={fixture.id}
                 fixture={fixture}
                 homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
