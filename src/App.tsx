@@ -10,7 +10,6 @@ import { SecurityHeaders } from "@/components/SecurityHeaders";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Leaderboards from "./pages/Leaderboards";
-import HowToPlay from "./pages/HowToPlay";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -30,7 +29,6 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
               <Route path="/leaderboards" element={<Leaderboards />} />
-              <Route path="/how-to-play" element={<HowToPlay />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

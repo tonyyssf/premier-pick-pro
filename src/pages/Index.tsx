@@ -6,12 +6,17 @@ import { UserScoreDisplay } from '../components/UserScoreDisplay';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { UserPickHistory } from '../components/UserPickHistory';
 import { PickingGuide } from '../components/PickingGuide';
+import { HowItWorksButton } from '../components/HowItWorksButton';
 
 const Index = () => {
   return (
     <ProtectedRoute>
       <Layout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Make Your Picks</h1>
+            <HowItWorksButton />
+          </div>
           <UserScoreDisplay />
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

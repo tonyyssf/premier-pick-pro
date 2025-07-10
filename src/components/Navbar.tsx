@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Settings, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,9 +21,8 @@ export const Navbar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Filter navigation items based on admin status
+  // Filter navigation items based on admin status - removed "How to Play"
   const baseNavigationItems = [
-    { to: "/how-to-play", label: "How to Play" },
     { to: "/", label: "Picks" },
     { to: "/leaderboards", label: "Leagues" }
   ];
