@@ -68,11 +68,16 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     hasPickForGameweek
   );
 
+  // Wrap loadCurrentGameweek to match expected Promise<void> signature
+  const wrappedLoadCurrentGameweek = async (): Promise<void> => {
+    await loadCurrentGameweek();
+  };
+
   const {
     advanceToNextGameweek,
     calculateScores
   } = useGameweekManagement(
-    loadCurrentGameweek,
+    wrappedLoadCurrentGameweek,
     loadUserPicks,
     loadScoresAndStandings,
     setScoresLoading,

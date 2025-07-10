@@ -23,6 +23,7 @@ interface FixtureListItemProps {
   selectedTeam: string | null;
   onTeamSelect: (fixtureId: string, teamId: string) => void;
   submitting?: boolean;
+  disabled?: boolean;
 }
 
 export const FixtureListItem: React.FC<FixtureListItemProps> = ({
@@ -31,12 +32,13 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
   awayTeamUsedCount,
   maxUses,
   onTeamSelect,
-  submitting = false
+  submitting = false,
+  disabled = false
 }) => {
   const [localSubmitting, setLocalSubmitting] = useState<string | null>(null);
   
-  const isHomeTeamDisabled = homeTeamUsedCount >= maxUses || submitting;
-  const isAwayTeamDisabled = awayTeamUsedCount >= maxUses || submitting;
+  const isHomeTeamDisabled = homeTeamUsedCount >= maxUses || submitting || disabled;
+  const isAwayTeamDisabled = awayTeamUsedCount >= maxUses || submitting || disabled;
   
   const timeUntilKickoff = fixture.kickoffTime.getTime() - new Date().getTime();
   const hasStarted = timeUntilKickoff <= 0;
@@ -44,7 +46,8 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
   const handleTeamSelect = async (teamId: string) => {
     if ((isHomeTeamDisabled && teamId === fixture.homeTeam.id) ||
         (isAwayTeamDisabled && teamId === fixture.awayTeam.id) ||
-        hasStarted) {
+        hasStarted ||
+        disabled) {
       return;
     }
     
@@ -58,7 +61,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
   const getTeamButtonClass = (teamId: string, isDisabled: boolean) => {
     const isBeingSubmitted = localSubmitting === teamId;
-    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
+    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted && !disabled;
     
     return `
       flex items-center justify-center space-x-1 p-2 h-full transition-all duration-200 relative
@@ -72,7 +75,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
   const getContainerClass = (teamId: string, isDisabled: boolean) => {
     const isBeingSubmitted = localSubmitting === teamId;
-    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
+    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted && !disabled;
     
     return `
       flex items-center justify-center transition-all duration-200
@@ -86,7 +89,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     usedCount: number;
   }> = ({ team, isDisabled, usedCount }) => {
     const isBeingSubmitted = localSubmitting === team.id;
-    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
+    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted && !disabled;
     
     return (
       <button
@@ -138,7 +141,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
   return (
     <div className={`
       bg-white border border-gray-200 rounded-lg overflow-hidden
-      ${submitting ? 'opacity-75' : ''}
+      ${submitting || disabled ? 'opacity-75' : ''}
     `}>
       <div className="grid grid-cols-2 h-14">
         {/* Home Team - Left Half */}
