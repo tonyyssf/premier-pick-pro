@@ -71,9 +71,9 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
     
     return `
-      flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 relative
+      flex flex-col items-center justify-center space-y-2 p-4 h-full transition-all duration-200 relative
       ${canSelect
-        ? 'hover:bg-plpe-purple/10 cursor-pointer'
+        ? 'hover:bg-gray-100 cursor-pointer'
         : 'cursor-not-allowed opacity-60'
       }
       ${isBeingSubmitted ? 'ring-2 ring-plpe-purple ring-opacity-50' : ''}
@@ -83,8 +83,8 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
   const TeamButton: React.FC<{
     team: Team;
     isDisabled: boolean;
-    side: 'left' | 'right';
-  }> = ({ team, isDisabled, side }) => {
+    usedCount: number;
+  }> = ({ team, isDisabled, usedCount }) => {
     const isBeingSubmitted = localSubmitting === team.id;
     const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
     
@@ -98,40 +98,35 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
       >
         {/* Loading spinner overlay */}
         {isBeingSubmitted && (
-          <div className="absolute inset-0 bg-plpe-purple/10 rounded-lg flex items-center justify-center z-20">
+          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-20">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-plpe-purple"></div>
           </div>
         )}
 
-        <div className={`flex items-center space-x-3 ${side === 'right' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-          {/* Team color indicator */}
-          <div 
-            className="w-8 h-8 rounded-full border border-gray-300 flex-shrink-0"
-            style={{ backgroundColor: team.teamColor || '#6B7280' }}
-          />
-          
-          <div className={`${side === 'right' ? 'text-right' : 'text-left'}`}>
-            <h4 className="font-semibold text-gray-900 text-base">{team.name}</h4>
-            
-            {/* Usage indicator */}
-            <div className="flex items-center space-x-1 mt-1">
-              <div className="flex space-x-1">
-                {[...Array(maxUses)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2 h-2 rounded-full ${
-                      i < (team.id === fixture.homeTeam.id ? homeTeamUsedCount : awayTeamUsedCount) 
-                        ? 'bg-plpe-purple' 
-                        : 'bg-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-gray-600 ml-1">
-                {team.id === fixture.homeTeam.id ? homeTeamUsedCount : awayTeamUsedCount}/{maxUses}
-              </span>
-            </div>
+        {/* Team color indicator */}
+        <div 
+          className="w-8 h-8 rounded-full border border-gray-300 flex-shrink-0"
+          style={{ backgroundColor: team.teamColor || '#6B7280' }}
+        />
+        
+        {/* Team name */}
+        <h4 className="font-semibold text-gray-900 text-sm text-center">{team.name}</h4>
+        
+        {/* Usage indicator */}
+        <div className="flex items-center space-x-1">
+          <div className="flex space-x-1">
+            {[...Array(maxUses)].map((_, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full ${
+                  i < usedCount ? 'bg-plpe-purple' : 'bg-gray-300'
+                }`}
+              />
+            ))}
           </div>
+          <span className="text-xs text-gray-600 ml-1">
+            {usedCount}/{maxUses}
+          </span>
         </div>
       </button>
     );
@@ -139,53 +134,53 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
   return (
     <div className={`
-      bg-plpe-gradient rounded-lg p-4 mb-4
+      bg-white border border-gray-200 rounded-lg mb-4 overflow-hidden
       ${submitting ? 'opacity-75' : ''}
     `}>
-      <div className="flex items-center justify-between text-white">
-        {/* Home Team */}
-        <div className="flex-1">
+      <div className="grid grid-cols-3 min-h-[120px]">
+        {/* Home Team - Left Third */}
+        <div className="flex items-center justify-center border-r border-gray-200">
           <TeamButton
             team={fixture.homeTeam}
             isDisabled={isHomeTeamDisabled}
-            side="left"
+            usedCount={homeTeamUsedCount}
           />
         </div>
         
-        {/* Kickoff Time */}
-        <div className="flex-shrink-0 px-8 text-center">
-          <div className="text-2xl font-bold">
+        {/* Kickoff Time - Center Third */}
+        <div className="flex flex-col items-center justify-center space-y-2 p-4 border-r border-gray-200">
+          <div className="text-2xl font-bold text-gray-900">
             {formatKickoffTime(fixture.kickoffTime)}
           </div>
           
           {/* Status indicators */}
-          <div className="flex items-center justify-center space-x-2 mt-2">
+          <div className="flex flex-col items-center space-y-1">
             {isUrgent && (
-              <Badge variant="outline" className="text-yellow-300 border-yellow-300 bg-yellow-900/20">
+              <Badge variant="outline" className="text-yellow-600 border-yellow-300 bg-yellow-50">
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 Urgent
               </Badge>
             )}
             
             {hasStarted ? (
-              <Badge variant="outline" className="text-gray-300 border-gray-300 bg-gray-900/20">
+              <Badge variant="outline" className="text-gray-600 border-gray-300 bg-gray-50">
                 <Clock className="h-3 w-3 mr-1" />
                 Started
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-green-300 border-green-300 bg-green-900/20">
+              <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
                 {fixture.status}
               </Badge>
             )}
           </div>
         </div>
         
-        {/* Away Team */}
-        <div className="flex-1">
+        {/* Away Team - Right Third */}
+        <div className="flex items-center justify-center">
           <TeamButton
             team={fixture.awayTeam}
             isDisabled={isAwayTeamDisabled}
-            side="right"
+            usedCount={awayTeamUsedCount}
           />
         </div>
       </div>
