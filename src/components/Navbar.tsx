@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Settings, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,8 +25,7 @@ export const Navbar: React.FC = () => {
   const baseNavigationItems = [
     { to: "/how-to-play", label: "How to Play" },
     { to: "/", label: "My Picks" },
-    { to: "/leagues", label: "Leagues" },
-    { to: "/leaderboards", label: "Leaderboards" }
+    { to: "/leaderboards", label: "Leagues & Rankings" }
   ];
 
   const navigationItems = isAdmin 

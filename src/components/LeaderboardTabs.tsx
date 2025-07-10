@@ -3,6 +3,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LeagueRankingsList } from '@/components/LeagueRankingsList';
 import { LeaderboardSection } from '@/components/LeaderboardSection';
+import { MyLeaguesTab } from '@/components/MyLeaguesTab';
 
 interface LeagueWithRank {
   id: string;
@@ -26,11 +27,14 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
   onToggleExpansion,
 }) => {
   return (
-    <Tabs defaultValue="leagues" className="w-full">
+    <Tabs defaultValue="my-leagues" className="w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="leagues" className="text-xs sm:text-sm">
-            My League Rankings
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+          <TabsTrigger value="my-leagues" className="text-xs sm:text-sm">
+            My Leagues
+          </TabsTrigger>
+          <TabsTrigger value="rankings" className="text-xs sm:text-sm">
+            League Rankings
           </TabsTrigger>
           <TabsTrigger value="global" className="text-xs sm:text-sm">
             Global Leaderboard
@@ -38,7 +42,11 @@ export const LeaderboardTabs: React.FC<LeaderboardTabsProps> = ({
         </TabsList>
       </div>
 
-      <TabsContent value="leagues" className="mt-6">
+      <TabsContent value="my-leagues" className="mt-6">
+        <MyLeaguesTab />
+      </TabsContent>
+
+      <TabsContent value="rankings" className="mt-6">
         <LeagueRankingsList
           leaguesWithRanks={leaguesWithRanks}
           isLoading={isLoading}
