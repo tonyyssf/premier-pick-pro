@@ -239,7 +239,7 @@ export const WeeklyPicks: React.FC = () => {
           )}
 
           {/* Fixture list */}
-          <div className="space-y-4 mb-8">
+          <div className="mb-8">
             {fixtures.map((fixture) => (
               <FixtureListItem
                 key={fixture.id}

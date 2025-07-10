@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { Badge } from './ui/badge';
@@ -134,7 +133,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
   return (
     <div className={`
-      bg-white border border-gray-200 rounded-lg mb-2 sm:mb-3 overflow-hidden
+      bg-white border border-gray-200 rounded-lg overflow-hidden
       ${submitting ? 'opacity-75' : ''}
     `}>
       <div className="grid grid-cols-3 min-h-[80px] sm:min-h-[90px]">
