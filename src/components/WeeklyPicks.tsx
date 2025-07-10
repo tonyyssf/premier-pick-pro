@@ -17,7 +17,8 @@ export const WeeklyPicks: React.FC = () => {
   
   const { 
     fixtures, 
-    currentGameweek, 
+    currentGameweek,
+    viewingGameweek,
     submitPick, 
     undoPick,
     canUndoPick,
@@ -25,11 +26,14 @@ export const WeeklyPicks: React.FC = () => {
     hasPickForGameweek, 
     getCurrentPick, 
     loading, 
-    fixturesLoading 
+    fixturesLoading,
+    navigation
   } = usePicks();
 
+  const gameweekToUse = viewingGameweek || currentGameweek;
+  const isCurrentGameweek = currentGameweek && gameweekToUse && currentGameweek.id === gameweekToUse.id;
   const currentPick = getCurrentPick();
-  const hasAlreadyPicked = currentGameweek ? hasPickForGameweek(currentGameweek.id) : false;
+  const hasAlreadyPicked = gameweekToUse ? hasPickForGameweek(gameweekToUse.id) : false;
   const canUndo = canUndoPick();
 
   // Clear messages after delay
@@ -48,7 +52,7 @@ export const WeeklyPicks: React.FC = () => {
   }, [lastError]);
 
   const handleTeamSelect = async (fixtureId: string, teamId: string) => {
-    if (submitting) return;
+    if (submitting || !isCurrentGameweek) return;
     
     setSubmitting(true);
     setLastError(null);
@@ -104,18 +108,23 @@ export const WeeklyPicks: React.FC = () => {
   }
 
   // No gameweek state
-  if (!currentGameweek) {
+  if (!currentGameweek || !gameweekToUse) {
     return <WeeklyPicksEmptyState />;
   }
 
-  // Check if deadline has passed
-  const deadlinePassed = new Date() > currentGameweek.deadline;
+  // Check if deadline has passed for current gameweek
+  const deadlinePassed = isCurrentGameweek && new Date() > gameweekToUse.deadline;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6" data-section="weekly-picks">
       <WeeklyPicksHeader 
         currentGameweek={currentGameweek}
+        viewingGameweek={gameweekToUse}
         hasAlreadyPicked={hasAlreadyPicked}
+        onNavigate={navigation?.navigateToGameweek}
+        canNavigatePrev={navigation?.canNavigatePrev}
+        canNavigateNext={navigation?.canNavigateNext}
+        isNavigating={navigation?.isNavigating}
       />
 
       <WeeklyPicksMessages
@@ -124,22 +133,22 @@ export const WeeklyPicks: React.FC = () => {
         onDismissError={() => setLastError(null)}
       />
 
-      {/* Deadline passed warning */}
+      {/* Deadline passed warning - only for current gameweek */}
       {deadlinePassed && !hasAlreadyPicked && (
-        <WeeklyPicksDeadlinePassed gameweekNumber={currentGameweek.number} />
+        <WeeklyPicksDeadlinePassed gameweekNumber={gameweekToUse.number} />
       )}
 
       {/* Main content */}
-      {hasAlreadyPicked && currentPick ? (
+      {hasAlreadyPicked && currentPick && isCurrentGameweek ? (
         <PickConfirmationCard
           currentPick={currentPick}
           pickInfo={getCurrentPickInfo()}
           canUndo={canUndo && !deadlinePassed}
           undoing={undoing}
           onUndoPick={handleUndoPick}
-          gameweekNumber={currentGameweek.number}
+          gameweekNumber={gameweekToUse.number}
         />
-      ) : !deadlinePassed ? (
+      ) : !deadlinePassed || !isCurrentGameweek ? (
         <>
           {/* Fixture list */}
           <WeeklyPicksFixtureList
@@ -147,7 +156,8 @@ export const WeeklyPicks: React.FC = () => {
             getTeamUsedCount={getTeamUsedCount}
             onTeamSelect={handleTeamSelect}
             submitting={submitting}
-            gameweekNumber={currentGameweek.number}
+            gameweekNumber={gameweekToUse.number}
+            disabled={!isCurrentGameweek}
           />
         </>
       ) : null}

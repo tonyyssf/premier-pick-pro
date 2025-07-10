@@ -11,6 +11,7 @@ interface WeeklyPicksFixtureListProps {
   onTeamSelect: (fixtureId: string, teamId: string) => Promise<void>;
   submitting: boolean;
   gameweekNumber: number;
+  disabled?: boolean;
 }
 
 export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
@@ -18,7 +19,8 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
   getTeamUsedCount,
   onTeamSelect,
   submitting,
-  gameweekNumber
+  gameweekNumber,
+  disabled = false
 }) => {
   if (fixtures.length === 0) {
     return (
@@ -45,8 +47,9 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
           awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
           maxUses={2}
           selectedTeam={null}
-          onTeamSelect={onTeamSelect}
+          onTeamSelect={disabled ? async () => {} : onTeamSelect}
           submitting={submitting}
+          disabled={disabled}
         />
       ))}
     </div>

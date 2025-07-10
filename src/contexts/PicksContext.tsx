@@ -7,6 +7,7 @@ import { usePicksData } from '@/hooks/usePicksData';
 import { useScoresAndStandings } from '@/hooks/useScoresAndStandings';
 import { usePickActions } from '@/hooks/usePickActions';
 import { useGameweekManagement } from '@/hooks/useGameweekManagement';
+import { useGameweekNavigation } from '@/hooks/useGameweekNavigation';
 
 const PicksContext = createContext<PicksContextType | undefined>(undefined);
 
@@ -15,9 +16,12 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   const {
     currentGameweek,
+    viewingGameweek,
     fixtures,
     fixturesLoading,
-    loadCurrentGameweek
+    loadCurrentGameweek,
+    loadGameweekByNumber,
+    setViewingGameweek
   } = useGameweekData();
 
   const {
@@ -34,6 +38,11 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setScoresLoading,
     loadScoresAndStandings
   } = useScoresAndStandings(user);
+
+  const navigation = useGameweekNavigation({
+    currentGameweek: viewingGameweek,
+    loadGameweekByNumber
+  });
 
   // Helper functions
   const getTeamUsedCount = (teamId: string): number => {
@@ -75,6 +84,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       picks,
       fixtures,
       currentGameweek,
+      viewingGameweek,
       gameweekScores,
       userStandings,
       submitPick,
@@ -88,6 +98,7 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       loading,
       fixturesLoading,
       scoresLoading,
+      navigation
     }}>
       {children}
     </PicksContext.Provider>

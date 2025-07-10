@@ -49,10 +49,20 @@ export interface UserStanding {
   currentRank: number | null;
 }
 
+export interface GameweekNavigation {
+  viewingGameweek: Gameweek | null;
+  setViewingGameweek: (gameweek: Gameweek | null) => void;
+  navigateToGameweek: (direction: 'prev' | 'next') => void;
+  canNavigatePrev: boolean;
+  canNavigateNext: boolean;
+  isNavigating: boolean;
+}
+
 export interface PicksContextType {
   picks: Pick[];
   fixtures: Fixture[];
   currentGameweek: Gameweek | null;
+  viewingGameweek?: Gameweek | null;
   gameweekScores: GameweekScore[];
   userStandings: UserStanding[];
   submitPick: (fixtureId: string, teamId: string) => Promise<boolean>;
@@ -66,4 +76,5 @@ export interface PicksContextType {
   loading: boolean;
   fixturesLoading: boolean;
   scoresLoading: boolean;
+  navigation?: GameweekNavigation;
 }

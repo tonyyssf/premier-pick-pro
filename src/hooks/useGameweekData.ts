@@ -5,6 +5,7 @@ import { Gameweek, Fixture } from '@/types/picks';
 
 export const useGameweekData = () => {
   const [currentGameweek, setCurrentGameweek] = useState<Gameweek | null>(null);
+  const [viewingGameweek, setViewingGameweek] = useState<Gameweek | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [fixturesLoading, setFixturesLoading] = useState(true);
 
@@ -55,8 +56,51 @@ export const useGameweekData = () => {
 
       console.log('Current gameweek loaded:', gameweek);
       setCurrentGameweek(gameweek);
+      setViewingGameweek(gameweek);
 
-      // Load fixtures for current gameweek - UPDATED to include team_color and order by kickoff_time
+      return gameweek;
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const loadGameweekByNumber = async (gameweekNumber: number): Promise<boolean> => {
+    try {
+      console.log('Loading gameweek by number:', gameweekNumber);
+      setFixturesLoading(true);
+
+      const { data: gameweekData, error: gameweekError } = await supabase
+        .from('gameweeks')
+        .select('*')
+        .eq('number', gameweekNumber)
+        .single();
+
+      if (gameweekError || !gameweekData) {
+        console.error('Error loading gameweek:', gameweekError);
+        return false;
+      }
+
+      const gameweek: Gameweek = {
+        id: gameweekData.id,
+        number: gameweekData.number,
+        deadline: new Date(gameweekData.deadline),
+        isCurrent: gameweekData.is_current,
+      };
+
+      setViewingGameweek(gameweek);
+      
+      // Load fixtures for the selected gameweek
+      await loadFixturesForGameweek(gameweek.id);
+      
+      return true;
+    } catch (error) {
+      console.error('Error loading gameweek by number:', error);
+      return false;
+    }
+  };
+
+  const loadFixturesForGameweek = async (gameweekId: string) => {
+    try {
       const { data: fixturesData, error: fixturesError } = await supabase
         .from('fixtures')
         .select(`
@@ -64,7 +108,7 @@ export const useGameweekData = () => {
           home_team:teams!fixtures_home_team_id_fkey(id, name, short_name, team_color),
           away_team:teams!fixtures_away_team_id_fkey(id, name, short_name, team_color)
         `)
-        .eq('gameweek_id', gameweek.id)
+        .eq('gameweek_id', gameweekId)
         .order('kickoff_time', { ascending: true });
 
       if (fixturesError) {
@@ -94,22 +138,34 @@ export const useGameweekData = () => {
 
       setFixtures(formattedFixtures);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading fixtures:', error);
     } finally {
       setFixturesLoading(false);
     }
   };
 
   useEffect(() => {
-    loadCurrentGameweek();
+    const initializeData = async () => {
+      const gameweek = await loadCurrentGameweek();
+      if (gameweek) {
+        await loadFixturesForGameweek(gameweek.id);
+      } else {
+        setFixturesLoading(false);
+      }
+    };
+    
+    initializeData();
   }, []);
 
   return {
     currentGameweek,
+    viewingGameweek,
     fixtures,
     fixturesLoading,
     loadCurrentGameweek,
+    loadGameweekByNumber,
     setCurrentGameweek,
-    setFixtures
+    setFixtures,
+    setViewingGameweek
   };
 };
