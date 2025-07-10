@@ -5,7 +5,6 @@ import { WeeklyPicks } from '../components/WeeklyPicks';
 import { UserScoreDisplay } from '../components/UserScoreDisplay';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { UserPickHistory } from '../components/UserPickHistory';
-import { PickingGuide } from '../components/PickingGuide';
 import { HowItWorksButton } from '../components/HowItWorksButton';
 
 const Index = () => {
@@ -18,9 +17,6 @@ const Index = () => {
             <HowItWorksButton />
           </div>
           <UserScoreDisplay />
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <PickingGuide />
         </div>
         <WeeklyPicks />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
