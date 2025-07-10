@@ -4,7 +4,6 @@ import { PickConfirmationCard } from './PickConfirmationCard';
 import { usePicks } from '../contexts/PicksContext';
 import { WeeklyPicksHeader } from './WeeklyPicksHeader';
 import { WeeklyPicksMessages } from './WeeklyPicksMessages';
-import { WeeklyPicksInstructions } from './WeeklyPicksInstructions';
 import { WeeklyPicksFixtureList } from './WeeklyPicksFixtureList';
 import { WeeklyPicksLoadingState } from './WeeklyPicksLoadingState';
 import { WeeklyPicksEmptyState } from './WeeklyPicksEmptyState';
@@ -142,9 +141,6 @@ export const WeeklyPicks: React.FC = () => {
         />
       ) : !deadlinePassed ? (
         <>
-          {/* Instructions for first-time users */}
-          {fixtures.length > 0 && <WeeklyPicksInstructions />}
-
           {/* Fixture list */}
           <WeeklyPicksFixtureList
             fixtures={fixtures}
