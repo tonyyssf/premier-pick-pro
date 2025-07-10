@@ -33,7 +33,7 @@ export const UserScoreDisplay: React.FC = () => {
           <CardTitle className="text-sm font-medium">Total Points</CardTitle>
           <Trophy className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
+        <CardContent className="text-center">
           <div className="text-2xl font-bold text-plpe-purple">{displayPoints}</div>
           <p className="text-xs text-muted-foreground">
             {currentGameweekScore ? `+${currentGameweekScore.points} this gameweek` : 
@@ -47,7 +47,7 @@ export const UserScoreDisplay: React.FC = () => {
           <CardTitle className="text-sm font-medium">Correct Picks</CardTitle>
           <Target className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
+        <CardContent className="text-center">
           <div className="text-2xl font-bold">{displayCorrectPicks}/{displayTotalPicks}</div>
           <p className="text-xs text-muted-foreground">
             {winRate}% win rate
@@ -60,7 +60,7 @@ export const UserScoreDisplay: React.FC = () => {
           <CardTitle className="text-sm font-medium">Current Rank</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
+        <CardContent className="text-center">
           <div className="text-2xl font-bold">
             {displayRank ? `#${displayRank}` : '-'}
           </div>
