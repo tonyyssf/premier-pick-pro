@@ -109,10 +109,10 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
           style={{ backgroundColor: team.teamColor || '#6B7280' }}
         />
         
-        {/* Team name - use shortName on mobile, full name on larger screens */}
+        {/* Team name - show full name on desktop/tablet, short name on mobile */}
         <span className="font-medium text-gray-900 text-xs leading-tight truncate">
-          <span className="hidden sm:inline">{team.name}</span>
-          <span className="sm:hidden">{team.shortName}</span>
+          <span className="hidden md:inline">{team.name}</span>
+          <span className="md:hidden">{team.shortName}</span>
         </span>
         
         {/* Usage dots - smaller and only show on larger screens */}
