@@ -124,14 +124,14 @@ export const MyLeaguesTab: React.FC = () => {
   }, [user]);
 
   return (
-    <div>
-      <div className="mb-8">
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-8 text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">My Leagues</h2>
         <p className="text-gray-600 mb-6">
           Create a new league or join an existing one using an invite code. All leagues have a maximum of 20 members.
         </p>
         
-        <div className="flex space-x-4">
+        <div className="flex justify-center space-x-4">
           <CreateLeagueDialog onLeagueCreated={fetchLeagues} />
           <JoinLeagueDialog onLeagueJoined={fetchLeagues} />
         </div>

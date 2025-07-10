@@ -5,7 +5,6 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { LeaderboardHeader } from '@/components/LeaderboardHeader';
 import { LeaderboardTabs } from '@/components/LeaderboardTabs';
 
 interface LeagueWithRank {
@@ -107,12 +106,6 @@ const Leaderboards = () => {
     <ProtectedRoute>
       <Layout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Leagues & Rankings</h1>
-            <p className="text-gray-600">
-              Manage your leagues, view rankings, and track your performance across all competitions.
-            </p>
-          </div>
           <LeaderboardTabs
             leaguesWithRanks={leaguesWithRanks}
             isLoading={isLoading}
