@@ -1,5 +1,5 @@
+
 import React, { useState } from 'react';
-import { Clock, AlertTriangle } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface Team {
@@ -39,16 +39,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
   const isAwayTeamDisabled = awayTeamUsedCount >= maxUses || submitting;
   
   const timeUntilKickoff = fixture.kickoffTime.getTime() - new Date().getTime();
-  const hoursUntilKickoff = timeUntilKickoff / (1000 * 60 * 60);
-  const isUrgent = hoursUntilKickoff <= 2 && hoursUntilKickoff > 0;
   const hasStarted = timeUntilKickoff <= 0;
-
-  const formatKickoffTime = (date: Date) => {
-    return date.toLocaleString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const handleTeamSelect = async (teamId: string) => {
     if ((isHomeTeamDisabled && teamId === fixture.homeTeam.id) ||
@@ -70,7 +61,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted;
     
     return `
-      flex flex-col items-center justify-center space-y-1 sm:space-y-2 p-2 sm:p-3 h-full transition-all duration-200 relative
+      flex flex-col items-center justify-center space-y-1 sm:space-y-2 p-3 sm:p-4 h-full transition-all duration-200 relative
       ${canSelect
         ? 'hover:bg-gray-100 cursor-pointer'
         : 'cursor-not-allowed opacity-60'
@@ -104,26 +95,26 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 
         {/* Team color indicator */}
         <div 
-          className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-gray-300 flex-shrink-0"
+          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex-shrink-0"
           style={{ backgroundColor: team.teamColor || '#6B7280' }}
         />
         
-        {/* Team name - responsive text size */}
-        <h4 className="font-medium text-gray-900 text-xs sm:text-sm text-center leading-tight">{team.name}</h4>
+        {/* Team name */}
+        <h4 className="font-medium text-gray-900 text-sm sm:text-base text-center leading-tight">{team.name}</h4>
         
-        {/* Usage indicator - smaller and more compact */}
-        <div className="flex items-center space-x-0.5 sm:space-x-1">
+        {/* Usage indicator */}
+        <div className="flex items-center space-x-1">
           <div className="flex space-x-0.5">
             {[...Array(maxUses)].map((_, i) => (
               <div
                 key={i}
-                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
+                className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${
                   i < usedCount ? 'bg-plpe-purple' : 'bg-gray-300'
                 }`}
               />
             ))}
           </div>
-          <span className="text-xs text-gray-600 ml-0.5 sm:ml-1">
+          <span className="text-xs sm:text-sm text-gray-600 ml-1">
             {usedCount}/{maxUses}
           </span>
         </div>
@@ -136,8 +127,8 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
       bg-white border border-gray-200 rounded-lg overflow-hidden
       ${submitting ? 'opacity-75' : ''}
     `}>
-      <div className="grid grid-cols-3 min-h-[80px] sm:min-h-[90px]">
-        {/* Home Team - Left Third */}
+      <div className="grid grid-cols-2 min-h-[100px] sm:min-h-[120px]">
+        {/* Home Team - Left Half */}
         <div className="flex items-center justify-center border-r border-gray-200">
           <TeamButton
             team={fixture.homeTeam}
@@ -146,38 +137,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
           />
         </div>
         
-        {/* Kickoff Time - Center Third */}
-        <div className="flex flex-col items-center justify-center space-y-1 p-2 sm:p-3 border-r border-gray-200">
-          <div className="text-lg sm:text-xl font-bold text-gray-900">
-            {formatKickoffTime(fixture.kickoffTime)}
-          </div>
-          
-          {/* Status indicators - smaller badges */}
-          <div className="flex flex-col items-center space-y-0.5">
-            {isUrgent && (
-              <Badge variant="outline" className="text-yellow-600 border-yellow-300 bg-yellow-50 text-xs px-1.5 py-0.5">
-                <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
-                <span className="hidden sm:inline">Urgent</span>
-                <span className="sm:hidden">!</span>
-              </Badge>
-            )}
-            
-            {hasStarted ? (
-              <Badge variant="outline" className="text-gray-600 border-gray-300 bg-gray-50 text-xs px-1.5 py-0.5">
-                <Clock className="h-2.5 w-2.5 mr-0.5" />
-                <span className="hidden sm:inline">Started</span>
-                <span className="sm:hidden">Live</span>
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50 text-xs px-1.5 py-0.5">
-                <span className="hidden sm:inline">{fixture.status}</span>
-                <span className="sm:hidden">Open</span>
-              </Badge>
-            )}
-          </div>
-        </div>
-        
-        {/* Away Team - Right Third */}
+        {/* Away Team - Right Half */}
         <div className="flex items-center justify-center">
           <TeamButton
             team={fixture.awayTeam}
