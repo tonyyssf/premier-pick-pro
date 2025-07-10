@@ -79,11 +79,16 @@ export const getCardStyle = (urgency: UrgencyLevel): CardStyle => {
   }
 };
 
-export const formatTimeUnit = (value: number, unit: string): string => {
+export const formatTimeUnit = (value: number, unit: string, isMobile: boolean = false): string => {
+  if (isMobile) {
+    // Use short format for mobile: "d" for days, "h" for hours
+    const shortUnit = unit === 'day' ? 'd' : unit === 'hour' ? 'h' : unit === 'minute' ? 'm' : 's';
+    return `${value} ${shortUnit}`;
+  }
   return `${value} ${unit}${value !== 1 ? 's' : ''}`;
 };
 
-export const getTimeDisplay = (timeRemaining: TimeRemaining): string => {
+export const getTimeDisplay = (timeRemaining: TimeRemaining, isMobile: boolean = false): string => {
   const { days, hours, minutes, seconds, totalMs } = timeRemaining;
 
   if (totalMs <= 0) {
@@ -91,11 +96,11 @@ export const getTimeDisplay = (timeRemaining: TimeRemaining): string => {
   }
 
   if (days > 0) {
-    return `${formatTimeUnit(days, 'day')} ${formatTimeUnit(hours, 'hour')}`;
+    return `${formatTimeUnit(days, 'day', isMobile)} ${formatTimeUnit(hours, 'hour', isMobile)}`;
   } else if (hours > 0) {
-    return `${formatTimeUnit(hours, 'hour')} ${formatTimeUnit(minutes, 'minute')}`;
+    return `${formatTimeUnit(hours, 'hour', isMobile)} ${formatTimeUnit(minutes, 'minute', isMobile)}`;
   } else {
-    return `${formatTimeUnit(minutes, 'minute')} ${formatTimeUnit(seconds, 'second')}`;
+    return `${formatTimeUnit(minutes, 'minute', isMobile)} ${formatTimeUnit(seconds, 'second', isMobile)}`;
   }
 };
 

@@ -12,6 +12,7 @@ import {
 import { DeadlineCardIcon } from './DeadlineCardIcon';
 import { DeadlineCardTimer } from './DeadlineCardTimer';
 import { DeadlineCardTip } from './DeadlineCardTip';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNumber }) => {
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({ 
@@ -21,6 +22,7 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNu
     seconds: 0, 
     totalMs: 0 
   });
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const updateTimer = () => {
@@ -34,7 +36,7 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNu
 
   const urgency = getUrgencyLevel(timeRemaining);
   const style = getCardStyle(urgency);
-  const timeDisplay = getTimeDisplay(timeRemaining);
+  const timeDisplay = getTimeDisplay(timeRemaining, isMobile);
   const urgencyMessage = getUrgencyMessage(urgency);
 
   return (
@@ -46,7 +48,7 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNu
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <DeadlineCardIcon style={style} />
+            {!isMobile && <DeadlineCardIcon style={style} />}
             <div>
               <h3 className={`text-xl font-bold ${style.textColor} mb-1`}>
                 Gameweek {gameweekNumber} Deadline
@@ -68,6 +70,7 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, gameweekNu
             timeRemaining={timeRemaining}
             urgency={urgency}
             textColor={style.textColor}
+            isMobile={isMobile}
           />
         </div>
         

@@ -8,6 +8,7 @@ interface DeadlineCardTimerProps {
   timeRemaining: TimeRemaining;
   urgency: UrgencyLevel;
   textColor: string;
+  isMobile?: boolean;
 }
 
 export const DeadlineCardTimer: React.FC<DeadlineCardTimerProps> = ({
@@ -15,7 +16,8 @@ export const DeadlineCardTimer: React.FC<DeadlineCardTimerProps> = ({
   deadline,
   timeRemaining,
   urgency,
-  textColor
+  textColor,
+  isMobile = false
 }) => {
   return (
     <div className="text-right">
@@ -32,8 +34,8 @@ export const DeadlineCardTimer: React.FC<DeadlineCardTimerProps> = ({
         })}
       </div>
       
-      {/* Progress bar for urgency */}
-      {urgency !== 'expired' && (
+      {/* Progress bar for urgency - hidden on mobile */}
+      {urgency !== 'expired' && !isMobile && (
         <div className="w-32 bg-gray-200 rounded-full h-2 mx-auto">
           <div 
             className={`h-2 rounded-full transition-all duration-1000 ${
