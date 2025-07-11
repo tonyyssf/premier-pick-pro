@@ -3,10 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PhoneNumberInput } from '@/components/PhoneNumberInput';
 import { useAuth } from '@/contexts/AuthContext';
-import { validateAndSanitizeUser } from '@/utils/validation';
-import { z } from 'zod';
 
 interface AuthSignUpFormProps {
   loading: boolean;
@@ -23,30 +20,7 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [name, setName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('+1');
   const { signUp } = useAuth();
-
-  const validateSignUpForm = () => {
-    try {
-      validateAndSanitizeUser({ username, name });
-      onErrorsChange({});
-      return true;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path.length > 0) {
-            newErrors[err.path[0] as string] = err.message;
-          }
-        });
-        onErrorsChange(newErrors);
-      }
-      return false;
-    }
-  };
 
   const handleInputChange = (field: string, value: string) => {
     switch (field) {
@@ -55,18 +29,6 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
         break;
       case 'password':
         setPassword(value);
-        break;
-      case 'username':
-        setUsername(value);
-        break;
-      case 'name':
-        setName(value);
-        break;
-      case 'phoneNumber':
-        setPhoneNumber(value);
-        break;
-      case 'countryCode':
-        setCountryCode(value);
         break;
     }
     
@@ -81,23 +43,14 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
     onLoadingChange(true);
     onErrorsChange({});
     
-    if (!email || !password || !username || !name) {
+    if (!email || !password) {
       onErrorsChange({ general: 'Please fill in all required fields' });
       onLoadingChange(false);
       return;
     }
 
-    if (!validateSignUpForm()) {
-      onLoadingChange(false);
-      return;
-    }
-
     try {
-      const sanitizedData = validateAndSanitizeUser({ username, name });
-      await signUp(email, password, {
-        ...sanitizedData,
-        phone_number: phoneNumber
-      });
+      await signUp(email, password);
     } catch (error) {
       console.error('Sign up error:', error);
     }
@@ -107,32 +60,6 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="signup-name">Full Name</Label>
-        <Input
-          id="signup-name"
-          type="text"
-          value={name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
-          placeholder="Enter your full name"
-          required
-          className={errors.name ? 'border-red-500' : ''}
-        />
-        {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="signup-username">Username</Label>
-        <Input
-          id="signup-username"
-          type="text"
-          value={username}
-          onChange={(e) => handleInputChange('username', e.target.value)}
-          placeholder="Choose a username"
-          required
-          className={errors.username ? 'border-red-500' : ''}
-        />
-        {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
-      </div>
       <div className="space-y-2">
         <Label htmlFor="signup-email">Email</Label>
         <Input
@@ -149,15 +76,6 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
         </p>
         {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
       </div>
-      <PhoneNumberInput
-        value={phoneNumber}
-        onChange={(value) => handleInputChange('phoneNumber', value)}
-        countryCode={countryCode}
-        onCountryCodeChange={(code) => handleInputChange('countryCode', code)}
-        label="Phone Number (Optional)"
-        placeholder="(555) 123-4567"
-        required={false}
-      />
       <div className="space-y-2">
         <Label htmlFor="signup-password">Password</Label>
         <Input
