@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { CheckCircle, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { Pick, Fixture } from '@/types/picks';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PickConfirmationDetailsProps {
   currentPick: Pick;
@@ -17,57 +18,51 @@ export const PickConfirmationDetails: React.FC<PickConfirmationDetailsProps> = (
   currentPick,
   pickInfo
 }) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 mb-6 border border-green-200">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-            <h4 className="text-lg font-bold text-gray-900">
+    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <h4 className="text-base font-bold text-gray-900 truncate">
               {pickInfo.team.name}
             </h4>
-            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
-              YOUR PICK
-            </span>
+            <p className="text-sm text-gray-700">
+              vs {pickInfo.opponent.name}
+            </p>
           </div>
-          
-          <div className="space-y-2 text-sm text-gray-700">
-            <p className="flex items-center space-x-2">
-              <span className="font-medium">Match:</span>
-              <span>{pickInfo.venue} vs {pickInfo.opponent.name}</span>
-            </p>
-            <p className="flex items-center space-x-2">
-              <Clock className="h-4 w-4" />
-              <span>
-                {pickInfo.fixture.kickoffTime.toLocaleDateString('en-GB', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </span>
-            </p>
-            <p className="flex items-center space-x-2">
-              <span className="font-medium">Picked on:</span>
-              <span>
-                {currentPick.timestamp.toLocaleDateString('en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </span>
-            </p>
+          <div className="flex-shrink-0 ml-3">
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+            </div>
           </div>
         </div>
         
-        {/* Visual confirmation */}
-        <div className="ml-6 text-center">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-2">
-            <CheckCircle className="h-8 w-8 text-white" />
+        <div className={`grid gap-2 text-sm text-gray-600 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">
+              {pickInfo.fixture.kickoffTime.toLocaleDateString('en-GB', {
+                weekday: isMobile ? 'short' : 'long',
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
           </div>
-          <p className="text-xs font-medium text-green-700">Confirmed</p>
+          <div className="flex items-center space-x-2">
+            <span className="font-medium">Picked:</span>
+            <span className="truncate">
+              {currentPick.timestamp.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          </div>
         </div>
       </div>
     </div>

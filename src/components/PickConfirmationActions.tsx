@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Undo, AlertTriangle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Fixture } from '@/types/picks';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PickConfirmationActionsProps {
   canUndo: boolean;
@@ -20,6 +21,7 @@ export const PickConfirmationActions: React.FC<PickConfirmationActionsProps> = (
   pickInfo
 }) => {
   const [showUndoConfirmation, setShowUndoConfirmation] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleUndoClick = () => {
     if (showUndoConfirmation) {
@@ -27,7 +29,6 @@ export const PickConfirmationActions: React.FC<PickConfirmationActionsProps> = (
       setShowUndoConfirmation(false);
     } else {
       setShowUndoConfirmation(true);
-      // Auto-hide confirmation after 5 seconds
       setTimeout(() => setShowUndoConfirmation(false), 5000);
     }
   };
@@ -41,31 +42,33 @@ export const PickConfirmationActions: React.FC<PickConfirmationActionsProps> = (
   }
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex flex-col items-center space-y-3">
       {!showUndoConfirmation ? (
         <Button
           onClick={handleUndoClick}
           variant="outline"
           disabled={undoing}
-          className="flex items-center space-x-2 border-orange-300 text-orange-700 hover:bg-orange-50"
+          size={isMobile ? "sm" : "default"}
+          className="border-orange-300 text-orange-700 hover:bg-orange-50"
         >
-          <Undo className="h-4 w-4" />
-          <span>Change Pick</span>
+          <Undo className="h-4 w-4 mr-2" />
+          Change Pick
         </Button>
       ) : (
-        <div className="flex items-center space-x-2">
+        <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'flex-row space-x-2'} items-center`}>
           <Button
             onClick={handleUndoClick}
             variant="destructive"
             disabled={undoing}
-            className="flex items-center space-x-2"
+            size={isMobile ? "sm" : "default"}
           >
-            <AlertTriangle className="h-4 w-4" />
-            <span>{undoing ? 'Undoing...' : 'Confirm Undo'}</span>
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            {undoing ? 'Undoing...' : 'Confirm'}
           </Button>
           <Button
             onClick={() => setShowUndoConfirmation(false)}
             variant="outline"
+            size={isMobile ? "sm" : "default"}
             className="text-gray-600"
           >
             Cancel
@@ -73,10 +76,9 @@ export const PickConfirmationActions: React.FC<PickConfirmationActionsProps> = (
         </div>
       )}
       
-      {/* Status indicator */}
       {isUrgent && (
-        <div className="flex items-center space-x-1 text-orange-600 bg-orange-100 px-3 py-1 rounded-full text-sm font-medium ml-4">
-          <AlertTriangle className="h-4 w-4" />
+        <div className="flex items-center space-x-1 text-orange-600 bg-orange-100 px-3 py-1 rounded-full text-xs font-medium">
+          <AlertTriangle className="h-3 w-3" />
           <span>Change soon!</span>
         </div>
       )}

@@ -30,8 +30,8 @@ export const PickConfirmationCard: React.FC<PickConfirmationCardProps> = ({
   gameweekNumber = 1
 }) => {
   return (
-    <Card className="bg-white shadow-lg border-l-4 border-green-500">
-      <CardContent className="p-6">
+    <Card className="bg-white shadow-md border-l-4 border-green-500">
+      <CardContent className="p-4 space-y-4">
         <PickConfirmationHeader gameweekNumber={gameweekNumber} />
         
         {pickInfo && (
@@ -41,8 +41,7 @@ export const PickConfirmationCard: React.FC<PickConfirmationCardProps> = ({
           />
         )}
 
-        {/* Action buttons and status - Centered */}
-        <div className="flex items-center justify-center">
+        <div className="flex justify-center pt-2">
           {canUndo ? (
             <PickConfirmationActions
               canUndo={canUndo}
