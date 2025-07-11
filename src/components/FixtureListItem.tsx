@@ -143,9 +143,9 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
       bg-white border border-gray-200 rounded-lg overflow-hidden
       ${submitting || disabled ? 'opacity-75' : ''}
     `}>
-      <div className="grid grid-cols-2 h-14">
-        {/* Home Team - Left Half */}
-        <div className={`${getContainerClass(fixture.homeTeam.id, isHomeTeamDisabled)} border-r border-gray-200`}>
+      <div className="flex h-14">
+        {/* Home Team - Left Side */}
+        <div className={`${getContainerClass(fixture.homeTeam.id, isHomeTeamDisabled)} flex-1 border-r border-gray-200`}>
           <TeamButton
             team={fixture.homeTeam}
             isDisabled={isHomeTeamDisabled}
@@ -153,8 +153,13 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
           />
         </div>
         
-        {/* Away Team - Right Half */}
-        <div className={getContainerClass(fixture.awayTeam.id, isAwayTeamDisabled)}>
+        {/* Center "V" */}
+        <div className="flex items-center justify-center w-8 bg-gray-50 border-r border-gray-200">
+          <span className="text-sm font-semibold text-gray-600">V</span>
+        </div>
+        
+        {/* Away Team - Right Side */}
+        <div className={`${getContainerClass(fixture.awayTeam.id, isAwayTeamDisabled)} flex-1`}>
           <TeamButton
             team={fixture.awayTeam}
             isDisabled={isAwayTeamDisabled}
