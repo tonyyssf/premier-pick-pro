@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CheckCircle, Undo, Clock, AlertTriangle, Shield, Info } from 'lucide-react';
+import { CheckCircle, Undo, Clock, AlertTriangle, Shield } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Pick, Fixture } from '@/types/picks';
@@ -123,74 +123,55 @@ export const PickConfirmationCard: React.FC<PickConfirmationCardProps> = ({
           </div>
         )}
 
-        {/* Action buttons and status */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {canUndo ? (
-              <div className="flex items-center space-x-3">
-                {!showUndoConfirmation ? (
+        {/* Action buttons and status - Centered */}
+        <div className="flex items-center justify-center">
+          {canUndo ? (
+            <div className="flex items-center space-x-3">
+              {!showUndoConfirmation ? (
+                <Button
+                  onClick={handleUndoClick}
+                  variant="outline"
+                  disabled={undoing}
+                  className="flex items-center space-x-2 border-orange-300 text-orange-700 hover:bg-orange-50"
+                >
+                  <Undo className="h-4 w-4" />
+                  <span>Change Pick</span>
+                </Button>
+              ) : (
+                <div className="flex items-center space-x-2">
                   <Button
                     onClick={handleUndoClick}
-                    variant="outline"
+                    variant="destructive"
                     disabled={undoing}
-                    className="flex items-center space-x-2 border-orange-300 text-orange-700 hover:bg-orange-50"
+                    className="flex items-center space-x-2"
                   >
-                    <Undo className="h-4 w-4" />
-                    <span>Change Pick</span>
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>{undoing ? 'Undoing...' : 'Confirm Undo'}</span>
                   </Button>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      onClick={handleUndoClick}
-                      variant="destructive"
-                      disabled={undoing}
-                      className="flex items-center space-x-2"
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>{undoing ? 'Undoing...' : 'Confirm Undo'}</span>
-                    </Button>
-                    <Button
-                      onClick={() => setShowUndoConfirmation(false)}
-                      variant="outline"
-                      className="text-gray-600"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2 text-gray-600">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm font-medium">Pick locked - match started</span>
-              </div>
-            )}
-          </div>
-          
-          {/* Status indicator */}
-          <div className="flex items-center space-x-2">
-            {isUrgent && canUndo && (
-              <div className="flex items-center space-x-1 text-orange-600 bg-orange-100 px-3 py-1 rounded-full text-sm font-medium">
-                <AlertTriangle className="h-4 w-4" />
-                <span>Change soon!</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Information panel */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-start space-x-3">
-            <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">What happens next?</p>
-              <ul className="space-y-1 text-xs">
-                <li>• Your pick is automatically locked when the match starts</li>
-                <li>• Points are awarded after the match ends</li>
-                {canUndo && <li>• You can change your pick until the first match begins</li>}
-              </ul>
+                  <Button
+                    onClick={() => setShowUndoConfirmation(false)}
+                    variant="outline"
+                    className="text-gray-600"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
+              
+              {/* Status indicator */}
+              {isUrgent && (
+                <div className="flex items-center space-x-1 text-orange-600 bg-orange-100 px-3 py-1 rounded-full text-sm font-medium ml-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>Change soon!</span>
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center space-x-2 text-gray-600">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm font-medium">Pick locked - match started</span>
+            </div>
+          )}
         </div>
 
         {/* Locked state warning */}
