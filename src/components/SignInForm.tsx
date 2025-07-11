@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
+import { GoogleSignInButton } from './GoogleSignInButton';
+import { AuthDivider } from './AuthDivider';
 
 interface SignInFormProps {
   rememberMe: boolean;
@@ -53,49 +55,59 @@ export const SignInForm: React.FC<SignInFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="signin-email">Email</Label>
-        <Input
-          id="signin-email"
-          type="email"
-          value={email}
-          onChange={(e) => handleInputChange('email', e.target.value)}
-          placeholder="Enter your email"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="signin-password">Password</Label>
-        <Input
-          id="signin-password"
-          type="password"
-          value={password}
-          onChange={(e) => handleInputChange('password', e.target.value)}
-          placeholder="Enter your password"
-          required
-        />
-      </div>
-      <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="remember-me"
-          checked={rememberMe}
-          onCheckedChange={(checked) => onRememberMeChange(checked as boolean)}
-        />
-        <Label 
-          htmlFor="remember-me" 
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+    <div className="space-y-4">
+      <GoogleSignInButton
+        loading={loading}
+        onLoadingChange={onLoadingChange}
+        isSignUp={false}
+      />
+      
+      <AuthDivider />
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="signin-email">Email</Label>
+          <Input
+            id="signin-email"
+            type="email"
+            value={email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="signin-password">Password</Label>
+          <Input
+            id="signin-password"
+            type="password"
+            value={password}
+            onChange={(e) => handleInputChange('password', e.target.value)}
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="remember-me"
+            checked={rememberMe}
+            onCheckedChange={(checked) => onRememberMeChange(checked as boolean)}
+          />
+          <Label 
+            htmlFor="remember-me" 
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Remember me for longer sessions
+          </Label>
+        </div>
+        <Button 
+          type="submit" 
+          className="w-full bg-plpe-purple hover:bg-purple-700"
+          disabled={loading}
         >
-          Remember me for longer sessions
-        </Label>
-      </div>
-      <Button 
-        type="submit" 
-        className="w-full bg-plpe-purple hover:bg-purple-700"
-        disabled={loading}
-      >
-        {loading ? 'Signing in...' : 'Sign In'}
-      </Button>
-    </form>
+          {loading ? 'Signing in...' : 'Sign In'}
+        </Button>
+      </form>
+    </div>
   );
 };

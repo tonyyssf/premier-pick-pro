@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
+import { GoogleSignInButton } from './GoogleSignInButton';
+import { AuthDivider } from './AuthDivider';
 
 interface AuthSignUpFormProps {
   loading: boolean;
@@ -59,44 +61,54 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="signup-email">Email</Label>
-        <Input
-          id="signup-email"
-          type="email"
-          value={email}
-          onChange={(e) => handleInputChange('email', e.target.value)}
-          placeholder="user@example.com"
-          required
-          className={errors.email ? 'border-red-500' : ''}
-        />
-        <p className="text-xs text-gray-500">
-          Please use a valid email format like user@example.com
-        </p>
-        {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="signup-password">Password</Label>
-        <Input
-          id="signup-password"
-          type="password"
-          value={password}
-          onChange={(e) => handleInputChange('password', e.target.value)}
-          placeholder="Create a secure password"
-          required
-        />
-        <p className="text-xs text-gray-500">
-          Must be at least 8 characters with uppercase, lowercase, number, and special character
-        </p>
-      </div>
-      <Button 
-        type="submit" 
-        className="w-full bg-plpe-purple hover:bg-purple-700"
-        disabled={loading}
-      >
-        {loading ? 'Creating account...' : 'Sign Up'}
-      </Button>
-    </form>
+    <div className="space-y-4">
+      <GoogleSignInButton
+        loading={loading}
+        onLoadingChange={onLoadingChange}
+        isSignUp={true}
+      />
+      
+      <AuthDivider />
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="signup-email">Email</Label>
+          <Input
+            id="signup-email"
+            type="email"
+            value={email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            placeholder="user@example.com"
+            required
+            className={errors.email ? 'border-red-500' : ''}
+          />
+          <p className="text-xs text-gray-500">
+            Please use a valid email format like user@example.com
+          </p>
+          {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="signup-password">Password</Label>
+          <Input
+            id="signup-password"
+            type="password"
+            value={password}
+            onChange={(e) => handleInputChange('password', e.target.value)}
+            placeholder="Create a secure password"
+            required
+          />
+          <p className="text-xs text-gray-500">
+            Must be at least 8 characters with uppercase, lowercase, number, and special character
+          </p>
+        </div>
+        <Button 
+          type="submit" 
+          className="w-full bg-plpe-purple hover:bg-purple-700"
+          disabled={loading}
+        >
+          {loading ? 'Creating account...' : 'Sign Up'}
+        </Button>
+      </form>
+    </div>
   );
 };
