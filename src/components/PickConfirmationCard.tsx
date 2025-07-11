@@ -31,7 +31,7 @@ export const PickConfirmationCard: React.FC<PickConfirmationCardProps> = ({
 }) => {
   return (
     <Card className="bg-white shadow-md border-l-4 border-green-500">
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-4 space-y-4 text-center">
         <PickConfirmationHeader gameweekNumber={gameweekNumber} />
         
         {pickInfo && (
