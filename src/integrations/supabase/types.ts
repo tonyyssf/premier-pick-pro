@@ -16,61 +16,40 @@ export type Database = {
     Tables: {
       fixtures: {
         Row: {
-          "Away Team": string | null
           away_score: number | null
-          away_team_id: string | null
-          created_at: string | null
-          Date: string | null
-          gameweek_id: string | null
-          "Home Team": string | null
+          away_team_id: string
+          created_at: string
+          gameweek_id: string
           home_score: number | null
-          home_team_id: string | null
+          home_team_id: string
           id: string
-          kickoff_time: string | null
-          Location: string | null
-          "Match Number": number | null
-          Result: string | null
-          "Round Number": number | null
-          status: string | null
-          updated_at: string | null
+          kickoff_time: string
+          status: string
+          updated_at: string
         }
         Insert: {
-          "Away Team"?: string | null
           away_score?: number | null
-          away_team_id?: string | null
-          created_at?: string | null
-          Date?: string | null
-          gameweek_id?: string | null
-          "Home Team"?: string | null
+          away_team_id: string
+          created_at?: string
+          gameweek_id: string
           home_score?: number | null
-          home_team_id?: string | null
+          home_team_id: string
           id?: string
-          kickoff_time?: string | null
-          Location?: string | null
-          "Match Number"?: number | null
-          Result?: string | null
-          "Round Number"?: number | null
-          status?: string | null
-          updated_at?: string | null
+          kickoff_time: string
+          status?: string
+          updated_at?: string
         }
         Update: {
-          "Away Team"?: string | null
           away_score?: number | null
-          away_team_id?: string | null
-          created_at?: string | null
-          Date?: string | null
-          gameweek_id?: string | null
-          "Home Team"?: string | null
+          away_team_id?: string
+          created_at?: string
+          gameweek_id?: string
           home_score?: number | null
-          home_team_id?: string | null
+          home_team_id?: string
           id?: string
-          kickoff_time?: string | null
-          Location?: string | null
-          "Match Number"?: number | null
-          Result?: string | null
-          "Round Number"?: number | null
-          status?: string | null
-          updated_at?: string | null
+          kickoff_time?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: [
           {
