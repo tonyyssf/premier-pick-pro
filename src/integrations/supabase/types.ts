@@ -28,7 +28,7 @@ export type Database = {
           id: string
           kickoff_time: string | null
           Location: string | null
-          "Match Number": number
+          "Match Number": number | null
           Result: string | null
           "Round Number": number | null
           status: string | null
@@ -47,7 +47,7 @@ export type Database = {
           id?: string
           kickoff_time?: string | null
           Location?: string | null
-          "Match Number": number
+          "Match Number"?: number | null
           Result?: string | null
           "Round Number"?: number | null
           status?: string | null
@@ -66,7 +66,7 @@ export type Database = {
           id?: string
           kickoff_time?: string | null
           Location?: string | null
-          "Match Number"?: number
+          "Match Number"?: number | null
           Result?: string | null
           "Round Number"?: number | null
           status?: string | null
