@@ -378,13 +378,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_picks_fixture_id_fkey"
-            columns: ["fixture_id"]
-            isOneToOne: false
-            referencedRelation: "fixtures"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "user_picks_gameweek_id_fkey"
             columns: ["gameweek_id"]
             isOneToOne: false
