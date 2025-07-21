@@ -35,6 +35,15 @@ export const WeeklyPicks: React.FC = () => {
   const currentPick = getCurrentPick();
   const hasAlreadyPicked = gameweekToUse ? hasPickForGameweek(gameweekToUse.id) : false;
   const canUndo = canUndoPick();
+  
+  console.log('WeeklyPicks state:', {
+    currentGameweek: currentGameweek?.number,
+    viewingGameweek: viewingGameweek?.number,
+    isCurrentGameweek,
+    hasAlreadyPicked,
+    canUndo,
+    fixtures: fixtures?.length
+  });
 
   // Clear messages after delay
   React.useEffect(() => {
