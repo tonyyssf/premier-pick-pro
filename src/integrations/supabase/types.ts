@@ -16,64 +16,33 @@ export type Database = {
     Tables: {
       fixtures: {
         Row: {
-          away_score: number | null
-          away_team_id: string
-          created_at: string
-          gameweek_id: string
-          home_score: number | null
-          home_team_id: string
-          id: string
-          kickoff_time: string
-          status: string
-          updated_at: string
+          "Away Team": string | null
+          Date: string | null
+          "Home Team": string | null
+          Location: string | null
+          "Match Number": number
+          Result: string | null
+          "Round Number": number | null
         }
         Insert: {
-          away_score?: number | null
-          away_team_id: string
-          created_at?: string
-          gameweek_id: string
-          home_score?: number | null
-          home_team_id: string
-          id?: string
-          kickoff_time: string
-          status?: string
-          updated_at?: string
+          "Away Team"?: string | null
+          Date?: string | null
+          "Home Team"?: string | null
+          Location?: string | null
+          "Match Number": number
+          Result?: string | null
+          "Round Number"?: number | null
         }
         Update: {
-          away_score?: number | null
-          away_team_id?: string
-          created_at?: string
-          gameweek_id?: string
-          home_score?: number | null
-          home_team_id?: string
-          id?: string
-          kickoff_time?: string
-          status?: string
-          updated_at?: string
+          "Away Team"?: string | null
+          Date?: string | null
+          "Home Team"?: string | null
+          Location?: string | null
+          "Match Number"?: number
+          Result?: string | null
+          "Round Number"?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fixtures_away_team_id_fkey"
-            columns: ["away_team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fixtures_gameweek_id_fkey"
-            columns: ["gameweek_id"]
-            isOneToOne: false
-            referencedRelation: "gameweeks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fixtures_home_team_id_fkey"
-            columns: ["home_team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       gameweek_scores: {
         Row: {
