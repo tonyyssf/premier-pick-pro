@@ -104,7 +104,14 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
       <button
         type="button"
         className={getTeamButtonClass(team.id, isDisabled)}
-        onClick={canSelect ? () => handleTeamSelect(team.id) : undefined}
+        onClick={(e) => {
+          console.log('Button clicked!', team.name, 'canSelect:', canSelect);
+          e.preventDefault();
+          e.stopPropagation();
+          if (canSelect) {
+            handleTeamSelect(team.id);
+          }
+        }}
         disabled={!canSelect}
         aria-label={`Pick ${team.name}`}
       >
