@@ -75,17 +75,21 @@ export const AdminDataTable: React.FC = () => {
     queryKey: ['admin-fixtures'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('fixtures')
-        .select(`
-          *,
-          home_team:teams!fixtures_home_team_id_fkey(name),
-          away_team:teams!fixtures_away_team_id_fkey(name)
-        `)
+        .from('app_fixtures')
+        .select('*')
         .order('kickoff_time')
         .limit(50);
       
       if (error) throw error;
-      return data as FixtureData[];
+      return data.map(fixture => ({
+        id: fixture.id,
+        home_team: { name: fixture.home_team_name },
+        away_team: { name: fixture.away_team_name },
+        kickoff_time: fixture.kickoff_time,
+        status: fixture.status,
+        home_score: fixture.home_score,
+        away_score: fixture.away_score,
+      })) as FixtureData[];
     }
   });
 

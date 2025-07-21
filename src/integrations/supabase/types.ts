@@ -385,7 +385,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      app_fixtures: {
+        Row: {
+          away_score: number | null
+          away_team_id: string | null
+          away_team_name: string | null
+          created_at: string | null
+          gameweek_id: string | null
+          home_score: number | null
+          home_team_id: string | null
+          home_team_name: string | null
+          id: string | null
+          kickoff_time: string | null
+          match_number: string | null
+          round_number: number | null
+          status: string | null
+          updated_at: string | null
+          venue: string | null
+        }
+        Insert: {
+          away_score?: never
+          away_team_id?: never
+          away_team_name?: string | null
+          created_at?: never
+          gameweek_id?: never
+          home_score?: never
+          home_team_id?: never
+          home_team_name?: string | null
+          id?: never
+          kickoff_time?: never
+          match_number?: never
+          round_number?: number | null
+          status?: never
+          updated_at?: never
+          venue?: string | null
+        }
+        Update: {
+          away_score?: never
+          away_team_id?: never
+          away_team_name?: string | null
+          created_at?: never
+          gameweek_id?: never
+          home_score?: never
+          home_team_id?: never
+          home_team_name?: string | null
+          id?: never
+          kickoff_time?: never
+          match_number?: never
+          round_number?: number | null
+          status?: never
+          updated_at?: never
+          venue?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_refresh_rankings: {
@@ -432,6 +485,25 @@ export type Database = {
       generate_invite_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_app_fixtures_for_gameweek: {
+        Args: { gw_id: string }
+        Returns: {
+          id: string
+          gameweek_id: string
+          home_team_id: string
+          away_team_id: string
+          kickoff_time: string
+          status: string
+          home_score: number
+          away_score: number
+          home_team_name: string
+          home_team_short_name: string
+          home_team_color: string
+          away_team_name: string
+          away_team_short_name: string
+          away_team_color: string
+        }[]
       }
       get_league_by_invite_code: {
         Args: { p_code: string }

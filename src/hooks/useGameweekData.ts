@@ -101,15 +101,10 @@ export const useGameweekData = () => {
 
   const loadFixturesForGameweek = async (gameweekId: string) => {
     try {
-      const { data: fixturesData, error: fixturesError } = await supabase
-        .from('fixtures')
-        .select(`
-          *,
-          home_team:teams!fixtures_home_team_id_fkey(id, name, short_name, team_color),
-          away_team:teams!fixtures_away_team_id_fkey(id, name, short_name, team_color)
-        `)
-        .eq('gameweek_id', gameweekId)
-        .order('kickoff_time', { ascending: true });
+      const { data: fixturesData, error: fixturesError } = await supabase.rpc(
+        'get_app_fixtures_for_gameweek',
+        { gw_id: gameweekId }
+      );
 
       if (fixturesError) {
         console.error('Error loading fixtures:', fixturesError);
@@ -121,16 +116,16 @@ export const useGameweekData = () => {
       const formattedFixtures: Fixture[] = fixturesData.map(fixture => ({
         id: fixture.id,
         homeTeam: {
-          id: fixture.home_team.id,
-          name: fixture.home_team.name,
-          shortName: fixture.home_team.short_name,
-          teamColor: fixture.home_team.team_color,
+          id: fixture.home_team_id,
+          name: fixture.home_team_name,
+          shortName: fixture.home_team_short_name,
+          teamColor: fixture.home_team_color,
         },
         awayTeam: {
-          id: fixture.away_team.id,
-          name: fixture.away_team.name,
-          shortName: fixture.away_team.short_name,
-          teamColor: fixture.away_team.team_color,
+          id: fixture.away_team_id,
+          name: fixture.away_team_name,
+          shortName: fixture.away_team_short_name,
+          teamColor: fixture.away_team_color,
         },
         kickoffTime: new Date(fixture.kickoff_time),
         status: fixture.status,

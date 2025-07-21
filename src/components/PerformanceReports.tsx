@@ -74,7 +74,7 @@ export const PerformanceReports: React.FC = () => {
 
       // Get fixtures to check completion rates
       const { data: fixtures, error: fixturesError } = await supabase
-        .from('fixtures')
+        .from('app_fixtures')
         .select('gameweek_id, status');
       
       if (fixturesError) throw fixturesError;
