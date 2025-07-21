@@ -44,16 +44,25 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
   const hasStarted = timeUntilKickoff <= 0;
 
   const handleTeamSelect = async (teamId: string) => {
+    console.log('Team clicked:', teamId, 'Fixture:', fixture.id);
+    console.log('Home team disabled:', isHomeTeamDisabled, 'Away team disabled:', isAwayTeamDisabled);
+    console.log('Has started:', hasStarted, 'Disabled:', disabled);
+    
     if ((isHomeTeamDisabled && teamId === fixture.homeTeam.id) ||
         (isAwayTeamDisabled && teamId === fixture.awayTeam.id) ||
         hasStarted ||
         disabled) {
+      console.log('Team selection blocked');
       return;
     }
     
     setLocalSubmitting(teamId);
     try {
+      console.log('Calling onTeamSelect...');
       await onTeamSelect(fixture.id, teamId);
+      console.log('onTeamSelect completed');
+    } catch (error) {
+      console.error('Error in onTeamSelect:', error);
     } finally {
       setLocalSubmitting(null);
     }
