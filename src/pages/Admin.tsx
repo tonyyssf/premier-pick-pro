@@ -7,7 +7,8 @@ import { AdminDataSync } from '@/components/AdminDataSync';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { SystemMonitoringDashboard } from '@/components/SystemMonitoringDashboard';
 import { EnhancedSecurityMonitor } from '@/components/EnhancedSecurityMonitor';
-import { Database, TrendingUp, Activity, Shield } from 'lucide-react';
+import { RapidApiTester } from '@/components/RapidApiTester';
+import { Database, TrendingUp, Activity, Shield, TestTube } from 'lucide-react';
 
 const Admin = () => {
   return (
@@ -22,10 +23,14 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="data" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="data" className="flex items-center space-x-2">
                 <Database className="h-4 w-4" />
                 <span>Data Management</span>
+              </TabsTrigger>
+              <TabsTrigger value="api-testing" className="flex items-center space-x-2">
+                <TestTube className="h-4 w-4" />
+                <span>API Testing</span>
               </TabsTrigger>
               <TabsTrigger value="analytics" className="flex items-center space-x-2">
                 <TrendingUp className="h-4 w-4" />
@@ -43,6 +48,10 @@ const Admin = () => {
 
             <TabsContent value="data" className="space-y-6">
               <AdminDataSync />
+            </TabsContent>
+
+            <TabsContent value="api-testing" className="space-y-6">
+              <RapidApiTester />
             </TabsContent>
 
             <TabsContent value="analytics" className="space-y-6">
