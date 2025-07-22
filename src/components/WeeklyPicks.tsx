@@ -2,14 +2,17 @@
 import React, { useState } from 'react';
 import { PickConfirmationCard } from './PickConfirmationCard';
 import { usePicks } from '../contexts/PicksContext';
+import { useAuth } from '../contexts/AuthContext';
 import { WeeklyPicksHeader } from './WeeklyPicksHeader';
 import { WeeklyPicksMessages } from './WeeklyPicksMessages';
 import { WeeklyPicksFixtureList } from './WeeklyPicksFixtureList';
 import { WeeklyPicksLoadingState } from './WeeklyPicksLoadingState';
 import { WeeklyPicksEmptyState } from './WeeklyPicksEmptyState';
 import { WeeklyPicksDeadlinePassed } from './WeeklyPicksDeadlinePassed';
+import { GuestWeeklyPicks } from './GuestWeeklyPicks';
 
 export const WeeklyPicks: React.FC = () => {
+  const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [undoing, setUndoing] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
@@ -29,6 +32,11 @@ export const WeeklyPicks: React.FC = () => {
     fixturesLoading,
     navigation
   } = usePicks();
+
+  // Show guest version if not authenticated
+  if (!user) {
+    return <GuestWeeklyPicks />;
+  }
 
   const gameweekToUse = viewingGameweek || currentGameweek;
   const isCurrentGameweek = currentGameweek && gameweekToUse && currentGameweek.id === gameweekToUse.id;

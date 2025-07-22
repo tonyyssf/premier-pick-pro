@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Settings, LogOut, Menu } from 'lucide-react';
+import { Settings, LogOut, Menu, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
@@ -90,69 +90,95 @@ export const Navbar: React.FC = () => {
                       </Link>
                     ))}
                     
-                    {user && (
-                      <div className="border-t pt-4 mt-6 space-y-2">
-                        <Button 
-                          onClick={() => {
-                            setSettingsOpen(true);
-                            closeMobileMenu();
-                          }}
-                          variant="outline"
-                          size="sm"
-                          className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
-                        >
-                          <Settings className="h-4 w-4" />
-                          <span>Settings</span>
-                        </Button>
-                        
-                        <Button 
-                          onClick={() => {
-                            handleSignOut();
-                            closeMobileMenu();
-                          }}
-                          variant="outline"
-                          size="sm"
-                          className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          <span>Sign Out</span>
-                        </Button>
-                      </div>
-                    )}
+                    <div className="border-t pt-4 mt-6 space-y-2">
+                      {user ? (
+                        <>
+                          <Button 
+                            onClick={() => {
+                              setSettingsOpen(true);
+                              closeMobileMenu();
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
+                          >
+                            <Settings className="h-4 w-4" />
+                            <span>Settings</span>
+                          </Button>
+                          
+                          <Button 
+                            onClick={() => {
+                              handleSignOut();
+                              closeMobileMenu();
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="w-full flex items-center justify-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            <span>Sign Out</span>
+                          </Button>
+                        </>
+                      ) : (
+                        <Link to="/auth">
+                          <Button 
+                            onClick={closeMobileMenu}
+                            className="w-full bg-plpe-purple hover:bg-plpe-purple/90 text-white flex items-center justify-center space-x-2"
+                          >
+                            <LogIn className="h-4 w-4" />
+                            <span>Sign In</span>
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
             </div>
 
-            {/* Desktop Settings and Sign Out */}
-            <Button 
-              onClick={() => setSettingsOpen(true)}
-              variant="ghost" 
-              size="icon"
-              className="hidden md:block p-2 text-gray-600 hover:text-plpe-purple transition-colors"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-            
-            {user && (
-              <Button 
-                onClick={handleSignOut}
-                variant="outline"
-                size="sm"
-                className="hidden md:flex items-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
-              </Button>
+            {/* Desktop Auth Actions */}
+            {user ? (
+              <>
+                <Button 
+                  onClick={() => setSettingsOpen(true)}
+                  variant="ghost" 
+                  size="icon"
+                  className="hidden md:block p-2 text-gray-600 hover:text-plpe-purple transition-colors"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+                
+                <Button 
+                  onClick={handleSignOut}
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex items-center space-x-2 text-gray-700 hover:text-plpe-purple border-gray-300 hover:border-plpe-purple"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button 
+                  className="hidden md:flex items-center space-x-2 bg-plpe-purple hover:bg-plpe-purple/90 text-white"
+                  size="sm"
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span>Sign In</span>
+                </Button>
+              </Link>
             )}
           </div>
         </div>
       </div>
       
-      <UserSettingsDialog 
-        open={settingsOpen} 
-        onOpenChange={setSettingsOpen} 
-      />
+      {user && (
+        <UserSettingsDialog 
+          open={settingsOpen} 
+          onOpenChange={setSettingsOpen} 
+        />
+      )}
     </nav>
   );
 };

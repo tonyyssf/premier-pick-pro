@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +23,11 @@ const Leaderboards = () => {
   const { toast } = useToast();
 
   const fetchLeaguesWithRanks = async () => {
-    if (!user) return;
+    if (!user) {
+      setLeaguesWithRanks([]);
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     
@@ -103,18 +106,16 @@ const Leaderboards = () => {
   };
 
   return (
-    <ProtectedRoute>
-      <Layout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <LeaderboardTabs
-            leaguesWithRanks={leaguesWithRanks}
-            isLoading={isLoading}
-            expandedLeagues={expandedLeagues}
-            onToggleExpansion={toggleLeagueExpansion}
-          />
-        </div>
-      </Layout>
-    </ProtectedRoute>
+    <Layout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <LeaderboardTabs
+          leaguesWithRanks={leaguesWithRanks}
+          isLoading={isLoading}
+          expandedLeagues={expandedLeagues}
+          onToggleExpansion={toggleLeagueExpansion}
+        />
+      </div>
+    </Layout>
   );
 };
 

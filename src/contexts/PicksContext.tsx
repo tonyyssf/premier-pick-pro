@@ -44,12 +44,14 @@ export const PicksProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     loadGameweekByNumber
   });
 
-  // Helper functions
+  // Helper functions that work for both authenticated and guest users
   const getTeamUsedCount = (teamId: string): number => {
+    if (!user) return 0; // Guests haven't used any teams
     return picks.filter(pick => pick.pickedTeamId === teamId).length;
   };
 
   const hasPickForGameweek = (gameweekId: string): boolean => {
+    if (!user) return false; // Guests have no picks
     return picks.some(pick => pick.gameweekId === gameweekId);
   };
 
