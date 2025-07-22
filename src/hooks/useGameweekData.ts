@@ -131,7 +131,12 @@ export const useGameweekData = () => {
         status: fixture.status,
       }));
 
-      setFixtures(formattedFixtures);
+      // Sort fixtures by kickoff time (chronologically)
+      const sortedFixtures = formattedFixtures.sort((a, b) => 
+        a.kickoffTime.getTime() - b.kickoffTime.getTime()
+      );
+
+      setFixtures(sortedFixtures);
     } catch (error) {
       console.error('Error loading fixtures:', error);
     } finally {

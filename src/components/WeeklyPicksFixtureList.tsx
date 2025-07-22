@@ -37,20 +37,49 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
     );
   }
 
+  // Group fixtures by date for better organization
+  const fixturesByDate = fixtures.reduce((acc, fixture) => {
+    const date = fixture.kickoffTime.toDateString();
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(fixture);
+    return acc;
+  }, {} as Record<string, Fixture[]>);
+
+  const sortedDates = Object.keys(fixturesByDate).sort((a, b) => 
+    new Date(a).getTime() - new Date(b).getTime()
+  );
+
   return (
-    <div className="mb-4">
-      {fixtures.map((fixture) => (
-        <FixtureListItem
-          key={fixture.id}
-          fixture={fixture}
-          homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
-          awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
-          maxUses={2}
-          selectedTeam={null}
-          onTeamSelect={disabled ? async () => {} : onTeamSelect}
-          submitting={submitting}
-          disabled={disabled}
-        />
+    <div className="mb-4 space-y-6">
+      {sortedDates.map(date => (
+        <div key={date}>
+          <div className="mb-3 px-2">
+            <h3 className="text-sm font-medium text-gray-700 uppercase tracking-wide">
+              {new Date(date).toLocaleDateString('en-GB', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long' 
+              })}
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {fixturesByDate[date].map((fixture) => (
+              <FixtureListItem
+                key={fixture.id}
+                fixture={fixture}
+                homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
+                awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
+                maxUses={2}
+                selectedTeam={null}
+                onTeamSelect={disabled ? async () => {} : onTeamSelect}
+                submitting={submitting}
+                disabled={disabled}
+              />
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );
