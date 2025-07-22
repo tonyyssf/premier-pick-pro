@@ -5,8 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
-import { GoogleSignInButton } from './GoogleSignInButton';
-import { AuthDivider } from './AuthDivider';
 
 interface SignInFormProps {
   rememberMe: boolean;
@@ -56,14 +54,6 @@ export const SignInForm: React.FC<SignInFormProps> = ({
 
   return (
     <div className="space-y-4">
-      <GoogleSignInButton
-        loading={loading}
-        onLoadingChange={onLoadingChange}
-        isSignUp={false}
-      />
-      
-      <AuthDivider />
-      
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="signin-email">Email</Label>

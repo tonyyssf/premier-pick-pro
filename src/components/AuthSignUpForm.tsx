@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { GoogleSignInButton } from './GoogleSignInButton';
-import { AuthDivider } from './AuthDivider';
 
 interface AuthSignUpFormProps {
   loading: boolean;
@@ -62,14 +60,6 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
 
   return (
     <div className="space-y-4">
-      <GoogleSignInButton
-        loading={loading}
-        onLoadingChange={onLoadingChange}
-        isSignUp={true}
-      />
-      
-      <AuthDivider />
-      
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="signup-email">Email</Label>
