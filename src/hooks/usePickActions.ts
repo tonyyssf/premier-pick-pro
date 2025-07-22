@@ -103,13 +103,15 @@ export const usePickActions = (
       return false;
     }
 
-    // Check if any fixture in the current gameweek has started
+    // Check if we're within 1 minute of the first fixture kickoff
     const now = new Date();
-    const hasStartedFixture = fixtures.some(fixture => 
-      fixture.kickoffTime <= now
-    );
-
-    return !hasStartedFixture;
+    const earliestKickoff = fixtures.reduce((earliest, fixture) => {
+      return fixture.kickoffTime < earliest ? fixture.kickoffTime : earliest;
+    }, new Date('2099-12-31')); // Start with a far future date
+    
+    const oneMinuteBeforeKickoff = new Date(earliestKickoff.getTime() - 60 * 1000);
+    
+    return now < oneMinuteBeforeKickoff;
   };
 
   const undoPick = async (): Promise<boolean> => {
@@ -125,7 +127,7 @@ export const usePickActions = (
     if (!canUndoPick()) {
       toast({
         title: "Cannot Undo Pick",
-        description: "You can only undo your pick before the first match starts.",
+        description: "You can only undo your pick until 1 minute before the first match kicks off.",
         variant: "destructive",
       });
       return false;
