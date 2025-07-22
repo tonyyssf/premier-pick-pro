@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Layout } from '@/components/Layout';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useOptimizedStandings } from '@/hooks/useOptimizedStandings';
@@ -39,12 +40,50 @@ const OptimizedLeaderboards = () => {
       // Load global standings first (cached)
       await loadGlobalStandings();
       
-      // Then load league data with minimal queries
-      // This implementation would need the actual supabase queries
-      // but is structured to minimize database calls
-      
-      setLeaguesWithRanks([]);
-      setExpandedLeagues(new Set());
+      // Fetch leagues user is a member of
+      const { data: userLeagues, error: userLeaguesError } = await supabase
+        .from('leagues')
+        .select(`
+          id,
+          name,
+          description,
+          league_members!inner(user_id)
+        `)
+        .eq('league_members.user_id', user.id);
+
+      if (userLeaguesError) throw userLeaguesError;
+
+      // Get member counts and user ranks for all leagues
+      const leaguesWithRankData = await Promise.all(
+        userLeagues.map(async (league) => {
+          // Get member count
+          const { count } = await supabase
+            .from('league_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('league_id', league.id);
+
+          // Get user's rank in this league from the unified standings table
+          const { data: userStanding } = await supabase
+            .from('standings')
+            .select('current_rank')
+            .eq('league_id', league.id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          return {
+            id: league.id,
+            name: league.name,
+            description: league.description,
+            member_count: count || 0,
+            user_rank: userStanding?.current_rank || null
+          };
+        })
+      );
+
+      setLeaguesWithRanks(leaguesWithRankData);
+      // Expand all leagues by default
+      setExpandedLeagues(new Set(leaguesWithRankData.map(league => league.id)));
+      console.log('Fetched leagues with ranks from unified standings:', leaguesWithRankData);
     } catch (error: any) {
       console.error('Error fetching leagues with ranks:', error);
       toast({
