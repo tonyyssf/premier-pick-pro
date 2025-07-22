@@ -1,4 +1,4 @@
-import { performance } from 'perf_hooks';
+// Use browser's native performance API
 
 interface PerformanceMetric {
   name: string;
