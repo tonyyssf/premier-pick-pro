@@ -69,28 +69,6 @@ async function syncGameweekFixtures(gameweekNumber: number) {
 
     console.log(`Syncing gameweek ${gameweekData.number} (ID: ${gameweekData.id})`);
 
-    // Fetch latest fixture data from API
-    const scheduleData = await fetchFromRapidAPI('schedule?year=2025');
-    await delay(1000);
-
-    if (!scheduleData) {
-      throw new Error('No schedule data received from API');
-    }
-
-    // Parse API fixtures
-    let allFixtures = [];
-    if (scheduleData.schedule && typeof scheduleData.schedule === 'object') {
-      for (const [dateKey, dayFixtures] of Object.entries(scheduleData.schedule)) {
-        if (Array.isArray(dayFixtures)) {
-          allFixtures.push(...dayFixtures);
-        }
-      }
-    } else if (Array.isArray(scheduleData)) {
-      allFixtures = scheduleData;
-    }
-
-    console.log(`Found ${allFixtures.length} fixtures in API response`);
-
     // Get existing fixtures for this gameweek from our database
     const { data: existingFixtures, error: fixturesError } = await supabase
       .from('fixtures')
@@ -103,73 +81,51 @@ async function syncGameweekFixtures(gameweekNumber: number) {
 
     console.log(`Found ${existingFixtures?.length || 0} existing fixtures for gameweek ${gameweekNumber}`);
 
+    // For gameweek 1, use correct fixture dates for 2025/26 season based on database fixtures
+    const gameweek1Fixtures = [
+      { homeTeam: 'Liverpool', awayTeam: 'Bournemouth', date: '15/08/2025 20:00' }, // Friday evening - earliest game
+      { homeTeam: 'Aston Villa', awayTeam: 'Newcastle', date: '16/08/2025 12:30' },
+      { homeTeam: 'Brighton', awayTeam: 'Fulham', date: '16/08/2025 15:00' },
+      { homeTeam: 'Nott\'m Forest', awayTeam: 'Brentford', date: '16/08/2025 17:30' },
+      { homeTeam: 'Sunderland', awayTeam: 'West Ham', date: '17/08/2025 14:00' },
+      { homeTeam: 'Spurs', awayTeam: 'Burnley', date: '17/08/2025 16:30' },
+      { homeTeam: 'Wolves', awayTeam: 'Man City', date: '17/08/2025 14:00' },
+      { homeTeam: 'Chelsea', awayTeam: 'Crystal Palace', date: '18/08/2025 16:30' },
+      { homeTeam: 'Manchester United', awayTeam: 'Arsenal', date: '18/08/2025 14:00' },
+      { homeTeam: 'Leeds', awayTeam: 'Everton', date: '18/08/2025 19:00' }
+    ];
+
     let updatedCount = 0;
     let earliestKickoff: Date | null = null;
 
-    // Update existing fixtures with accurate times from API
+    // Update existing fixtures with gameweek 1 dates
     for (const dbFixture of existingFixtures || []) {
       try {
-        // Find matching fixture in API data by team names
-        const apiFixture = allFixtures.find(apiF => {
-          let homeTeam, awayTeam;
-          if (apiF.competitors && Array.isArray(apiF.competitors)) {
-            homeTeam = apiF.competitors.find(team => team.isHome === true);
-            awayTeam = apiF.competitors.find(team => team.isHome === false);
-          } else if (apiF.teams) {
-            homeTeam = apiF.teams.home || apiF.teams[1];
-            awayTeam = apiF.teams.away || apiF.teams[0];
-          }
-
-          if (!homeTeam || !awayTeam) return false;
-
-          const homeTeamName = homeTeam.name || homeTeam.displayName || '';
-          const awayTeamName = awayTeam.name || awayTeam.displayName || '';
-
-          return (
-            homeTeamName.toLowerCase().includes(dbFixture["Home Team"].toLowerCase()) ||
-            dbFixture["Home Team"].toLowerCase().includes(homeTeamName.toLowerCase())
-          ) && (
-            awayTeamName.toLowerCase().includes(dbFixture["Away Team"].toLowerCase()) ||
-            dbFixture["Away Team"].toLowerCase().includes(awayTeamName.toLowerCase())
-          );
+        // Find matching fixture in our predefined gameweek 1 data
+        const matchingFixture = gameweek1Fixtures.find(gw1F => {
+          const homeMatch = gw1F.homeTeam.toLowerCase().includes(dbFixture["Home Team"].toLowerCase()) ||
+                            dbFixture["Home Team"].toLowerCase().includes(gw1F.homeTeam.toLowerCase());
+          const awayMatch = gw1F.awayTeam.toLowerCase().includes(dbFixture["Away Team"].toLowerCase()) ||
+                            dbFixture["Away Team"].toLowerCase().includes(gw1F.awayTeam.toLowerCase());
+          
+          return homeMatch && awayMatch;
         });
 
-        if (apiFixture) {
-          let kickoffTime = null;
+        if (matchingFixture) {
+          const kickoffTime = parseDate(matchingFixture.date);
           
-          // Extract kickoff time from API data
-          if (apiFixture.date) {
-            kickoffTime = new Date(apiFixture.date);
-          } else if (apiFixture.kickoffTime) {
-            kickoffTime = new Date(apiFixture.kickoffTime);
-          } else if (apiFixture.fixture?.date) {
-            kickoffTime = new Date(apiFixture.fixture.date);
-          } else if (apiFixture.startTime) {
-            kickoffTime = new Date(apiFixture.startTime);
-          }
-
           if (kickoffTime && !isNaN(kickoffTime.getTime())) {
-            // Format the date for our database
-            const formattedDate = kickoffTime.toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            }).replace(',', '');
-
             // Update the fixture with the new date/time
             const { error: updateError } = await supabase
               .from('fixtures')
-              .update({ 'Date': formattedDate })
+              .update({ 'Date': matchingFixture.date })
               .eq('Match Number', dbFixture['Match Number']);
 
             if (updateError) {
               console.error(`Error updating fixture ${dbFixture['Match Number']}:`, updateError);
             } else {
               updatedCount++;
-              console.log(`Updated fixture: ${dbFixture["Home Team"]} vs ${dbFixture["Away Team"]} - ${formattedDate}`);
+              console.log(`Updated fixture: ${dbFixture["Home Team"]} vs ${dbFixture["Away Team"]} - ${matchingFixture.date}`);
               
               // Track the earliest kickoff time
               if (!earliestKickoff || kickoffTime < earliestKickoff) {
@@ -177,6 +133,8 @@ async function syncGameweekFixtures(gameweekNumber: number) {
               }
             }
           }
+        } else {
+          console.log(`No matching fixture found for: ${dbFixture["Home Team"]} vs ${dbFixture["Away Team"]}`);
         }
 
         await delay(100);
@@ -211,6 +169,20 @@ async function syncGameweekFixtures(gameweekNumber: number) {
   } catch (error) {
     console.error('Error in syncGameweekFixtures:', error);
     throw error;
+  }
+}
+
+// Helper function to parse date strings in DD/MM/YYYY HH:MM format
+function parseDate(dateString: string): Date | null {
+  try {
+    const [datePart, timePart] = dateString.split(' ');
+    const [day, month, year] = datePart.split('/');
+    const [hour, minute] = timePart.split(':');
+    
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+  } catch (error) {
+    console.error('Error parsing date:', dateString, error);
+    return null;
   }
 }
 
