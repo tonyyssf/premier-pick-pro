@@ -1,16 +1,21 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useGlobalStandings } from './useGlobalStandings';
-import { useLeagueStandings } from './useLeagueStandings';
+import { useOptimizedStandings } from './useOptimizedStandings';
+import { performanceMonitor } from '@/utils/performanceMonitor';
 
 export const useWeeklyStandings = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const { userStandings, loadGlobalStandings } = useGlobalStandings();
-  const { leagueStandings, loadLeagueStandings } = useLeagueStandings();
+  const { 
+    userStandings, 
+    leagueStandings, 
+    loadGlobalStandings, 
+    loadLeagueStandings 
+  } = useOptimizedStandings();
 
   useEffect(() => {
     if (!user) return;
@@ -18,7 +23,9 @@ export const useWeeklyStandings = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        await loadGlobalStandings();
+        await performanceMonitor.measureAsync('load-standings', async () => {
+          await loadGlobalStandings();
+        });
       } catch (error) {
         console.error('Error loading standings:', error);
         toast({
