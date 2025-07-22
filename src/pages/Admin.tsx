@@ -3,7 +3,7 @@ import React from 'react';
 import { Layout } from '@/components/Layout';
 import { AdminOnly } from '@/components/AdminOnly';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AdminDataSync } from '@/components/AdminDataSync';
+import AdminDataSync from '@/components/AdminDataSync';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { SystemMonitoringDashboard } from '@/components/SystemMonitoringDashboard';
 import { EnhancedSecurityMonitor } from '@/components/EnhancedSecurityMonitor';

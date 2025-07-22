@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminFixtureSync } from './AdminFixtureSync';
-import { Database, Sync, Calendar } from 'lucide-react';
+import { Database, RefreshCw, Calendar } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
@@ -130,7 +130,7 @@ const AdminDataSync = () => {
             <span>Fixture Sync</span>
           </TabsTrigger>
           <TabsTrigger value="current-gameweek" className="flex items-center space-x-2">
-            <Sync className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
             <span>Current Gameweek</span>
           </TabsTrigger>
           <TabsTrigger value="scores" className="flex items-center space-x-2">
