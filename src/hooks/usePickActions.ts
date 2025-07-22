@@ -111,6 +111,13 @@ export const usePickActions = (
     
     const oneMinuteBeforeKickoff = new Date(earliestKickoff.getTime() - 60 * 1000);
     
+    console.log('Undo check:', {
+      now: now.toISOString(),
+      earliestKickoff: earliestKickoff.toISOString(),
+      oneMinuteBeforeKickoff: oneMinuteBeforeKickoff.toISOString(),
+      canUndo: now < oneMinuteBeforeKickoff
+    });
+    
     return now < oneMinuteBeforeKickoff;
   };
 
