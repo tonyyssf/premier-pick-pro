@@ -70,7 +70,7 @@ export const UserPickHistory: React.FC = () => {
               ? fixture.home_team_name 
               : fixture.away_team_name;
               
-            const score = pick.gameweek_scores?.[0];
+            const score = Array.isArray(pick.gameweek_scores) ? pick.gameweek_scores[0] : pick.gameweek_scores;
             
             historyItems.push({
               id: pick.id,

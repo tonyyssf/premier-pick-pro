@@ -33,11 +33,11 @@ export const UserScoreDisplay: React.FC = () => {
     );
   }
 
-  const globalStanding = userStandings?.find(s => s.league_id === null);
-  const totalPoints = globalStanding?.total_points || 0;
-  const correctPicks = globalStanding?.correct_picks || 0;
-  const totalPicks = globalStanding?.total_picks || 0;
-  const currentRank = globalStanding?.current_rank || 0;
+  const globalStanding = userStandings?.find(s => s.userId === user?.id);
+  const totalPoints = globalStanding?.totalPoints || 0;
+  const correctPicks = globalStanding?.correctPicks || 0;
+  const totalPicks = globalStanding?.totalPicks || 0;
+  const currentRank = globalStanding?.currentRank || 0;
   const winRate = totalPicks > 0 ? Math.round((correctPicks / totalPicks) * 100) : 0;
 
   const getBadgeVariant = (rank: number) => {
