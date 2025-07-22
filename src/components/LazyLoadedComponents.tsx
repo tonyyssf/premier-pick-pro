@@ -3,9 +3,9 @@ import { lazy } from 'react';
 
 // Lazy load heavy components to improve initial bundle size
 export const LazyLeaderboards = lazy(() => import('@/pages/OptimizedLeaderboards'));
-export const LazyLeagueAnalytics = lazy(() => import('@/components/LeagueAnalytics'));
+export const LazyLeagueAnalytics = lazy(() => import('@/components/LeagueAnalytics').then(module => ({ default: module.LeagueAnalytics })));
 export const LazyAdminDataSync = lazy(() => import('@/components/AdminDataSync'));
-export const LazySystemMonitoringDashboard = lazy(() => import('@/components/SystemMonitoringDashboard'));
+export const LazySystemMonitoringDashboard = lazy(() => import('@/components/SystemMonitoringDashboard').then(module => ({ default: module.SystemMonitoringDashboard })));
 
 // Wrapper components with better loading states
 export const LazyLoadWrapper: React.FC<{
