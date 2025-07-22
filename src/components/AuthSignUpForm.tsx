@@ -20,6 +20,7 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const { signUp } = useAuth();
 
   const handleInputChange = (field: string, value: string) => {
@@ -29,6 +30,9 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
         break;
       case 'password':
         setPassword(value);
+        break;
+      case 'username':
+        setUsername(value);
         break;
     }
     
@@ -43,14 +47,14 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
     onLoadingChange(true);
     onErrorsChange({});
     
-    if (!email || !password) {
+    if (!email || !password || !username) {
       onErrorsChange({ general: 'Please fill in all required fields' });
       onLoadingChange(false);
       return;
     }
 
     try {
-      await signUp(email, password);
+      await signUp(email, password, { username });
     } catch (error) {
       console.error('Sign up error:', error);
     }
@@ -76,6 +80,22 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
             Please use a valid email format like user@example.com
           </p>
           {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="signup-username">Username</Label>
+          <Input
+            id="signup-username"
+            type="text"
+            value={username}
+            onChange={(e) => handleInputChange('username', e.target.value)}
+            placeholder="Choose a unique username"
+            required
+            className={errors.username ? 'border-red-500' : ''}
+          />
+          <p className="text-xs text-gray-500">
+            3-20 characters, letters, numbers, hyphens, and underscores only
+          </p>
+          {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="signup-password">Password</Label>
