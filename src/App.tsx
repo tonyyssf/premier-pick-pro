@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PicksProvider } from "@/contexts/PicksContext";
+import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { SecurityHeaders } from "@/components/SecurityHeaders";
 import { SecurityMonitoringProvider } from "@/components/SecurityMonitoringProvider";
 import { SecurityMiddleware } from "@/components/SecurityMiddleware";
@@ -39,9 +40,10 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SecurityMonitoringProvider>
-          <SecurityMiddleware>
-            <PicksProvider>
+        <OnboardingProvider>
+          <SecurityMonitoringProvider>
+            <SecurityMiddleware>
+              <PicksProvider>
               <TooltipProvider>
                 <SecurityHeaders />
                 <Toaster />
@@ -66,6 +68,7 @@ const App = () => {
             </PicksProvider>
           </SecurityMiddleware>
         </SecurityMonitoringProvider>
+        </OnboardingProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

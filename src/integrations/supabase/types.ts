@@ -184,6 +184,9 @@ export type Database = {
           email: string | null
           id: string
           name: string | null
+          onboarding_completed: boolean | null
+          onboarding_dismissed: boolean | null
+          onboarding_dismissed_at: string | null
           phone_number: string | null
           sms_reminders_enabled: boolean | null
           updated_at: string
@@ -195,6 +198,9 @@ export type Database = {
           email?: string | null
           id: string
           name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_dismissed?: boolean | null
+          onboarding_dismissed_at?: string | null
           phone_number?: string | null
           sms_reminders_enabled?: boolean | null
           updated_at?: string
@@ -206,6 +212,9 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_dismissed?: boolean | null
+          onboarding_dismissed_at?: string | null
           phone_number?: string | null
           sms_reminders_enabled?: boolean | null
           updated_at?: string

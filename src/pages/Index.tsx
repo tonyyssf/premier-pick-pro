@@ -5,6 +5,7 @@ import { WeeklyPicks } from '../components/WeeklyPicks';
 import { UserScoreDisplay } from '../components/UserScoreDisplay';
 import { UserPickHistory } from '../components/UserPickHistory';
 import { HowItWorksButton } from '../components/HowItWorksButton';
+import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
 
 const Index = () => {
   return (
@@ -14,6 +15,7 @@ const Index = () => {
           <h1 className="text-2xl font-bold text-gray-900">Make Your Picks</h1>
           <HowItWorksButton />
         </div>
+        <OnboardingFlow />
         <UserScoreDisplay />
       </div>
       <WeeklyPicks />
