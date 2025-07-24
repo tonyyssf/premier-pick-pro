@@ -52,11 +52,11 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
   );
 
   return (
-    <div className="mb-4 space-y-6">
+    <div className="mb-4 space-y-3">
       {sortedDates.map(date => (
         <div key={date}>
-          <div className="mb-3 px-2">
-            <h3 className="text-sm font-medium text-gray-700 uppercase tracking-wide">
+          <div className="mb-2 px-2">
+            <h3 className="text-sm font-medium text-gray-700 uppercase tracking-wide text-center">
               {new Date(date).toLocaleDateString('en-GB', { 
                 weekday: 'long', 
                 day: 'numeric', 
@@ -64,7 +64,7 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
               })}
             </h3>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {fixturesByDate[date].map((fixture) => (
               <FixtureListItem
                 key={fixture.id}
