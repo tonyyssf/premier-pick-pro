@@ -213,6 +213,45 @@ export type Database = {
         }
         Relationships: []
       }
+      role_change_audit: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          change_reason: string | null
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          new_role: string
+          old_role: string | null
+          status: string | null
+          target_user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_role: string
+          old_role?: string | null
+          status?: string | null
+          target_user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_role?: string
+          old_role?: string | null
+          status?: string | null
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       sms_reminders: {
         Row: {
           gameweek_id: string
@@ -526,6 +565,10 @@ export type Database = {
         Args: { user_uuid?: string }
         Returns: boolean
       }
+      is_admin_secure: {
+        Args: { user_uuid?: string }
+        Returns: boolean
+      }
       is_league_creator: {
         Args: { _user_id: string; _league_id: string }
         Returns: boolean
@@ -538,9 +581,17 @@ export type Database = {
         Args: { _league_id: string }
         Returns: boolean
       }
+      log_security_event: {
+        Args: { event_type: string; user_id?: string; details?: Json }
+        Returns: undefined
+      }
       refresh_all_rankings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      request_role_change: {
+        Args: { target_user_id: string; new_role: string; reason?: string }
+        Returns: string
       }
       security_audit_log: {
         Args: Record<PropertyKey, never>
