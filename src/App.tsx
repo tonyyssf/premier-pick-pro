@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PicksProvider } from "@/contexts/PicksContext";
 import { SecurityHeaders } from "@/components/SecurityHeaders";
+import { SecurityMonitoringProvider } from "@/components/SecurityMonitoringProvider";
+import { SecurityMiddleware } from "@/components/SecurityMiddleware";
 import { Suspense, lazy } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
@@ -33,25 +35,29 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <PicksProvider>
-        <TooltipProvider>
-          <SecurityHeaders />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<LoadingSpinner message="Loading application..." />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
-                <Route path="/leaderboards" element={<OptimizedLeaderboards />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </PicksProvider>
+      <SecurityMonitoringProvider>
+        <SecurityMiddleware>
+          <PicksProvider>
+            <TooltipProvider>
+              <SecurityHeaders />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<LoadingSpinner message="Loading application..." />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
+                    <Route path="/leaderboards" element={<OptimizedLeaderboards />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </PicksProvider>
+        </SecurityMiddleware>
+      </SecurityMonitoringProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

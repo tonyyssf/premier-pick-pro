@@ -215,8 +215,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
         <Switch
           id="sms-signup"
-          checked={formData.sms_reminders_enabled}
-          onCheckedChange={(checked) => handleInputChange('sms_reminders_enabled', checked)}
+                checked={formData.sms_reminders_enabled}
+                onCheckedChange={(checked) => handleInputChange('sms_reminders_enabled', checked)}
         />
       </div>
 

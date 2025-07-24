@@ -7,6 +7,7 @@ import AdminDataSync from '@/components/AdminDataSync';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { SystemMonitoringDashboard } from '@/components/SystemMonitoringDashboard';
 import { EnhancedSecurityMonitor } from '@/components/EnhancedSecurityMonitor';
+import { SecurityAuditDashboard } from '@/components/SecurityAuditDashboard';
 import { RapidApiTester } from '@/components/RapidApiTester';
 import { Database, TrendingUp, Activity, Shield, TestTube } from 'lucide-react';
 
@@ -63,6 +64,7 @@ const Admin = () => {
             </TabsContent>
 
             <TabsContent value="security" className="space-y-6">
+              <SecurityAuditDashboard />
               <EnhancedSecurityMonitor />
             </TabsContent>
           </Tabs>

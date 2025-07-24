@@ -1,20 +1,12 @@
 
 import React, { useEffect } from 'react';
+import { getSecurityHeaders } from '@/utils/enhancedSecurityUtils';
+import { securityLogger } from '@/utils/securityLogger';
 
 export const SecurityHeaders: React.FC = () => {
   useEffect(() => {
-    // Set Content Security Policy
-    const csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://uocfjxteyrjnihemezgo.supabase.co wss://uocfjxteyrjnihemezgo.supabase.co https://o4509564147466240.ingest.us.sentry.io",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'"
-    ].join('; ');
+    const headers = getSecurityHeaders();
+    const csp = headers['Content-Security-Policy'];
 
     // Create or update CSP meta tag
     let cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]') as HTMLMetaElement;
@@ -25,12 +17,13 @@ export const SecurityHeaders: React.FC = () => {
     }
     cspMeta.setAttribute('content', csp);
 
-    // Set other security headers via meta tags (for client-side awareness)
+    // Set comprehensive security headers via meta tags
     const securityMetas = [
-      { name: 'referrer', content: 'strict-origin-when-cross-origin' },
-      { name: 'X-Content-Type-Options', content: 'nosniff' },
-      { name: 'X-Frame-Options', content: 'DENY' },
-      { name: 'X-XSS-Protection', content: '1; mode=block' }
+      { name: 'referrer', content: headers['Referrer-Policy'] },
+      { name: 'X-Content-Type-Options', content: headers['X-Content-Type-Options'] },
+      { name: 'X-Frame-Options', content: headers['X-Frame-Options'] },
+      { name: 'X-XSS-Protection', content: headers['X-XSS-Protection'] },
+      { name: 'Permissions-Policy', content: headers['Permissions-Policy'] }
     ];
 
     securityMetas.forEach(({ name, content }) => {
@@ -43,9 +36,52 @@ export const SecurityHeaders: React.FC = () => {
       meta.setAttribute('content', content);
     });
 
-    // Set secure cookie defaults for future cookies
+    // Set secure cookie defaults and monitor for violations
     document.cookie = "SameSite=Strict; Secure; Path=/";
+    
+    // Monitor for CSP violations
+    document.addEventListener('securitypolicyviolation', (e) => {
+      securityLogger.log({
+        type: 'suspicious_activity',
+        details: {
+          operation: 'csp_violation',
+          violatedDirective: e.violatedDirective,
+          blockedURI: e.blockedURI,
+          originalPolicy: e.originalPolicy,
+          disposition: e.disposition
+        }
+      });
+    });
 
+    // Detect and log potential security bypass attempts
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as Element;
+              // Check for suspicious script additions
+              if (element.tagName === 'SCRIPT' || element.querySelector('script')) {
+                securityLogger.log({
+                  type: 'suspicious_activity',
+                  details: {
+                    operation: 'dynamic_script_detected',
+                    tagName: element.tagName,
+                    innerHTML: element.innerHTML.substring(0, 100)
+                  }
+                });
+              }
+            }
+          });
+        }
+      });
+    });
+
+    observer.observe(document, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   return null; // This component doesn't render anything
