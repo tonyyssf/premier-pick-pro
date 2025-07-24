@@ -9,7 +9,8 @@ import { PicksProvider } from "@/contexts/PicksContext";
 import { SecurityHeaders } from "@/components/SecurityHeaders";
 import { SecurityMonitoringProvider } from "@/components/SecurityMonitoringProvider";
 import { SecurityMiddleware } from "@/components/SecurityMiddleware";
-import { Suspense, lazy } from "react";
+import { PerformanceDashboard } from "@/components/PerformanceDashboard";
+import { Suspense, lazy, useState } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 // Lazy load pages for better performance
@@ -32,34 +33,42 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <SecurityMonitoringProvider>
-        <SecurityMiddleware>
-          <PicksProvider>
-            <TooltipProvider>
-              <SecurityHeaders />
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Suspense fallback={<LoadingSpinner message="Loading application..." />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
-                    <Route path="/leaderboards" element={<OptimizedLeaderboards />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-            </TooltipProvider>
-          </PicksProvider>
-        </SecurityMiddleware>
-      </SecurityMonitoringProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <SecurityMonitoringProvider>
+          <SecurityMiddleware>
+            <PicksProvider>
+              <TooltipProvider>
+                <SecurityHeaders />
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Suspense fallback={<LoadingSpinner message="Loading application..." />}>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
+                      <Route path="/leaderboards" element={<OptimizedLeaderboards />} />
+                      <Route path="/admin" element={<Admin />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                  <PerformanceDashboard 
+                    isVisible={showPerformanceDashboard}
+                    onToggle={() => setShowPerformanceDashboard(!showPerformanceDashboard)}
+                  />
+                </BrowserRouter>
+              </TooltipProvider>
+            </PicksProvider>
+          </SecurityMiddleware>
+        </SecurityMonitoringProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
