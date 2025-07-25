@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
+import { useAdmin } from '@/hooks/useAdmin';
 import { 
   Shield, 
   AlertTriangle, 
@@ -20,6 +21,11 @@ import {
 
 export const EnhancedSecurityMonitor: React.FC = () => {
   const { metrics, isLoading, performSecurityAudit } = useSecurityMonitoring();
+  const { isAdmin } = useAdmin();
+
+  if (!isAdmin) {
+    return null; // Only show to admins
+  }
 
   if (isLoading) {
     return (

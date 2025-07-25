@@ -12,6 +12,7 @@ import { SecurityMonitoringProvider } from "@/components/SecurityMonitoringProvi
 import { SecurityMiddleware } from "@/components/SecurityMiddleware";
 import { PerformanceDashboard } from "@/components/PerformanceDashboard";
 import { Suspense, lazy, useState } from "react";
+import { useAdmin } from "@/hooks/useAdmin";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 // Lazy load pages for better performance
@@ -36,6 +37,7 @@ const queryClient = new QueryClient({
 
 const App = () => {
   const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false);
+  const { isAdmin } = useAdmin();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -59,10 +61,12 @@ const App = () => {
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
-                  <PerformanceDashboard 
-                    isVisible={showPerformanceDashboard}
-                    onToggle={() => setShowPerformanceDashboard(!showPerformanceDashboard)}
-                  />
+                  {isAdmin && (
+                    <PerformanceDashboard 
+                      isVisible={showPerformanceDashboard}
+                      onToggle={() => setShowPerformanceDashboard(!showPerformanceDashboard)}
+                    />
+                  )}
                 </BrowserRouter>
               </TooltipProvider>
             </PicksProvider>
