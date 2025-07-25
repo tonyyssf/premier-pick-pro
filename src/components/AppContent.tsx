@@ -1,9 +1,6 @@
-import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
-import { useAdmin } from "@/hooks/useAdmin";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { PerformanceDashboard } from "@/components/PerformanceDashboard";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("../pages/Index"));
@@ -13,9 +10,6 @@ const Admin = lazy(() => import("../pages/Admin"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 
 export const AppContent = () => {
-  const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false);
-  const { isAdmin } = useAdmin();
-
   return (
     <BrowserRouter>
       <Suspense fallback={<LoadingSpinner message="Loading application..." />}>
@@ -28,12 +22,6 @@ export const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      {isAdmin && (
-        <PerformanceDashboard 
-          isVisible={showPerformanceDashboard}
-          onToggle={() => setShowPerformanceDashboard(!showPerformanceDashboard)}
-        />
-      )}
     </BrowserRouter>
   );
 };
