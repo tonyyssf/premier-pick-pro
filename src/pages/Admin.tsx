@@ -6,10 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminDataSync from '@/components/AdminDataSync';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { SystemMonitoringDashboard } from '@/components/SystemMonitoringDashboard';
-import { EnhancedSecurityMonitor } from '@/components/EnhancedSecurityMonitor';
-import { SecurityAuditDashboard } from '@/components/SecurityAuditDashboard';
 import { RapidApiTester } from '@/components/RapidApiTester';
-import { Database, TrendingUp, Activity, Shield, TestTube } from 'lucide-react';
+import { Database, TrendingUp, Activity, TestTube } from 'lucide-react';
 
 const Admin = () => {
   return (
@@ -24,7 +22,7 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="data" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="data" className="flex items-center space-x-2">
                 <Database className="h-4 w-4" />
                 <span>Data Management</span>
@@ -40,10 +38,6 @@ const Admin = () => {
               <TabsTrigger value="monitoring" className="flex items-center space-x-2">
                 <Activity className="h-4 w-4" />
                 <span>System Monitoring</span>
-              </TabsTrigger>
-              <TabsTrigger value="security" className="flex items-center space-x-2">
-                <Shield className="h-4 w-4" />
-                <span>Enhanced Security</span>
               </TabsTrigger>
             </TabsList>
 
@@ -63,10 +57,6 @@ const Admin = () => {
               <SystemMonitoringDashboard />
             </TabsContent>
 
-            <TabsContent value="security" className="space-y-6">
-              <SecurityAuditDashboard />
-              <EnhancedSecurityMonitor />
-            </TabsContent>
           </Tabs>
         </div>
       </Layout>
