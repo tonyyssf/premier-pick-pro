@@ -7,7 +7,7 @@ import { usePicks } from '../contexts/PicksContext';
 import { WeeklyPicksHeader } from './WeeklyPicksHeader';
 import { WeeklyPicksLoadingState } from './WeeklyPicksLoadingState';
 import { WeeklyPicksEmptyState } from './WeeklyPicksEmptyState';
-import { FixtureListItem } from './FixtureListItem';
+import { FixtureCard } from './FixtureCard';
 import { useNavigate } from 'react-router-dom';
 
 export const GuestWeeklyPicks: React.FC = () => {
@@ -83,9 +83,9 @@ export const GuestWeeklyPicks: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="mb-4">
+        <div className="space-y-2">
           {fixtures.map((fixture) => (
-            <FixtureListItem
+            <FixtureCard
               key={fixture.id}
               fixture={fixture}
               homeTeamUsedCount={0}
@@ -94,7 +94,6 @@ export const GuestWeeklyPicks: React.FC = () => {
               selectedTeam={null}
               onTeamSelect={async () => handleAuthPrompt()}
               submitting={false}
-              disabled={true}
             />
           ))}
         </div>

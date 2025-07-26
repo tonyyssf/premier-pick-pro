@@ -1,9 +1,8 @@
 
-import React, { useRef } from 'react';
-import { Clock, RotateCcw } from 'lucide-react';
-import { FixtureListItem, FixtureListItemRef } from './FixtureListItem';
+import React from 'react';
+import { Clock } from 'lucide-react';
+import { FixtureCard } from './FixtureCard';
 import { Card, CardContent } from './ui/card';
-import { Button } from './ui/button';
 import { Fixture } from '@/types/picks';
 
 interface WeeklyPicksFixtureListProps {
@@ -23,14 +22,6 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
   gameweekNumber,
   disabled = false
 }) => {
-  const fixtureRefs = useRef<Map<string, FixtureListItemRef>>(new Map());
-
-  const handleForceResetAll = () => {
-    console.log('Force resetting all fixture loading states');
-    fixtureRefs.current.forEach((ref) => {
-      ref.forceResetLoading();
-    });
-  };
   if (fixtures.length === 0) {
     return (
       <Card className="border-gray-200">
@@ -61,8 +52,7 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
   );
 
   return (
-    <div className="mb-4 space-y-3">
-      
+    <div className="space-y-4">
       {sortedDates.map(date => (
         <div key={date}>
           <div className="mb-2 px-2">
@@ -74,17 +64,10 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
               })}
             </h3>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-2">
             {fixturesByDate[date].map((fixture) => (
-              <FixtureListItem
+              <FixtureCard
                 key={fixture.id}
-                ref={(ref) => {
-                  if (ref) {
-                    fixtureRefs.current.set(fixture.id, ref);
-                  } else {
-                    fixtureRefs.current.delete(fixture.id);
-                  }
-                }}
                 fixture={fixture}
                 homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
                 awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
@@ -92,7 +75,6 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
                 selectedTeam={null}
                 onTeamSelect={disabled ? async () => {} : onTeamSelect}
                 submitting={submitting}
-                disabled={disabled}
               />
             ))}
           </div>
