@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useInsights } from '@/hooks/useInsights';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePremiumUpgrade } from '@/hooks/usePremiumUpgrade';
 import { HeatMapChart } from '@/components/insights/HeatMapChart';
 import { EfficiencyLineChart } from '@/components/insights/EfficiencyLineChart';
 import { ProjectionStat } from '@/components/insights/ProjectionStat';
@@ -12,13 +13,36 @@ import { toast } from '@/hooks/use-toast';
 import { Download, BarChart3, TrendingUp, Target, AlertCircle } from 'lucide-react';
 import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
+import { useEffect } from 'react';
 
 const Insights = () => {
   const { user } = useAuth();
   const { data: insights, isLoading, error } = useInsights();
+  const { verifyPayment } = usePremiumUpgrade();
   
   // Check if user is premium
   const isPremium = user?.user_metadata?.is_premium === true;
+
+  // Handle payment success/failure from URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const sessionId = urlParams.get('session_id');
+
+    if (paymentStatus === 'success' && sessionId) {
+      verifyPayment(sessionId);
+      // Clean up URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (paymentStatus === 'cancelled') {
+      toast({
+        title: "Payment Cancelled",
+        description: "Your premium upgrade was cancelled. You can try again anytime.",
+        variant: "destructive",
+      });
+      // Clean up URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [verifyPayment]);
 
   const handleExportCSV = () => {
     if (!isPremium) {

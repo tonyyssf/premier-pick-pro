@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, Star, TrendingUp } from 'lucide-react';
+import { Lock, Star, TrendingUp, Loader2 } from 'lucide-react';
+import { usePremiumUpgrade } from '@/hooks/usePremiumUpgrade';
 
 interface UnlockBannerProps {
   title: string;
@@ -8,6 +9,8 @@ interface UnlockBannerProps {
 }
 
 export const UnlockBanner: React.FC<UnlockBannerProps> = ({ title, description }) => {
+  const { startUpgrade, isLoading } = usePremiumUpgrade();
+
   return (
     <Card className="bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
       <CardContent className="p-6 text-center space-y-4">
@@ -33,12 +36,17 @@ export const UnlockBanner: React.FC<UnlockBannerProps> = ({ title, description }
 
         <Button 
           className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white"
-          onClick={() => {
-            // TODO: Implement premium upgrade flow
-            console.log('Upgrade to premium clicked');
-          }}
+          onClick={startUpgrade}
+          disabled={isLoading}
         >
-          Unlock Premium Features
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Processing...
+            </>
+          ) : (
+            'Unlock Premium Features - $9.99'
+          )}
         </Button>
       </CardContent>
     </Card>
