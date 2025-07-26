@@ -7,8 +7,17 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:analyze": "vite build --mode production && node scripts/analyze-bundle.js",
+    "build:report": "vite build --mode production && npx vite-bundle-analyzer dist",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix",
+    "preview": "vite preview",
+    "analyze": "node scripts/analyze-bundle.js",
+    "tree-shake": "node comprehensive-tree-shake.js",
+    "clean": "rm -rf dist node_modules/.vite",
+    "cache:clear": "node scripts/clear-cache.js",
+    "perf:monitor": "node scripts/performance-monitor.js",
+    "bundle:stats": "npm run build && npx webpack-bundle-analyzer dist/stats.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
