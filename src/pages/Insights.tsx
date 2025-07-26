@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useInsights } from '@/hooks/useInsights';
+import { useFixtureDifficulty } from '@/hooks/useFixtureDifficulty';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePremiumUpgrade } from '@/hooks/usePremiumUpgrade';
 import { LazyHeatMapChart, LazyEfficiencyLineChart, LazyProjectionStat } from '@/components/LazyChartComponents';
@@ -11,6 +12,8 @@ import { PickEfficiencyGauge } from '@/components/PickEfficiencyGauge';
 import { UnlockBanner } from '@/components/insights/UnlockBanner';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ExportOptions } from '@/components/ExportOptions';
+import { FixtureDifficultyHeatMap } from '@/components/FixtureDifficultyHeatMap';
+import { FixtureRunAnalysis } from '@/components/FixtureRunAnalysis';
 import { usePremiumAccess } from '@/guards/usePremiumAccess';
 import { getPickRecommendations } from '@/utils/getPickRecommendations';
 import { useCurrentGameweek } from '@/hooks/useCurrentGameweek';
@@ -22,6 +25,7 @@ import { useEffect } from 'react';
 const Insights = () => {
   const { user } = useAuth();
   const { data: insights, isLoading, error } = useInsights();
+  const { data: fixtureDifficulty, isLoading: isLoadingFixtures } = useFixtureDifficulty();
   const { verifyPayment } = usePremiumUpgrade();
   const isPremium = usePremiumAccess();
   const currentGameweek = useCurrentGameweek();
@@ -194,6 +198,42 @@ const Insights = () => {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Fixture Difficulty Analysis */}
+        <div className="mt-8 space-y-6">
+          {isLoadingFixtures ? (
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-72" />
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                    <Skeleton key={i} className="h-32 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : fixtureDifficulty?.processedData && fixtureDifficulty.processedData.length > 0 ? (
+            <>
+              <FixtureDifficultyHeatMap 
+                data={fixtureDifficulty.processedData} 
+                currentGameweek={currentGameweek}
+              />
+              <FixtureRunAnalysis 
+                data={fixtureDifficulty.processedData} 
+                currentGameweek={currentGameweek}
+              />
+            </>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-muted-foreground">No fixture difficulty data available</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </Layout>
