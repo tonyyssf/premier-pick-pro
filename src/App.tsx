@@ -10,27 +10,48 @@ import { SecurityHeaders } from "@/components/SecurityHeaders";
 import { SecurityMonitoringProvider } from "@/components/SecurityMonitoringProvider";
 import { SecurityMiddleware } from "@/components/SecurityMiddleware";
 import { AppContent } from "@/components/AppContent";
+import { DebugErrorBoundary } from "@/components/DebugErrorBoundary";
+
+console.log("App component is loading...");
 
 const App = () => {
+  console.log("App component render started");
+  
   return (
-    <QueryProvider>
-      <AuthProvider>
-        <OnboardingProvider>
-          <SecurityMonitoringProvider>
-            <SecurityMiddleware>
-              <PicksProvider>
-                <TooltipProvider>
-                  <SecurityHeaders />
-                  <Toaster />
-                  <Sonner />
-                  <AppContent />
-                </TooltipProvider>
-              </PicksProvider>
-            </SecurityMiddleware>
-          </SecurityMonitoringProvider>
-        </OnboardingProvider>
-      </AuthProvider>
-    </QueryProvider>
+    <DebugErrorBoundary>
+      <QueryProvider>
+        <DebugErrorBoundary>
+          <AuthProvider>
+            <DebugErrorBoundary>
+              <OnboardingProvider>
+                <DebugErrorBoundary>
+                  <SecurityMonitoringProvider>
+                    <DebugErrorBoundary>
+                      <SecurityMiddleware>
+                        <DebugErrorBoundary>
+                          <PicksProvider>
+                            <DebugErrorBoundary>
+                              <TooltipProvider>
+                                <SecurityHeaders />
+                                <Toaster />
+                                <Sonner />
+                                <DebugErrorBoundary>
+                                  <AppContent />
+                                </DebugErrorBoundary>
+                              </TooltipProvider>
+                            </DebugErrorBoundary>
+                          </PicksProvider>
+                        </DebugErrorBoundary>
+                      </SecurityMiddleware>
+                    </DebugErrorBoundary>
+                  </SecurityMonitoringProvider>
+                </DebugErrorBoundary>
+              </OnboardingProvider>
+            </DebugErrorBoundary>
+          </AuthProvider>
+        </DebugErrorBoundary>
+      </QueryProvider>
+    </DebugErrorBoundary>
   );
 };
 
