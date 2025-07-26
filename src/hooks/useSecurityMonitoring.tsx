@@ -144,12 +144,6 @@ export const useSecurityMonitoring = () => {
           description: `${criticalIssues} critical security issues found (Score: ${securityScore}/100)`,
           variant: "destructive",
         });
-      } else if (securityScore >= 90) {
-        toast({
-          title: "Excellent Security",
-          description: `Security score: ${securityScore}/100 - Well done!`,
-          variant: "default",
-        });
       }
 
     } catch (error) {
