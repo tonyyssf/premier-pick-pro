@@ -30,13 +30,24 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseService.auth.admin.listUsers();
     
     if (userError) {
+      console.error('Failed to fetch users:', userError);
       throw new Error(`Failed to fetch users: ${userError.message}`);
     }
+
+    console.log(`Found ${userData.users.length} total users`);
+    console.log('Looking for email:', userEmail);
+    
+    // Log all user emails for debugging
+    userData.users.forEach((user, index) => {
+      console.log(`User ${index + 1}: ${user.email}`);
+    });
 
     const targetUser = userData.users.find(user => user.email === userEmail);
     
     if (!targetUser) {
-      throw new Error(`User with email ${userEmail} not found`);
+      console.error(`User with email ${userEmail} not found`);
+      console.log('Available emails:', userData.users.map(u => u.email));
+      throw new Error(`User with email ${userEmail} not found. Please verify the email address is correct.`);
     }
 
     // Update user metadata to mark as premium
