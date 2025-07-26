@@ -113,15 +113,6 @@ const Insights = () => {
           </p>
         </div>
 
-        {/* Premium Upgrade Banner for Free Users */}
-        {!isPremium && (
-          <div className="mb-8">
-            <UnlockBanner 
-              title="Unlock Premium Analytics"
-              description="Get access to advanced charts, season projections, and CSV exports to take your analysis to the next level."
-            />
-          </div>
-        )}
 
         {/* Smart Pick Planner - First Section */}
         <div className="mb-8">
