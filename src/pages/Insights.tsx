@@ -106,7 +106,7 @@ const Insights = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics</h1>
           <p className="text-gray-600">
             Deep insights into your performance, team analysis, and season projections.
@@ -125,30 +125,6 @@ const Insights = () => {
           </div>
         )}
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Pick Efficiency Gauge - First on large screens */}
-          <ErrorBoundary>
-            <div onMouseEnter={() => handleChartInteraction('efficiency', 'view')}>
-              <PickEfficiencyGauge 
-                efficiencyData={insights?.efficiency || []}
-                isPremium={isPremium}
-                isLoading={isLoading}
-              />
-            </div>
-          </ErrorBoundary>
-
-          {/* Heat Map Chart */}
-          <ErrorBoundary>
-            <div onMouseEnter={() => handleChartInteraction('heatmap', 'view')}>
-              <LazyHeatMapChart 
-                data={insights?.heatmap}
-                isPremium={isPremium}
-                isLoading={isLoading}
-              />
-            </div>
-          </ErrorBoundary>
-        </div>
 
         {/* Projection Stats for Premium Users */}
         {isPremium && insights?.projections && (
