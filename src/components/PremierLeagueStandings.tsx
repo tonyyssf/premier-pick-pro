@@ -1,78 +1,189 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { supabase } from '@/integrations/supabase/client';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface TeamStanding {
   id: string;
   name: string;
   shortName: string;
-  position: number;
   played: number;
   won: number;
   drawn: number;
   lost: number;
-  points: number;
   goalsFor: number;
   goalsAgainst: number;
-  goalDifference: number;
+  points: number;
+  position: number;
+  previousPosition?: number;
 }
 
-export const PremierLeagueStandings: React.FC = () => {
-  const [standings, setStandings] = useState<TeamStanding[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isMockData, setIsMockData] = useState(false);
+interface PremierLeagueStandingsProps {
+  standings: TeamStanding[];
+  loading?: boolean;
+}
 
-  useEffect(() => {
-    fetchStandings();
-  }, []);
+// Memoized table row component
+const StandingRow = React.memo<{
+  team: TeamStanding;
+  index: number;
+}>(({ team, index }) => {
+  // Memoized position change calculation
+  const positionChange = useMemo(() => {
+    if (!team.previousPosition) return null;
+    const change = team.previousPosition - team.position;
+    if (change > 0) return { direction: 'up', value: change };
+    if (change < 0) return { direction: 'down', value: Math.abs(change) };
+    return { direction: 'same', value: 0 };
+  }, [team.previousPosition, team.position]);
 
-  const fetchStandings = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Memoized position icon
+  const positionIcon = useMemo(() => {
+    if (team.position === 1) return <Trophy className="w-4 h-4 text-yellow-500" />;
+    if (team.position === 2) return <Trophy className="w-4 h-4 text-gray-400" />;
+    if (team.position === 3) return <Trophy className="w-4 h-4 text-amber-600" />;
+    return null;
+  }, [team.position]);
 
-      console.log('Calling Supabase Edge Function: epl-standings');
-      
-      const { data, error: functionError } = await supabase.functions.invoke('epl-standings');
-
-      if (functionError) {
-        console.error('Supabase function error:', functionError);
-        throw new Error(`Function error: ${functionError.message}`);
-      }
-
-      if (!data) {
-        throw new Error('No data received from function');
-      }
-
-      console.log('Received data from function:', data);
-      
-      // Check if this is mock data
-      setIsMockData(!!data.note);
-      
-      // Sort alphabetically by team name since season hasn't started
-      const sortedStandings = data.standings.sort((a: TeamStanding, b: TeamStanding) => 
-        a.name.localeCompare(b.name)
-      );
-      
-      setStandings(sortedStandings);
-    } catch (error) {
-      console.error('Error fetching standings:', error);
-      setError('Failed to load Premier League standings');
-    } finally {
-      setLoading(false);
+  // Memoized position change icon
+  const changeIcon = useMemo(() => {
+    if (!positionChange) return null;
+    switch (positionChange.direction) {
+      case 'up':
+        return <TrendingUp className="w-3 h-3 text-green-500" />;
+      case 'down':
+        return <TrendingDown className="w-3 h-3 text-red-500" />;
+      case 'same':
+        return <Minus className="w-3 h-3 text-gray-400" />;
+      default:
+        return null;
     }
-  };
+  }, [positionChange]);
+
+  // Memoized goal difference
+  const goalDifference = useMemo(() => {
+    return team.goalsFor - team.goalsAgainst;
+  }, [team.goalsFor, team.goalsAgainst]);
+
+  return (
+    <TableRow key={team.id} className="hover:bg-gray-50">
+      <TableCell className="font-medium text-center">
+        <div className="flex items-center justify-center space-x-1">
+          {positionIcon}
+          <span>{team.position}</span>
+          {positionChange && (
+            <div className="flex items-center space-x-1">
+              {changeIcon}
+              {positionChange.value > 0 && (
+                <span className="text-xs text-gray-500">
+                  {positionChange.value}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="font-medium">
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold">{team.name}</span>
+          <span className="text-xs text-gray-500">{team.shortName}</span>
+        </div>
+      </TableCell>
+      <TableCell className="text-center">{team.played}</TableCell>
+      <TableCell className="text-center">{team.won}</TableCell>
+      <TableCell className="text-center">{team.drawn}</TableCell>
+      <TableCell className="text-center">{team.lost}</TableCell>
+      <TableCell className="text-center">
+        <span className={goalDifference > 0 ? 'text-green-600' : goalDifference < 0 ? 'text-red-600' : 'text-gray-600'}>
+          {goalDifference > 0 ? '+' : ''}{goalDifference}
+        </span>
+      </TableCell>
+      <TableCell className="text-center font-bold">{team.points}</TableCell>
+    </TableRow>
+  );
+});
+
+StandingRow.displayName = 'StandingRow';
+
+// Memoized loading skeleton
+const LoadingSkeleton = React.memo(() => (
+  <div className="space-y-2">
+    {Array.from({ length: 20 }).map((_, i) => (
+      <div key={i} className="flex items-center space-x-4 p-2 animate-pulse">
+        <div className="w-8 h-6 bg-gray-200 rounded"></div>
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+        </div>
+        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+      </div>
+    ))}
+  </div>
+));
+
+LoadingSkeleton.displayName = 'LoadingSkeleton';
+
+export const PremierLeagueStandings: React.FC<PremierLeagueStandingsProps> = React.memo(({
+  standings,
+  loading = false
+}) => {
+  // Memoized sorted standings
+  const sortedStandings = useMemo(() => {
+    return [...standings].sort((a, b) => {
+      // First by points (descending)
+      if (b.points !== a.points) {
+        return b.points - a.points;
+      }
+      
+      // Then by goal difference (descending)
+      const aGD = a.goalsFor - a.goalsAgainst;
+      const bGD = b.goalsFor - b.goalsAgainst;
+      if (bGD !== aGD) {
+        return bGD - aGD;
+      }
+      
+      // Then by goals scored (descending)
+      if (b.goalsFor !== a.goalsFor) {
+        return b.goalsFor - a.goalsFor;
+      }
+      
+      // Finally by team name (alphabetical)
+      return a.name.localeCompare(b.name);
+    });
+  }, [standings]);
+
+  // Memoized table rows
+  const tableRows = useMemo(() => {
+    return sortedStandings.map((team, index) => (
+      <StandingRow
+        key={team.id}
+        team={team}
+        index={index}
+      />
+    ));
+  }, [sortedStandings]);
+
+  // Memoized stats
+  const stats = useMemo(() => {
+    const totalTeams = standings.length;
+    const totalMatches = standings.reduce((sum, team) => sum + team.played, 0) / 2;
+    const totalGoals = standings.reduce((sum, team) => sum + team.goalsFor, 0);
+    const avgGoalsPerMatch = totalMatches > 0 ? (totalGoals / totalMatches).toFixed(2) : '0.00';
+    
+    return {
+      totalTeams,
+      totalMatches,
+      totalGoals,
+      avgGoalsPerMatch,
+    };
+  }, [standings]);
 
   if (loading) {
     return (
@@ -81,28 +192,7 @@ export const PremierLeagueStandings: React.FC = () => {
           <CardTitle>Premier League Standings</CardTitle>
         </CardHeader>
         <CardContent>
-          <LoadingSpinner message="Loading Premier League standings..." />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Premier League Standings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-red-600 mb-4">{error}</p>
-            <button 
-              onClick={fetchStandings}
-              className="px-4 py-2 bg-plpe-purple text-white rounded hover:bg-plpe-purple/90 transition-colors"
-            >
-              Retry
-            </button>
-          </div>
+          <LoadingSkeleton />
         </CardContent>
       </Card>
     );
@@ -111,19 +201,12 @@ export const PremierLeagueStandings: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          Premier League Standings
-          <span className="text-sm font-normal text-gray-500">
-            (Alphabetical order - Season not started)
-          </span>
-        </CardTitle>
-        {isMockData && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-            <p className="text-sm text-yellow-800">
-              ⚠️ Displaying sample data - Live API temporarily unavailable
-            </p>
+        <CardTitle className="flex items-center justify-between">
+          <span>Premier League Standings</span>
+          <div className="text-sm text-gray-500">
+            {stats.totalTeams} teams • {stats.totalMatches} matches • {stats.avgGoalsPerMatch} goals/match
           </div>
-        )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -141,44 +224,19 @@ export const PremierLeagueStandings: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {standings.map((team, index) => (
-                <TableRow key={team.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium text-center">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold">{team.name}</span>
-                      <span className="text-xs text-gray-500">{team.shortName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">{team.played}</TableCell>
-                  <TableCell className="text-center">{team.won}</TableCell>
-                  <TableCell className="text-center">{team.drawn}</TableCell>
-                  <TableCell className="text-center">{team.lost}</TableCell>
-                  <TableCell className="text-center">
-                    <span className={`font-medium ${
-                      team.goalDifference > 0 ? 'text-green-600' : 
-                      team.goalDifference < 0 ? 'text-red-600' : 
-                      'text-gray-600'
-                    }`}>
-                      {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center font-bold">
-                    {team.points}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {tableRows}
             </TableBody>
           </Table>
         </div>
+        
         {standings.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-600">No standings data available</p>
+          <div className="text-center py-8 text-gray-500">
+            No standings data available
           </div>
         )}
       </CardContent>
     </Card>
   );
-};
+});
+
+PremierLeagueStandings.displayName = 'PremierLeagueStandings';

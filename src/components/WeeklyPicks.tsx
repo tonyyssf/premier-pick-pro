@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { PickConfirmationCard } from './PickConfirmationCard';
 import { usePicks } from '../contexts/PicksContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,7 +11,7 @@ import { WeeklyPicksEmptyState } from './WeeklyPicksEmptyState';
 import { WeeklyPicksDeadlinePassed } from './WeeklyPicksDeadlinePassed';
 import { GuestWeeklyPicks } from './GuestWeeklyPicks';
 
-export const WeeklyPicks: React.FC = () => {
+export const WeeklyPicks: React.FC = React.memo(() => {
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [undoing, setUndoing] = useState(false);
@@ -33,42 +33,87 @@ export const WeeklyPicks: React.FC = () => {
     navigation
   } = usePicks();
 
-  // Show guest version if not authenticated
-  if (!user) {
-    return <GuestWeeklyPicks />;
-  }
-
-  const gameweekToUse = viewingGameweek || currentGameweek;
-  const isCurrentGameweek = currentGameweek && gameweekToUse && currentGameweek.id === gameweekToUse.id;
-  const currentPick = getCurrentPick();
-  const hasAlreadyPicked = gameweekToUse ? hasPickForGameweek(gameweekToUse.id) : false;
-  const canUndo = canUndoPick();
+  // Memoized derived state
+  const gameweekToUse = useMemo(() => viewingGameweek || currentGameweek, [viewingGameweek, currentGameweek]);
   
-  console.log('WeeklyPicks state:', {
-    currentGameweek: currentGameweek?.number,
-    viewingGameweek: viewingGameweek?.number,
-    isCurrentGameweek,
+  const isCurrentGameweek = useMemo(() => 
+    currentGameweek && gameweekToUse && currentGameweek.id === gameweekToUse.id,
+    [currentGameweek, gameweekToUse]
+  );
+  
+  const currentPick = useMemo(() => getCurrentPick(), [getCurrentPick]);
+  
+  const hasAlreadyPicked = useMemo(() => 
+    gameweekToUse ? hasPickForGameweek(gameweekToUse.id) : false,
+    [gameweekToUse, hasPickForGameweek]
+  );
+  
+  const canUndo = useMemo(() => canUndoPick(), [canUndoPick]);
+  
+  const deadlinePassed = useMemo(() => 
+    isCurrentGameweek && new Date() > gameweekToUse.deadline,
+    [isCurrentGameweek, gameweekToUse]
+  );
+
+  // Memoized current pick info
+  const currentPickInfo = useMemo(() => {
+    if (!currentPick) return null;
+    
+    const fixture = fixtures.find(f => f.id === currentPick.fixtureId);
+    if (!fixture) return null;
+    
+    const team = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.homeTeam : fixture.awayTeam;
+    const opponent = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.awayTeam : fixture.homeTeam;
+    const venue = fixture.homeTeam.id === currentPick.pickedTeamId ? 'Home' : 'Away';
+    
+    return { team, opponent, venue, fixture };
+  }, [currentPick, fixtures]);
+
+  // Memoized navigation props
+  const navigationProps = useMemo(() => ({
+    onNavigate: navigation?.navigateToGameweek,
+    canNavigatePrev: navigation?.canNavigatePrev,
+    canNavigateNext: navigation?.canNavigateNext,
+    isNavigating: navigation?.isNavigating,
+  }), [navigation]);
+
+  // Memoized header props
+  const headerProps = useMemo(() => ({
+    currentGameweek,
+    viewingGameweek: gameweekToUse,
     hasAlreadyPicked,
-    canUndo,
-    fixtures: fixtures?.length
-  });
+    ...navigationProps,
+  }), [currentGameweek, gameweekToUse, hasAlreadyPicked, navigationProps]);
 
-  // Clear messages after delay
-  React.useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
+  // Memoized messages props
+  const messagesProps = useMemo(() => ({
+    successMessage,
+    lastError,
+    onDismissError: () => setLastError(null),
+  }), [successMessage, lastError]);
 
-  React.useEffect(() => {
-    if (lastError) {
-      const timer = setTimeout(() => setLastError(null), 8000);
-      return () => clearTimeout(timer);
-    }
-  }, [lastError]);
+  // Memoized fixture list props
+  const fixtureListProps = useMemo(() => ({
+    fixtures,
+    getTeamUsedCount,
+    onTeamSelect: handleTeamSelect,
+    submitting,
+    gameweekNumber: gameweekToUse.number,
+    disabled: !isCurrentGameweek,
+  }), [fixtures, getTeamUsedCount, submitting, gameweekToUse.number, isCurrentGameweek]);
 
-  const handleTeamSelect = async (fixtureId: string, teamId: string) => {
+  // Memoized pick confirmation props
+  const pickConfirmationProps = useMemo(() => ({
+    currentPick,
+    pickInfo: currentPickInfo,
+    canUndo: canUndo && !deadlinePassed,
+    undoing,
+    onUndoPick: handleUndoPick,
+    gameweekNumber: gameweekToUse.number,
+  }), [currentPick, currentPickInfo, canUndo, deadlinePassed, undoing, gameweekToUse.number]);
+
+  // Optimized event handlers
+  const handleTeamSelect = useCallback(async (fixtureId: string, teamId: string) => {
     if (submitting || !isCurrentGameweek) return;
     
     setSubmitting(true);
@@ -87,9 +132,9 @@ export const WeeklyPicks: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [submitting, isCurrentGameweek, submitPick, fixtures]);
 
-  const handleUndoPick = async () => {
+  const handleUndoPick = useCallback(async () => {
     setUndoing(true);
     setLastError(null);
     
@@ -104,20 +149,27 @@ export const WeeklyPicks: React.FC = () => {
     } finally {
       setUndoing(false);
     }
-  };
+  }, [undoPick]);
 
-  const getCurrentPickInfo = () => {
-    if (!currentPick) return null;
-    
-    const fixture = fixtures.find(f => f.id === currentPick.fixtureId);
-    if (!fixture) return null;
-    
-    const team = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.homeTeam : fixture.awayTeam;
-    const opponent = fixture.homeTeam.id === currentPick.pickedTeamId ? fixture.awayTeam : fixture.homeTeam;
-    const venue = fixture.homeTeam.id === currentPick.pickedTeamId ? 'Home' : 'Away';
-    
-    return { team, opponent, venue, fixture };
-  };
+  // Auto-clear messages
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (lastError) {
+      const timer = setTimeout(() => setLastError(null), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastError]);
+
+  // Show guest version if not authenticated
+  if (!user) {
+    return <GuestWeeklyPicks />;
+  }
 
   // Loading state
   if (loading || fixturesLoading) {
@@ -129,26 +181,11 @@ export const WeeklyPicks: React.FC = () => {
     return <WeeklyPicksEmptyState />;
   }
 
-  // Check if deadline has passed for current gameweek
-  const deadlinePassed = isCurrentGameweek && new Date() > gameweekToUse.deadline;
-
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6" data-section="weekly-picks">
-      <WeeklyPicksHeader 
-        currentGameweek={currentGameweek}
-        viewingGameweek={gameweekToUse}
-        hasAlreadyPicked={hasAlreadyPicked}
-        onNavigate={navigation?.navigateToGameweek}
-        canNavigatePrev={navigation?.canNavigatePrev}
-        canNavigateNext={navigation?.canNavigateNext}
-        isNavigating={navigation?.isNavigating}
-      />
+      <WeeklyPicksHeader {...headerProps} />
 
-      <WeeklyPicksMessages
-        successMessage={successMessage}
-        lastError={lastError}
-        onDismissError={() => setLastError(null)}
-      />
+      <WeeklyPicksMessages {...messagesProps} />
 
       {/* Deadline passed warning - only for current gameweek */}
       {deadlinePassed && !hasAlreadyPicked && (
@@ -157,27 +194,12 @@ export const WeeklyPicks: React.FC = () => {
 
       {/* Main content */}
       {hasAlreadyPicked && currentPick && isCurrentGameweek ? (
-        <PickConfirmationCard
-          currentPick={currentPick}
-          pickInfo={getCurrentPickInfo()}
-          canUndo={canUndo && !deadlinePassed}
-          undoing={undoing}
-          onUndoPick={handleUndoPick}
-          gameweekNumber={gameweekToUse.number}
-        />
+        <PickConfirmationCard {...pickConfirmationProps} />
       ) : !deadlinePassed || !isCurrentGameweek ? (
-        <>
-          {/* Fixture list */}
-          <WeeklyPicksFixtureList
-            fixtures={fixtures}
-            getTeamUsedCount={getTeamUsedCount}
-            onTeamSelect={handleTeamSelect}
-            submitting={submitting}
-            gameweekNumber={gameweekToUse.number}
-            disabled={!isCurrentGameweek}
-          />
-        </>
+        <WeeklyPicksFixtureList {...fixtureListProps} />
       ) : null}
     </div>
   );
-};
+});
+
+WeeklyPicks.displayName = 'WeeklyPicks';

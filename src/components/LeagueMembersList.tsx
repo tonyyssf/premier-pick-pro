@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, ChevronDown, ChevronUp, Crown } from 'lucide-react';
+import { Users, Crown, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,9 +12,9 @@ interface LeagueMember {
   user_id: string;
   joined_at: string;
   profiles: {
-    username: string | null;
-    name: string | null;
-    email: string | null;
+    username: string;
+    name: string;
+    email: string;
   } | null;
 }
 
@@ -24,7 +24,45 @@ interface LeagueMembersListProps {
   memberCount: number;
 }
 
-export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
+// Memoized member card component
+const MemberCard = React.memo<{
+  member: LeagueMember;
+  isCreator: boolean;
+}>(({ member, isCreator }) => (
+  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+    <div className="flex items-center space-x-3">
+      <div className="w-10 h-10 bg-plpe-purple rounded-full flex items-center justify-center">
+        <span className="text-white font-semibold text-sm">
+          {member.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+        </span>
+      </div>
+      <div>
+        <div className="font-semibold text-gray-900 flex items-center gap-2">
+          {member.profiles?.username || 'Unknown User'}
+          {isCreator && (
+            <Badge variant="default" className="text-xs">
+              <Crown className="w-3 h-3 mr-1" />
+              Creator
+            </Badge>
+          )}
+        </div>
+        <div className="text-sm text-gray-500">
+          {member.profiles?.name || 'No name provided'}
+        </div>
+      </div>
+    </div>
+    <div className="text-right">
+      <div className="text-xs text-gray-500 flex items-center gap-1">
+        <Calendar className="w-3 h-3" />
+        Joined {new Date(member.joined_at).toLocaleDateString()}
+      </div>
+    </div>
+  </div>
+));
+
+MemberCard.displayName = 'MemberCard';
+
+export const LeagueMembersList: React.FC<LeagueMembersListProps> = React.memo(({
   leagueId,
   creatorId,
   memberCount
@@ -34,7 +72,8 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const fetchMembers = async () => {
+  // Memoized fetch function
+  const fetchMembers = useCallback(async () => {
     if (members.length > 0) return; // Don't refetch if we already have data
 
     setLoading(true);
@@ -89,80 +128,100 @@ export const LeagueMembersList: React.FC<LeagueMembersListProps> = ({
 
       console.log('Combined members with profiles:', membersWithProfiles);
       setMembers(membersWithProfiles);
-    } catch (error: any) {
-      console.error('Error fetching members:', error);
+
+    } catch (error) {
+      console.error('Error fetching league members:', error);
       toast({
-        title: "Error Loading Members",
-        description: error.message,
+        title: "Error",
+        description: "Failed to load league members. Please try again.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [leagueId, members.length, toast]);
 
-  const handleToggle = () => {
-    setIsOpen(!isOpen);
-    if (!isOpen && members.length === 0) {
-      fetchMembers();
-    }
-  };
+  // Memoized toggle handler
+  const handleToggle = useCallback(() => {
+    setIsOpen(prev => {
+      const newState = !prev;
+      if (newState && members.length === 0) {
+        fetchMembers();
+      }
+      return newState;
+    });
+  }, [fetchMembers, members.length]);
+
+  // Memoized sorted members
+  const sortedMembers = useMemo(() => {
+    return [...members].sort((a, b) => {
+      // Creator first
+      if (a.user_id === creatorId && b.user_id !== creatorId) return -1;
+      if (a.user_id !== creatorId && b.user_id === creatorId) return 1;
+      
+      // Then by join date
+      return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+    });
+  }, [members, creatorId]);
+
+  // Memoized member cards
+  const memberCards = useMemo(() => {
+    return sortedMembers.map((member) => (
+      <MemberCard
+        key={member.id}
+        member={member}
+        isCreator={member.user_id === creatorId}
+      />
+    ));
+  }, [sortedMembers, creatorId]);
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleToggle}
-          className="w-full justify-between p-2 h-auto"
-        >
-          <div className="flex items-center space-x-2">
-            <Users className="h-4 w-4" />
-            <span className="text-sm">View Members ({memberCount})</span>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            League Members
           </div>
-          {isOpen ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-        </Button>
-      </CollapsibleTrigger>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggle}
+            disabled={loading}
+          >
+            {isOpen ? 'Hide' : 'Show'} Members ({memberCount})
+          </Button>
+        </CardTitle>
+      </CardHeader>
       
-      <CollapsibleContent className="mt-2">
-        {loading ? (
-          <div className="text-center py-4">
-            <p className="text-sm text-gray-600">Loading members...</p>
-          </div>
-        ) : members.length === 0 ? (
-          <div className="text-center py-4">
-            <p className="text-sm text-gray-600">No members found.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {members.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-                <div className="flex items-center space-x-2">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">
-                      {member.profiles?.username || member.profiles?.name || 'Unknown User'}
-                      {member.user_id === creatorId && (
-                        <Badge variant="secondary" className="ml-2 text-xs">
-                          <Crown className="h-3 w-3 mr-1" />
-                          Creator
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Joined: {new Date(member.joined_at).toLocaleDateString()}
-                    </p>
+      {isOpen && (
+        <CardContent>
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: Math.min(memberCount, 5) }).map((_, i) => (
+                <div key={i} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg animate-pulse">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+                    <div className="h-3 bg-gray-300 rounded w-1/2"></div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CollapsibleContent>
-    </Collapsible>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {memberCards}
+              {sortedMembers.length === 0 && (
+                <div className="text-center py-4 text-gray-500">
+                  No members found
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      )}
+    </Card>
   );
-};
+});
+
+LeagueMembersList.displayName = 'LeagueMembersList';
