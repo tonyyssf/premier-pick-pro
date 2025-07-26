@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("../pages/Index"));
@@ -18,9 +19,30 @@ export const AppContent = () => {
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
-          <Route path="/leaderboards" element={<OptimizedLeaderboards />} />
-          <Route path="/insights" element={<ComingSoon />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route 
+            path="/leaderboards" 
+            element={
+              <ProtectedRoute>
+                <OptimizedLeaderboards />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/insights" 
+            element={
+              <ProtectedRoute>
+                <ComingSoon />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <Admin />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

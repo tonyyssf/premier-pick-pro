@@ -48,7 +48,14 @@ export const SignInForm: React.FC<SignInFormProps> = ({
       return;
     }
     
-    await signIn(email, password, rememberMe);
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      onErrorsChange({ general: error.message });
+    } else {
+      // Store remember me preference
+      localStorage.setItem('plpe_remember_me', rememberMe.toString());
+    }
     onLoadingChange(false);
   };
 

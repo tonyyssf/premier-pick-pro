@@ -54,9 +54,17 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
     }
 
     try {
-      await signUp(email, password, { username });
+      const { error } = await signUp(email, password, { username });
+      
+      if (!error) {
+        // Clear form on successful signup
+        setEmail('');
+        setUsername('');
+        setPassword('');
+      }
     } catch (error) {
       console.error('Sign up error:', error);
+      onErrorsChange({ general: 'An unexpected error occurred' });
     }
     
     onLoadingChange(false);
