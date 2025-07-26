@@ -13,8 +13,8 @@ export const PlanPicksCard = () => {
   const { currentGameweek } = usePicks();
   const currentGwNumber = currentGameweek?.number || 1;
   
-  // Show 5 upcoming gameweeks starting from current + 1
-  const startGameweek = Math.min(currentGwNumber + 1, 38);
+  // Show current week and next 4 weeks
+  const startGameweek = Math.min(currentGwNumber, 38);
   const gameweeksToShow = 5;
   const endGameweek = Math.min(startGameweek + gameweeksToShow - 1, 38);
   
