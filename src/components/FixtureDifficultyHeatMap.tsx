@@ -52,7 +52,7 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
     return 3; // Default difficulty
   };
 
-  // Team code to full name mapping (using fixtures table names)
+  // Team code to full name mapping (using exact fixtures table names)
   const teamMapping: Record<string, string> = {
     'ARS': 'Arsenal',
     'AVL': 'Aston Villa', 
@@ -76,7 +76,7 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
     'WOL': 'Wolves'
   };
 
-  // Additional mapping for short names when available
+  // Short name mapping for display (fallback when database doesn't provide short names)
   const getOpponentShortName = (fullName: string) => {
     const shortNameMap: Record<string, string> = {
       'Arsenal': 'ARS',
@@ -100,7 +100,7 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
       'West Ham': 'WHU',
       'Wolves': 'WOL'
     };
-    return shortNameMap[fullName] || fullName;
+    return shortNameMap[fullName] || fullName.slice(0, 3).toUpperCase();
   };
 
   // Get opponent information for a team
