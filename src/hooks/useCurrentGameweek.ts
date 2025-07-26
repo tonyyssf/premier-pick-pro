@@ -11,7 +11,8 @@ export function useCurrentGameweek(): number {
         // For now, we'll use a simple approach or fetch from Supabase
         const { data, error } = await supabase
           .from('gameweeks')
-          .select('current_gameweek')
+          .select('number')
+          .eq('is_current', true)
           .single();
 
         if (error) {
@@ -19,7 +20,7 @@ export function useCurrentGameweek(): number {
           // Fallback to a reasonable default
           setCurrentGameweek(1);
         } else {
-          setCurrentGameweek(data?.current_gameweek || 1);
+          setCurrentGameweek(data?.number || 1);
         }
       } catch (error) {
         console.warn('Error fetching current gameweek:', error);

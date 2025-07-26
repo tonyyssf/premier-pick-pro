@@ -25,6 +25,7 @@ export interface InsightsData {
   correctPicks: number;
   totalPicks: number;
   winRate: number;
+  remainingTokens?: Record<string, number>;
 }
 
 export function useInsights() {
