@@ -114,17 +114,6 @@ const Insights = () => {
         </div>
 
 
-        {/* Smart Pick Planner - First Section */}
-        <div className="mb-8">
-          <ErrorBoundary>
-            <SmartPickPlanner 
-              recommendations={recommendations}
-              remainingTokens={insights?.remainingTokens || {}}
-              isPremium={isPremium}
-              isLoading={isLoading}
-            />
-          </ErrorBoundary>
-        </div>
 
         {/* Export Options for Premium Users */}
         {isPremium && insights && (
