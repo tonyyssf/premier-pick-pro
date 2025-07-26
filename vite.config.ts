@@ -43,7 +43,6 @@ export default defineConfig({
           ],
           'analytics': [
             './src/pages/Insights',
-            './src/components/insights',
             './src/components/AnalyticsDashboard',
           ],
           'leaderboards': [
