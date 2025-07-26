@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProcessedFixtureDifficulty, FixtureDifficultyData } from '@/hooks/useFixtureDifficulty';
-import { Shield, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useFixturesByGameweek } from '@/hooks/useFixturesByGameweek';
+import { Shield, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight, Home, Plane } from 'lucide-react';
 import { useState } from 'react';
 
 interface FixtureDifficultyHeatMapProps {
@@ -13,6 +14,7 @@ interface FixtureDifficultyHeatMapProps {
 
 export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: FixtureDifficultyHeatMapProps) {
   const [selectedGameweek, setSelectedGameweek] = useState(currentGameweek);
+  const { data: fixtures, isLoading: fixturesLoading } = useFixturesByGameweek(selectedGameweek);
 
   const getDifficultyColor = (difficulty: number) => {
     if (difficulty <= 2) return 'bg-green-500';
@@ -48,6 +50,27 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
     }
     
     return 3; // Default difficulty
+  };
+
+  // Get opponent information for a team
+  const getOpponentInfo = (teamName: string) => {
+    if (!fixtures || fixturesLoading) return null;
+    
+    const fixture = fixtures.find(f => 
+      f.home_team_name === teamName || f.away_team_name === teamName
+    );
+    
+    if (!fixture) return null;
+    
+    const isHome = fixture.home_team_name === teamName;
+    const opponent = isHome ? fixture.away_team_short_name : fixture.home_team_short_name;
+    
+    return {
+      opponent,
+      isHome,
+      kickoffTime: fixture.kickoff_time,
+      status: fixture.status
+    };
   };
 
   // Sort teams by selected gameweek difficulty (easiest first)
@@ -121,6 +144,7 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {sortedData.slice(0, 5).map((team) => {
               const gameweekDifficulty = getGameweekDifficulty(team, selectedGameweek);
+              const opponentInfo = getOpponentInfo(team.team);
               return (
                 <div
                   key={team.team}
@@ -140,6 +164,20 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
                   </div>
                   
                   <div className="space-y-2">
+                    {opponentInfo && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Opponent:</span>
+                        <span className="font-medium flex items-center gap-1">
+                          {opponentInfo.isHome ? (
+                            <Home className="h-3 w-3 text-blue-600" />
+                          ) : (
+                            <Plane className="h-3 w-3 text-orange-600" />
+                          )}
+                          {opponentInfo.opponent}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Difficulty:</span>
                       <span className="font-medium">
@@ -173,6 +211,7 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {sortedData.slice(-5).reverse().map((team) => {
               const gameweekDifficulty = getGameweekDifficulty(team, selectedGameweek);
+              const opponentInfo = getOpponentInfo(team.team);
               return (
                 <div
                   key={team.team}
@@ -192,6 +231,20 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
                   </div>
                   
                   <div className="space-y-2">
+                    {opponentInfo && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Opponent:</span>
+                        <span className="font-medium flex items-center gap-1">
+                          {opponentInfo.isHome ? (
+                            <Home className="h-3 w-3 text-blue-600" />
+                          ) : (
+                            <Plane className="h-3 w-3 text-orange-600" />
+                          )}
+                          {opponentInfo.opponent}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Difficulty:</span>
                       <span className="font-medium">
