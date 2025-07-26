@@ -17,7 +17,13 @@
     "clean": "rm -rf dist node_modules/.vite",
     "cache:clear": "node scripts/clear-cache.js",
     "perf:monitor": "node scripts/performance-monitor.js",
-    "bundle:stats": "npm run build && npx webpack-bundle-analyzer dist/stats.json"
+    "bundle:stats": "npm run build && npx webpack-bundle-analyzer dist/stats.json",
+    "images:optimize": "node scripts/optimize-images.js",
+    "images:convert": "npm run images:optimize",
+    "sw:update": "node scripts/update-service-worker.js",
+    "cdn:test": "node scripts/test-cdn-performance.js",
+    "perf:real-time": "npm run dev & node scripts/real-time-monitor.js",
+    "optimize:all": "npm run images:optimize && npm run build:analyze && npm run perf:monitor"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
