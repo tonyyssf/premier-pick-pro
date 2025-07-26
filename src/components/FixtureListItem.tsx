@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from './ui/badge';
 
 interface Team {
@@ -37,6 +37,19 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
 }) => {
   const [localSubmitting, setLocalSubmitting] = useState<string | null>(null);
   
+  // Clear loading state when component unmounts or when submitting prop changes
+  useEffect(() => {
+    if (!submitting && localSubmitting) {
+      console.log('Clearing stuck loading state for:', localSubmitting);
+      setLocalSubmitting(null);
+    }
+  }, [submitting, localSubmitting]);
+  
+  // Clear loading state when fixture changes
+  useEffect(() => {
+    setLocalSubmitting(null);
+  }, [fixture.id]);
+  
   const isHomeTeamDisabled = homeTeamUsedCount >= maxUses || submitting || disabled;
   const isAwayTeamDisabled = awayTeamUsedCount >= maxUses || submitting || disabled;
   
@@ -47,6 +60,9 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     console.log('Team clicked:', teamId, 'Fixture:', fixture.id);
     console.log('Home team disabled:', isHomeTeamDisabled, 'Away team disabled:', isAwayTeamDisabled);
     console.log('Has started:', hasStarted, 'Disabled:', disabled);
+    
+    // Clear any existing loading state first
+    setLocalSubmitting(null);
     
     if ((isHomeTeamDisabled && teamId === fixture.homeTeam.id) ||
         (isAwayTeamDisabled && teamId === fixture.awayTeam.id) ||
@@ -60,10 +76,11 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     try {
       console.log('Calling onTeamSelect...');
       await onTeamSelect(fixture.id, teamId);
-      console.log('onTeamSelect completed');
+      console.log('onTeamSelect completed successfully');
     } catch (error) {
       console.error('Error in onTeamSelect:', error);
     } finally {
+      // Always clear the loading state regardless of success or failure
       setLocalSubmitting(null);
     }
   };
