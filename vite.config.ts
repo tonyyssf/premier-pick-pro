@@ -13,14 +13,8 @@ export default defineConfig({
   build: {
     // Optimize build output
     target: 'es2015',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.log in production
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-      },
-    },
+    minify: 'esbuild', // Use esbuild instead of terser for faster builds
+    // Remove terserOptions since we're using esbuild
     
     // Optimize chunk splitting
     rollupOptions: {
