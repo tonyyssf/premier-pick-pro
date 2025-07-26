@@ -65,6 +65,7 @@ export default defineConfig({
         },
         entryFileNames: 'js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
+          if (!assetInfo.name) return 'assets/[name]-[hash][extname]';
           const info = assetInfo.name.split('.');
           const ext = info[info.length - 1];
           if (/\.(css)$/.test(assetInfo.name)) {
@@ -116,7 +117,7 @@ export default defineConfig({
   
   // Development server optimization
   server: {
-    port: 3000,
+    port: 8080,
     host: true,
     // Enable HMR optimization
     hmr: {
@@ -142,15 +143,7 @@ export default defineConfig({
     modules: {
       localsConvention: 'camelCase',
     },
-    // PostCSS optimization
-    postcss: {
-      plugins: [
-        // Add autoprefixer for better browser compatibility
-        require('autoprefixer'),
-        // Add cssnano for CSS minification in production
-        ...(process.env.NODE_ENV === 'production' ? [require('cssnano')] : []),
-      ],
-    },
+    // PostCSS optimization handled by Vite automatically
   },
   
   // Experimental features for better performance

@@ -34,51 +34,15 @@ const ChartLoadingSkeleton = () => (
 // Lazy load heavy admin components
 export const LazyAdmin = lazy(() => import('../pages/Admin'));
 
-// Lazy load analytics components
-export const LazyAnalyticsDashboard = lazy(() => import('./AnalyticsDashboard'));
-
-export const LazyLeagueAnalytics = lazy(() => import('./LeagueAnalytics'));
-
-// Lazy load chart components
-export const LazyEfficiencyLineChart = lazy(() => import('./insights/EfficiencyLineChart'));
-
-export const LazyHeatMapChart = lazy(() => import('./insights/HeatMapChart'));
-
-export const LazyProjectionStat = lazy(() => import('./insights/ProjectionStat'));
-
-// Lazy load performance monitoring components
-export const LazyPerformanceDashboard = lazy(() => import('./PerformanceDashboard'));
-
-export const LazySystemMonitoringDashboard = lazy(() => import('./SystemMonitoringDashboard'));
-
-// Lazy load security components
-export const LazySecurityAuditDashboard = lazy(() => import('./SecurityAuditDashboard'));
-
-export const LazyEnhancedSecurityMonitor = lazy(() => import('./EnhancedSecurityMonitor'));
-
-// Lazy load export components
-export const LazyExportOptions = lazy(() => import('./ExportOptions'));
-
-// Lazy load onboarding components
-export const LazyOnboardingFlow = lazy(() => import('./onboarding/OnboardingFlow'));
-
-// Lazy load user settings components
-export const LazyUserSettingsDialog = lazy(() => import('./UserSettingsDialog'));
-
-// Lazy load game rules modal
-export const LazyGameRulesModal = lazy(() => import('./GameRulesModal'));
-
-// Lazy load smart pick planner
-export const LazySmartPickPlanner = lazy(() => import('./SmartPickPlanner'));
-
-// Lazy load pick efficiency gauge
-export const LazyPickEfficiencyGauge = lazy(() => import('./PickEfficiencyGauge'));
+// Temporarily disable lazy loading for components that don't have proper exports
+// These will need to be checked individually for proper default exports
 
 // Lazy load insights components
 export const LazyInsights = lazy(() => import('../pages/Insights'));
 
-// Lazy load leaderboard components
+// Lazy load leaderboard components  
 export const LazyOptimizedLeaderboards = lazy(() => import('../pages/OptimizedLeaderboards'));
+
 
 // Wrapper components with proper loading states
 export const AdminLazyWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (

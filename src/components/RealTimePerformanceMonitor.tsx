@@ -70,7 +70,6 @@ export const RealTimePerformanceMonitor: React.FC = () => {
   const { 
     isSupported: swSupported, 
     isControlling: swControlling,
-    getCacheStats,
     clearAllCaches 
   } = useServiceWorker();
 
@@ -113,10 +112,11 @@ export const RealTimePerformanceMonitor: React.FC = () => {
     const connection = (navigator as any).connection;
     
     if (connection) {
+      const status: 'online' | 'offline' | 'slow' = connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g' ? 'slow' : 'online';
       return {
         latency: connection.rtt || 0,
         throughput: connection.downlink || 0,
-        status: connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g' ? 'slow' : 'online',
+        status,
       };
     }
     
@@ -125,16 +125,17 @@ export const RealTimePerformanceMonitor: React.FC = () => {
     try {
       await fetch('/api/health', { method: 'HEAD' });
       const latency = performance.now() - startTime;
+      const status: 'online' | 'offline' | 'slow' = latency > 1000 ? 'slow' : 'online';
       return {
         latency,
         throughput: 0,
-        status: latency > 1000 ? 'slow' : 'online',
+        status,
       };
     } catch {
       return {
         latency: 0,
         throughput: 0,
-        status: 'offline',
+        status: 'offline' as const,
       };
     }
   }, []);
@@ -142,8 +143,15 @@ export const RealTimePerformanceMonitor: React.FC = () => {
   // Cache monitoring
   const getCacheInfo = useCallback(async () => {
     try {
-      const stats = await getCacheStats();
-      const totalItems = Object.values(stats).reduce((sum: number, cache: any) => sum + cache.size, 0);
+      // Use basic cache information since getCacheStats is not available
+      const cacheNames = await caches.keys();
+      let totalItems = 0;
+      
+      for (const name of cacheNames) {
+        const cache = await caches.open(name);
+        const keys = await cache.keys();
+        totalItems += keys.length;
+      }
       
       return {
         hitRate: 0.85, // This would be calculated from actual cache hits
@@ -157,13 +165,13 @@ export const RealTimePerformanceMonitor: React.FC = () => {
         items: 0,
       };
     }
-  }, [getCacheStats]);
+  }, []);
 
   // CDN monitoring
   const getCDNInfo = useCallback(async () => {
     try {
       const cdnMetrics = await cdnService.getPerformanceMetrics();
-      const status = cdnMetrics.latency < 50 ? 'optimal' : 
+      const status: 'optimal' | 'good' | 'poor' = cdnMetrics.latency < 50 ? 'optimal' : 
                     cdnMetrics.latency < 100 ? 'good' : 'poor';
       
       return {
@@ -191,10 +199,10 @@ export const RealTimePerformanceMonitor: React.FC = () => {
       if (originalError) originalError(message, source, lineno, colno, error);
     };
     
-    window.onunhandledrejection = (event) => {
+    window.onunhandledrejection = (event: PromiseRejectionEvent) => {
       errorCountRef.current++;
       addAlert('error', `Unhandled Promise Rejection: ${event.reason}`);
-      if (originalUnhandledRejection) originalUnhandledRejection(event);
+      if (originalUnhandledRejection) originalUnhandledRejection.call(window, event);
     };
     
     return () => {

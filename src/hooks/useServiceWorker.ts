@@ -147,7 +147,6 @@ export const useServiceWorker = () => {
       await state.registration.showNotification(title, {
         icon: '/favicon.ico',
         badge: '/favicon.ico',
-        vibrate: [100, 50, 100],
         ...options,
       });
     } catch (error) {
