@@ -28,6 +28,7 @@ export const TeamButton: React.FC<TeamButtonProps> = ({
   hasStarted,
   disabled
 }) => {
+  console.log(`[TeamButton] ${team.name} - isLoading:`, isLoading, 'isDisabled:', isDisabled, 'hasStarted:', hasStarted, 'disabled:', disabled);
   const canSelect = !isDisabled && !isLoading && !hasStarted && !disabled;
   
   const getButtonClass = () => {
