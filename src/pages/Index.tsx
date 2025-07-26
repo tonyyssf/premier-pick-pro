@@ -6,6 +6,7 @@ import { UserScoreDisplay } from '../components/UserScoreDisplay';
 import { UserPickHistory } from '../components/UserPickHistory';
 import { HowItWorksButton } from '../components/HowItWorksButton';
 import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
+import { AdminUpgradeUser } from '../components/AdminUpgradeUser';
 
 const Index = () => {
   return (
@@ -17,6 +18,9 @@ const Index = () => {
         </div>
         <OnboardingFlow />
         <UserScoreDisplay />
+        <div className="mb-8">
+          <AdminUpgradeUser />
+        </div>
       </div>
       <WeeklyPicks />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
