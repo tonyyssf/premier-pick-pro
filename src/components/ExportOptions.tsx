@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
 import { analytics } from '@/utils/analytics';
-import { Download, FileText, FileJson, FilePdf, ChevronDown, Loader2 } from 'lucide-react';
+import { Download, FileText, FileJson, ChevronDown, Loader2 } from 'lucide-react';
 import * as Papa from 'papaparse';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
@@ -243,7 +243,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
             {isExporting && exportFormat === 'pdf' ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <FilePdf className="h-4 w-4" />
+                              <FileText className="h-4 w-4" />
             )}
             PDF
           </Button>
