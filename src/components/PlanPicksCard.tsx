@@ -55,6 +55,48 @@ export const PlanPicksCard = () => {
     const fixtureQuery = fixtureQueries.find((_, index) => startGameweek + index === gameweekNumber);
     if (!fixtureQuery?.data) return null;
     
+    // Enhanced team name mapping with variations
+    const teamNameToShort: Record<string, string> = {
+      'Arsenal': 'ARS',
+      'Aston Villa': 'AVL',
+      'Bournemouth': 'BOU',
+      'AFC Bournemouth': 'BOU',
+      'Brentford': 'BRE',
+      'Brighton': 'BHA',
+      'Brighton & Hove Albion': 'BHA',
+      'Chelsea': 'CHE',
+      'Crystal Palace': 'CRY',
+      'Everton': 'EVE',
+      'Fulham': 'FUL',
+      'Ipswich': 'IPS',
+      'Ipswich Town': 'IPS',
+      'Leicester': 'LEI',
+      'Leicester City': 'LEI',
+      'Liverpool': 'LIV',
+      'Man City': 'MCI',
+      'Manchester City': 'MCI',
+      'Man Utd': 'MUN',
+      'Manchester United': 'MUN',
+      'Newcastle': 'NEW',
+      'Newcastle United': 'NEW',
+      'Nottm Forest': 'NFO',
+      'Nottingham Forest': 'NFO',
+      'Southampton': 'SOU',
+      'Tottenham': 'TOT',
+      'Tottenham Hotspur': 'TOT',
+      'West Ham': 'WHU',
+      'West Ham United': 'WHU',
+      'Wolves': 'WOL',
+      'Wolverhampton Wanderers': 'WOL',
+      // Legacy/relegated teams that might appear in fixture data
+      'Burnley': 'BUR',
+      'Leeds': 'LEE',
+      'Leeds United': 'LEE',
+      'Sheffield United': 'SHU',
+      'Luton': 'LUT',
+      'Luton Town': 'LUT'
+    };
+    
     const teamMapping: Record<string, string> = {
       'ARS': 'Arsenal', 'AVL': 'Aston Villa', 'BOU': 'Bournemouth', 'BRE': 'Brentford',
       'BHA': 'Brighton', 'CHE': 'Chelsea', 'CRY': 'Crystal Palace', 'EVE': 'Everton',
@@ -74,7 +116,7 @@ export const PlanPicksCard = () => {
     
     const isHome = fixture.home_team_name === teamFullName;
     const opponentName = isHome ? fixture.away_team_name : fixture.home_team_name;
-    const opponentShort = Object.entries(teamMapping).find(([_, name]) => name === opponentName)?.[0] || opponentName.slice(0, 3).toUpperCase();
+    const opponentShort = teamNameToShort[opponentName] || opponentName.slice(0, 3).toUpperCase();
     
     return {
       opponent: opponentShort,
