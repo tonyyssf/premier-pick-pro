@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -13,39 +13,37 @@ const NotFound = lazy(() => import("../pages/NotFound"));
 
 export const AppContent = () => {
   return (
-    <BrowserRouter>
-      <Suspense fallback={<LoadingSpinner message="Loading application..." />}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
-          <Route 
-            path="/leaderboards" 
-            element={
-              <ProtectedRoute>
-                <OptimizedLeaderboards />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/insights" 
-            element={
-              <ProtectedRoute>
-                <ComingSoon />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+    <Suspense fallback={<LoadingSpinner message="Loading application..." />}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
+        <Route 
+          path="/leaderboards" 
+          element={
+            <ProtectedRoute>
+              <OptimizedLeaderboards />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/insights" 
+          element={
+            <ProtectedRoute>
+              <ComingSoon />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
