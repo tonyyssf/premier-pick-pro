@@ -1,6 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Badge } from './ui/badge';
+import { TeamButton } from './TeamButton';
+import { useTeamSelection } from '@/hooks/useTeamSelection';
 
 interface Team {
   id: string;
@@ -26,7 +28,11 @@ interface FixtureListItemProps {
   disabled?: boolean;
 }
 
-export const FixtureListItem: React.FC<FixtureListItemProps> = ({
+export interface FixtureListItemRef {
+  forceResetLoading: () => void;
+}
+
+export const FixtureListItem = forwardRef<FixtureListItemRef, FixtureListItemProps>(({
   fixture,
   homeTeamUsedCount,
   awayTeamUsedCount,
@@ -34,141 +40,34 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
   onTeamSelect,
   submitting = false,
   disabled = false
-}) => {
-  const [localSubmitting, setLocalSubmitting] = useState<string | null>(null);
-  
-  // Clear loading state when component unmounts or when submitting prop changes
-  useEffect(() => {
-    if (!submitting && localSubmitting) {
-      console.log('Clearing stuck loading state for:', localSubmitting);
-      setLocalSubmitting(null);
-    }
-  }, [submitting, localSubmitting]);
-  
-  // Clear loading state when fixture changes
-  useEffect(() => {
-    setLocalSubmitting(null);
-  }, [fixture.id]);
+}, ref) => {
+  const timeUntilKickoff = fixture.kickoffTime.getTime() - new Date().getTime();
+  const hasStarted = timeUntilKickoff <= 0;
   
   const isHomeTeamDisabled = homeTeamUsedCount >= maxUses || submitting || disabled;
   const isAwayTeamDisabled = awayTeamUsedCount >= maxUses || submitting || disabled;
-  
-  const timeUntilKickoff = fixture.kickoffTime.getTime() - new Date().getTime();
-  const hasStarted = timeUntilKickoff <= 0;
 
-  const handleTeamSelect = async (teamId: string) => {
-    console.log('Team clicked:', teamId, 'Fixture:', fixture.id);
-    console.log('Home team disabled:', isHomeTeamDisabled, 'Away team disabled:', isAwayTeamDisabled);
-    console.log('Has started:', hasStarted, 'Disabled:', disabled);
-    
-    // Clear any existing loading state first
-    setLocalSubmitting(null);
-    
-    if ((isHomeTeamDisabled && teamId === fixture.homeTeam.id) ||
-        (isAwayTeamDisabled && teamId === fixture.awayTeam.id) ||
-        hasStarted ||
-        disabled) {
-      console.log('Team selection blocked');
-      return;
-    }
-    
-    setLocalSubmitting(teamId);
-    try {
-      console.log('Calling onTeamSelect...');
-      await onTeamSelect(fixture.id, teamId);
-      console.log('onTeamSelect completed successfully');
-    } catch (error) {
-      console.error('Error in onTeamSelect:', error);
-    } finally {
-      // Always clear the loading state regardless of success or failure
-      setLocalSubmitting(null);
-    }
-  };
+  const { localSubmitting, handleTeamSelect, forceResetLoading, isLoading } = useTeamSelection({
+    onTeamSelect,
+    fixtureId: fixture.id,
+    submitting,
+    disabled,
+    hasStarted
+  });
 
-  const getTeamButtonClass = (teamId: string, isDisabled: boolean) => {
-    const isBeingSubmitted = localSubmitting === teamId;
-    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted && !disabled;
-    
-    return `
-      flex items-center justify-center space-x-1 p-2 h-full transition-all duration-200 relative
-      ${canSelect
-        ? 'cursor-pointer'
-        : 'cursor-not-allowed opacity-60'
-      }
-      ${isBeingSubmitted ? 'ring-1 ring-plpe-purple ring-opacity-50' : ''}
-    `;
-  };
+  // Expose forceResetLoading to parent components
+  useImperativeHandle(ref, () => ({
+    forceResetLoading
+  }), [forceResetLoading]);
 
   const getContainerClass = (teamId: string, isDisabled: boolean) => {
-    const isBeingSubmitted = localSubmitting === teamId;
-    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted && !disabled;
+    const teamIsLoading = isLoading(teamId);
+    const canSelect = !isDisabled && !teamIsLoading && !hasStarted && !disabled;
     
     return `
       flex items-center justify-center transition-all duration-200
       ${canSelect ? 'hover:bg-gray-100' : ''}
     `;
-  };
-
-  const TeamButton: React.FC<{
-    team: Team;
-    isDisabled: boolean;
-    usedCount: number;
-  }> = ({ team, isDisabled, usedCount }) => {
-    const isBeingSubmitted = localSubmitting === team.id;
-    const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted && !disabled;
-    
-    return (
-      <button
-        type="button"
-        className={getTeamButtonClass(team.id, isDisabled)}
-        onClick={(e) => {
-          console.log('Button clicked!', team.name, 'canSelect:', canSelect);
-          e.preventDefault();
-          e.stopPropagation();
-          if (canSelect) {
-            handleTeamSelect(team.id);
-          }
-        }}
-        disabled={!canSelect}
-        aria-label={`Pick ${team.name}`}
-      >
-        {/* Loading spinner overlay */}
-        {isBeingSubmitted && (
-          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-20">
-            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-plpe-purple"></div>
-          </div>
-        )}
-
-        {/* Team color indicator - smaller */}
-        <div 
-          className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
-          style={{ backgroundColor: team.teamColor || '#6B7280' }}
-        />
-        
-        {/* Team name - show full name on desktop/tablet, short name on mobile */}
-        <span className="font-medium text-gray-900 text-xs leading-tight truncate">
-          <span className="hidden md:inline">{team.name}</span>
-          <span className="md:hidden">{team.shortName}</span>
-        </span>
-        
-        {/* Usage dots - smaller and only show on larger screens */}
-        <div className="hidden sm:flex space-x-0.5">
-          {[...Array(maxUses)].map((_, i) => (
-            <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full ${
-                i < usedCount ? 'bg-plpe-purple' : 'bg-gray-300'
-              }`}
-            />
-          ))}
-        </div>
-        
-        {/* Usage count - show on mobile instead of dots */}
-        <span className="text-xs text-gray-600 sm:hidden">
-          {usedCount}/{maxUses}
-        </span>
-      </button>
-    );
   };
 
   return (
@@ -183,6 +82,11 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
             team={fixture.homeTeam}
             isDisabled={isHomeTeamDisabled}
             usedCount={homeTeamUsedCount}
+            maxUses={maxUses}
+            isLoading={isLoading(fixture.homeTeam.id)}
+            onSelect={() => handleTeamSelect(fixture.homeTeam.id, isHomeTeamDisabled)}
+            hasStarted={hasStarted}
+            disabled={disabled}
           />
         </div>
         
@@ -197,9 +101,14 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
             team={fixture.awayTeam}
             isDisabled={isAwayTeamDisabled}
             usedCount={awayTeamUsedCount}
+            maxUses={maxUses}
+            isLoading={isLoading(fixture.awayTeam.id)}
+            onSelect={() => handleTeamSelect(fixture.awayTeam.id, isAwayTeamDisabled)}
+            hasStarted={hasStarted}
+            disabled={disabled}
           />
         </div>
       </div>
     </div>
   );
-};
+});

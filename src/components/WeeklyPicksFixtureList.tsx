@@ -1,8 +1,9 @@
 
-import React from 'react';
-import { Clock } from 'lucide-react';
-import { FixtureListItem } from './FixtureListItem';
+import React, { useRef } from 'react';
+import { Clock, RotateCcw } from 'lucide-react';
+import { FixtureListItem, FixtureListItemRef } from './FixtureListItem';
 import { Card, CardContent } from './ui/card';
+import { Button } from './ui/button';
 import { Fixture } from '@/types/picks';
 
 interface WeeklyPicksFixtureListProps {
@@ -22,6 +23,14 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
   gameweekNumber,
   disabled = false
 }) => {
+  const fixtureRefs = useRef<Map<string, FixtureListItemRef>>(new Map());
+
+  const handleForceResetAll = () => {
+    console.log('Force resetting all fixture loading states');
+    fixtureRefs.current.forEach((ref) => {
+      ref.forceResetLoading();
+    });
+  };
   if (fixtures.length === 0) {
     return (
       <Card className="border-gray-200">
@@ -53,6 +62,21 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
 
   return (
     <div className="mb-4 space-y-3">
+      {/* Debug/Reset Button - only show in development or when there are stuck states */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="flex justify-center mb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleForceResetAll}
+            className="text-xs"
+          >
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Reset Loading States
+          </Button>
+        </div>
+      )}
+      
       {sortedDates.map(date => (
         <div key={date}>
           <div className="mb-2 px-2">
@@ -68,6 +92,13 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
             {fixturesByDate[date].map((fixture) => (
               <FixtureListItem
                 key={fixture.id}
+                ref={(ref) => {
+                  if (ref) {
+                    fixtureRefs.current.set(fixture.id, ref);
+                  } else {
+                    fixtureRefs.current.delete(fixture.id);
+                  }
+                }}
                 fixture={fixture}
                 homeTeamUsedCount={getTeamUsedCount(fixture.homeTeam.id)}
                 awayTeamUsedCount={getTeamUsedCount(fixture.awayTeam.id)}
