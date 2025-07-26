@@ -602,6 +602,10 @@ export type Database = {
         Args: { target_user_id: string; new_role: string; reason?: string }
         Returns: string
       }
+      rpc_get_insights: {
+        Args: { target_user_id?: string }
+        Returns: Json
+      }
       security_audit_log: {
         Args: Record<PropertyKey, never>
         Returns: {

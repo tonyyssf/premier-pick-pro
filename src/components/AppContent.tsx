@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 const Index = lazy(() => import("../pages/Index"));
 const Auth = lazy(() => import("../pages/Auth"));
 const OptimizedLeaderboards = lazy(() => import("../pages/OptimizedLeaderboards"));
+const Insights = lazy(() => import("../pages/Insights"));
 const Admin = lazy(() => import("../pages/Admin"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 
@@ -18,6 +19,7 @@ export const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/leagues" element={<Navigate to="/leaderboards" replace />} />
           <Route path="/leaderboards" element={<OptimizedLeaderboards />} />
+          <Route path="/insights" element={<Insights />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
