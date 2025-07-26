@@ -175,8 +175,8 @@ const Insights = () => {
           <ErrorBoundary>
             <div onMouseEnter={() => handleChartInteraction('projections', 'view')}>
               <LazyProjectionStat 
-                projections={insights.projections}
-                currentGameweek={insights.currentGameweek}
+                data={insights.projections}
+                isPremium={isPremium}
                 isLoading={isLoading}
               />
             </div>

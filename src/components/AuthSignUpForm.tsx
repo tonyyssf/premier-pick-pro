@@ -54,7 +54,7 @@ export const AuthSignUpForm: React.FC<AuthSignUpFormProps> = ({
     }
 
     try {
-      await signUp(email, password, { username });
+      await signUp(email, password);
     } catch (error) {
       console.error('Sign up error:', error);
     }

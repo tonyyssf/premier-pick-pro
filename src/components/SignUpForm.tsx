@@ -48,12 +48,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     setLoading(true);
     
     try {
-      // Sign up the user with metadata
-      const { error: signUpError } = await signUp(formData.email, formData.password, {
-        username: formData.username,
-        name: formData.name,
-        phone_number: formData.phone_number
-      });
+      // Sign up the user
+      const { error: signUpError } = await signUp(formData.email, formData.password);
 
       if (signUpError) {
         console.error('Sign up error:', signUpError);

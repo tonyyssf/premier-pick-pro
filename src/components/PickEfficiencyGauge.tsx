@@ -147,7 +147,7 @@ export const PickEfficiencyGauge: React.FC<PickEfficiencyGaugeProps> = ({
                         <div className="bg-background/95 backdrop-blur-sm border rounded-lg p-2 shadow-md">
                           <p className="font-medium text-xs">GW {label}</p>
                           <p className="text-xs" style={{ color: payload[0].color }}>
-                            Efficiency: {payload[0].value?.toFixed(1)}%
+                            Efficiency: {typeof payload[0].value === 'number' ? payload[0].value.toFixed(1) : payload[0].value}%
                           </p>
                         </div>
                       );

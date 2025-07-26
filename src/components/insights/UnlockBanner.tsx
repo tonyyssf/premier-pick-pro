@@ -36,7 +36,7 @@ export const UnlockBanner: React.FC<UnlockBannerProps> = ({ title, description }
 
         <Button 
           className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white"
-          onClick={startUpgrade}
+          onClick={() => startUpgrade()}
           disabled={isLoading}
         >
           {isLoading ? (
