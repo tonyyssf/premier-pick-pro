@@ -7,7 +7,8 @@ import AdminDataSync from '@/components/AdminDataSync';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { SystemMonitoringDashboard } from '@/components/SystemMonitoringDashboard';
 import { RapidApiTester } from '@/components/RapidApiTester';
-import { Database, TrendingUp, Activity, TestTube } from 'lucide-react';
+import { AdminUpgradeUser } from '@/components/AdminUpgradeUser';
+import { Database, TrendingUp, Activity, TestTube, Crown } from 'lucide-react';
 
 const Admin = () => {
   return (
@@ -22,7 +23,7 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="data" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="data" className="flex items-center space-x-2">
                 <Database className="h-4 w-4" />
                 <span>Data Management</span>
@@ -38,6 +39,10 @@ const Admin = () => {
               <TabsTrigger value="monitoring" className="flex items-center space-x-2">
                 <Activity className="h-4 w-4" />
                 <span>System Monitoring</span>
+              </TabsTrigger>
+              <TabsTrigger value="user-management" className="flex items-center space-x-2">
+                <Crown className="h-4 w-4" />
+                <span>User Management</span>
               </TabsTrigger>
             </TabsList>
 
@@ -55,6 +60,10 @@ const Admin = () => {
 
             <TabsContent value="monitoring" className="space-y-6">
               <SystemMonitoringDashboard />
+            </TabsContent>
+
+            <TabsContent value="user-management" className="space-y-6">
+              <AdminUpgradeUser />
             </TabsContent>
 
           </Tabs>
