@@ -54,7 +54,10 @@ export const PlanPicksCard = () => {
   // Get opponent info for a team in a specific gameweek
   const getOpponentInfo = (teamShortName: string, gameweekNumber: number) => {
     const fixtureQuery = fixtureQueries.find((_, index) => startGameweek + index === gameweekNumber);
-    if (!fixtureQuery?.data) return null;
+    if (!fixtureQuery?.data) {
+      console.log(`No fixture data for gameweek ${gameweekNumber}`, { teamShortName, fixtureQuery });
+      return null;
+    }
     
     // Enhanced team name mapping with variations
     const teamNameToShort: Record<string, string> = {
@@ -108,18 +111,28 @@ export const PlanPicksCard = () => {
       'ARS': 'Arsenal', 'AVL': 'Aston Villa', 'BOU': 'Bournemouth', 'BRE': 'Brentford',
       'BHA': 'Brighton', 'CHE': 'Chelsea', 'CRY': 'Crystal Palace', 'EVE': 'Everton',
       'FUL': 'Fulham', 'IPS': 'Ipswich', 'LEI': 'Leicester', 'LIV': 'Liverpool',
-      'MCI': 'Man City', 'MUN': 'Man Utd', 'NEW': 'Newcastle', 'NFO': 'Nottm Forest',
+      'MCI': 'Man City', 'MUN': 'Man Utd', 'NEW': 'Newcastle', 'NFO': 'Nottingham Forest',
       'SOU': 'Southampton', 'TOT': 'Tottenham', 'WHU': 'West Ham', 'WOL': 'Wolves'
     };
     
     const teamFullName = teamMapping[teamShortName];
-    if (!teamFullName) return null;
+    if (!teamFullName) {
+      console.log(`No team mapping found for ${teamShortName}`);
+      return null;
+    }
     
     const fixture = fixtureQuery.data.find(f => 
       f.home_team_name === teamFullName || f.away_team_name === teamFullName
     );
     
-    if (!fixture) return null;
+    if (!fixture) {
+      console.log(`No fixture found for ${teamFullName} in gameweek ${gameweekNumber}`, {
+        teamShortName,
+        teamFullName,
+        availableFixtures: fixtureQuery.data.map(f => `${f.home_team_name} vs ${f.away_team_name}`)
+      });
+      return null;
+    }
     
     const isHome = fixture.home_team_name === teamFullName;
     const opponentName = isHome ? fixture.away_team_name : fixture.home_team_name;
