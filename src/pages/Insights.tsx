@@ -13,7 +13,6 @@ import { UnlockBanner } from '@/components/insights/UnlockBanner';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ExportOptions } from '@/components/ExportOptions';
 import { FixtureDifficultyHeatMap } from '@/components/FixtureDifficultyHeatMap';
-import { FixtureRunAnalysis } from '@/components/FixtureRunAnalysis';
 import { usePremiumAccess } from '@/guards/usePremiumAccess';
 import { getPickRecommendations } from '@/utils/getPickRecommendations';
 import { useCurrentGameweek } from '@/hooks/useCurrentGameweek';
@@ -221,10 +220,6 @@ const Insights = () => {
               <FixtureDifficultyHeatMap 
                 data={fixtureDifficulty.processedData} 
                 rawData={fixtureDifficulty.rawData}
-                currentGameweek={currentGameweek}
-              />
-              <FixtureRunAnalysis 
-                data={fixtureDifficulty.processedData} 
                 currentGameweek={currentGameweek}
               />
             </>
