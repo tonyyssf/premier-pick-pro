@@ -77,42 +77,7 @@ export const WeeklyPicks: React.FC = React.memo(() => {
     isNavigating: navigation?.isNavigating,
   }), [navigation]);
 
-  // Memoized header props
-  const headerProps = useMemo(() => ({
-    currentGameweek,
-    viewingGameweek: gameweekToUse,
-    hasAlreadyPicked,
-    ...navigationProps,
-  }), [currentGameweek, gameweekToUse, hasAlreadyPicked, navigationProps]);
-
-  // Memoized messages props
-  const messagesProps = useMemo(() => ({
-    successMessage,
-    lastError,
-    onDismissError: () => setLastError(null),
-  }), [successMessage, lastError]);
-
-  // Memoized fixture list props
-  const fixtureListProps = useMemo(() => ({
-    fixtures,
-    getTeamUsedCount,
-    onTeamSelect: handleTeamSelect,
-    submitting,
-    gameweekNumber: gameweekToUse.number,
-    disabled: !isCurrentGameweek,
-  }), [fixtures, getTeamUsedCount, submitting, gameweekToUse.number, isCurrentGameweek]);
-
-  // Memoized pick confirmation props
-  const pickConfirmationProps = useMemo(() => ({
-    currentPick,
-    pickInfo: currentPickInfo,
-    canUndo: canUndo && !deadlinePassed,
-    undoing,
-    onUndoPick: handleUndoPick,
-    gameweekNumber: gameweekToUse.number,
-  }), [currentPick, currentPickInfo, canUndo, deadlinePassed, undoing, gameweekToUse.number]);
-
-  // Optimized event handlers
+  // Optimized event handlers (moved before their usage)
   const handleTeamSelect = useCallback(async (fixtureId: string, teamId: string) => {
     if (submitting || !isCurrentGameweek) return;
     
@@ -150,6 +115,41 @@ export const WeeklyPicks: React.FC = React.memo(() => {
       setUndoing(false);
     }
   }, [undoPick]);
+
+  // Memoized header props
+  const headerProps = useMemo(() => ({
+    currentGameweek,
+    viewingGameweek: gameweekToUse,
+    hasAlreadyPicked,
+    ...navigationProps,
+  }), [currentGameweek, gameweekToUse, hasAlreadyPicked, navigationProps]);
+
+  // Memoized messages props
+  const messagesProps = useMemo(() => ({
+    successMessage,
+    lastError,
+    onDismissError: () => setLastError(null),
+  }), [successMessage, lastError]);
+
+  // Memoized fixture list props
+  const fixtureListProps = useMemo(() => ({
+    fixtures,
+    getTeamUsedCount,
+    onTeamSelect: handleTeamSelect,
+    submitting,
+    gameweekNumber: gameweekToUse.number,
+    disabled: !isCurrentGameweek,
+  }), [fixtures, getTeamUsedCount, handleTeamSelect, submitting, gameweekToUse.number, isCurrentGameweek]);
+
+  // Memoized pick confirmation props
+  const pickConfirmationProps = useMemo(() => ({
+    currentPick,
+    pickInfo: currentPickInfo,
+    canUndo: canUndo && !deadlinePassed,
+    undoing,
+    onUndoPick: handleUndoPick,
+    gameweekNumber: gameweekToUse.number,
+  }), [currentPick, currentPickInfo, canUndo, deadlinePassed, undoing, handleUndoPick, gameweekToUse.number]);
 
   // Auto-clear messages
   useEffect(() => {
