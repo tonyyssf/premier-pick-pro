@@ -62,20 +62,6 @@ export const WeeklyPicksFixtureList: React.FC<WeeklyPicksFixtureListProps> = ({
 
   return (
     <div className="mb-4 space-y-3">
-      {/* Debug/Reset Button - only show in development or when there are stuck states */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="flex justify-center mb-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleForceResetAll}
-            className="text-xs"
-          >
-            <RotateCcw className="h-3 w-3 mr-1" />
-            Reset Loading States
-          </Button>
-        </div>
-      )}
       
       {sortedDates.map(date => (
         <div key={date}>
