@@ -90,11 +90,14 @@ export const PlanPicksCard = () => {
       'Wolverhampton Wanderers': 'WOL',
       // Legacy/relegated teams that might appear in fixture data
       'Burnley': 'BUR',
+      'Burnley FC': 'BUR',
       'Leeds': 'LEE',
       'Leeds United': 'LEE',
       'Sheffield United': 'SHU',
       'Luton': 'LUT',
-      'Luton Town': 'LUT'
+      'Luton Town': 'LUT',
+      'Sunderland': 'SUN',
+      'Sunderland AFC': 'SUN'
     };
     
     const teamMapping: Record<string, string> = {
