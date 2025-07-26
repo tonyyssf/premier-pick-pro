@@ -7,7 +7,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 const Index = lazy(() => import("../pages/Index"));
 const Auth = lazy(() => import("../pages/Auth"));
 const OptimizedLeaderboards = lazy(() => import("../pages/OptimizedLeaderboards"));
-const ComingSoon = lazy(() => import("../components/ComingSoon"));
+const Insights = lazy(() => import("../pages/Insights"));
 const Admin = lazy(() => import("../pages/Admin"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 
@@ -26,11 +26,12 @@ export const AppContent = () => {
             </ProtectedRoute>
           } 
         />
+        <Route path="/insights" element={<Navigate to="/analytics" replace />} />
         <Route 
-          path="/insights" 
+          path="/analytics" 
           element={
             <ProtectedRoute>
-              <ComingSoon />
+              <Insights />
             </ProtectedRoute>
           } 
         />

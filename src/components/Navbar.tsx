@@ -25,7 +25,7 @@ export const Navbar: React.FC = () => {
   const baseNavigationItems = [
     { to: "/", label: "Picks" },
     { to: "/leaderboards", label: "Leagues" },
-    { to: "/insights", label: "Insights" }
+    { to: "/analytics", label: "Analytics" }
   ];
 
   const navigationItems = isAdmin 

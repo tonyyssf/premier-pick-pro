@@ -107,7 +107,7 @@ const Insights = () => {
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Advanced Analytics</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics</h1>
           <p className="text-gray-600">
             Deep insights into your performance, team analysis, and season projections.
           </p>
