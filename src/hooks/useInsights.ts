@@ -37,13 +37,17 @@ export function useInsights() {
         throw new Error('User not authenticated');
       }
 
+      console.log('Fetching insights for user:', user.id);
+
       const { data, error } = await supabase.rpc('rpc_get_insights', {
         target_user_id: user.id
       });
 
+      console.log('RPC response:', { data, error });
+
       if (error) {
         console.error('Error fetching insights:', error);
-        throw new Error('Failed to fetch insights data');
+        throw new Error(`Failed to fetch insights data: ${error.message}`);
       }
 
       return data as unknown as InsightsData;
