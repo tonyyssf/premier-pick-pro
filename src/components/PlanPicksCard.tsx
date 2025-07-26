@@ -13,12 +13,13 @@ export const PlanPicksCard = () => {
   const { currentGameweek } = usePicks();
   const currentGwNumber = currentGameweek?.number || 1;
   
-  // Show current week and next 4 weeks
-  const startGameweek = Math.min(currentGwNumber, 38);
-  const gameweeksToShow = 5;
-  const endGameweek = Math.min(startGameweek + gameweeksToShow - 1, 38);
+  // Navigate through gameweeks in groups of 5 (1-5, 6-10, 11-15, etc.)
+  const [currentChunk, setCurrentChunk] = useState(Math.floor((currentGwNumber - 1) / 5));
   
-  const [selectedGameweek, setSelectedGameweek] = useState(startGameweek);
+  const startGameweek = Math.max(1, currentChunk * 5 + 1);
+  const endGameweek = Math.min(38, startGameweek + 4);
+  const gameweeksToShow = endGameweek - startGameweek + 1;
+  
   const [selectedPicks, setSelectedPicks] = useState<Record<number, string>>({});
   
   const { data: difficultyData } = useFixtureDifficulty(currentGwNumber);
@@ -161,9 +162,9 @@ export const PlanPicksCard = () => {
     });
   };
   
-  // Check if we can navigate to previous/next gameweeks
-  const canNavigatePrev = startGameweek > currentGwNumber + 1;
-  const canNavigateNext = endGameweek < 38;
+  // Check if we can navigate to previous/next chunks
+  const canNavigatePrev = currentChunk > 0;
+  const canNavigateNext = currentChunk < 7; // 38 gameweeks = 8 chunks (0-7)
   
   if (!difficultyData || teams.length === 0) {
     return (
@@ -204,19 +205,19 @@ export const PlanPicksCard = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedGameweek(Math.max(selectedGameweek - 1, startGameweek))}
-                disabled={selectedGameweek <= startGameweek}
+                onClick={() => setCurrentChunk(currentChunk - 1)}
+                disabled={!canNavigatePrev}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm font-medium min-w-[80px] text-center">
-                GW {selectedGameweek}
+              <span className="text-sm font-medium min-w-[100px] text-center">
+                GW {startGameweek}-{endGameweek}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedGameweek(Math.min(selectedGameweek + 1, endGameweek))}
-                disabled={selectedGameweek >= endGameweek}
+                onClick={() => setCurrentChunk(currentChunk + 1)}
+                disabled={!canNavigateNext}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
