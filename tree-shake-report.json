@@ -1,0 +1,736 @@
+{
+  "timestamp": "2025-07-26T03:28:25.522Z",
+  "summary": {
+    "totalFiles": 255,
+    "usedFiles": 119,
+    "unusedFiles": 136,
+    "totalSize": 817842,
+    "usedSize": 379884,
+    "unusedSize": 437958,
+    "potentialSavings": "53.6"
+  },
+  "unusedFiles": [
+    {
+      "file": "__tests__/components/SmartPickPlanner.test.tsx",
+      "size": 3848,
+      "sizeFormatted": "3.76 KB"
+    },
+    {
+      "file": "__tests__/utils/calcEfficiency.test.ts",
+      "size": 2697,
+      "sizeFormatted": "2.63 KB"
+    },
+    {
+      "file": "__tests__/utils/getPickRecommendations.test.ts",
+      "size": 2991,
+      "sizeFormatted": "2.92 KB"
+    },
+    {
+      "file": "components/AdminDataTable.tsx",
+      "size": 11455,
+      "sizeFormatted": "11.19 KB"
+    },
+    {
+      "file": "components/AdminFixtureSync.tsx",
+      "size": 5733,
+      "sizeFormatted": "5.6 KB"
+    },
+    {
+      "file": "components/AuthDivider.tsx",
+      "size": 414,
+      "sizeFormatted": "414 Bytes"
+    },
+    {
+      "file": "components/AuthSignUpForm.tsx",
+      "size": 3847,
+      "sizeFormatted": "3.76 KB"
+    },
+    {
+      "file": "components/DeadlineCard.tsx",
+      "size": 2662,
+      "sizeFormatted": "2.6 KB"
+    },
+    {
+      "file": "components/DeadlineCardIcon.tsx",
+      "size": 437,
+      "sizeFormatted": "437 Bytes"
+    },
+    {
+      "file": "components/DeadlineCardTimer.tsx",
+      "size": 1538,
+      "sizeFormatted": "1.5 KB"
+    },
+    {
+      "file": "components/DeadlineCardTip.tsx",
+      "size": 633,
+      "sizeFormatted": "633 Bytes"
+    },
+    {
+      "file": "components/DeadlineCardTypes.ts",
+      "size": 446,
+      "sizeFormatted": "446 Bytes"
+    },
+    {
+      "file": "components/DeadlineCardUtils.ts",
+      "size": 3944,
+      "sizeFormatted": "3.85 KB"
+    },
+    {
+      "file": "components/DesktopStandingsTable.tsx",
+      "size": 4184,
+      "sizeFormatted": "4.09 KB"
+    },
+    {
+      "file": "components/EmptyStandings.tsx",
+      "size": 331,
+      "sizeFormatted": "331 Bytes"
+    },
+    {
+      "file": "components/EnhancedSecurityMonitor.tsx",
+      "size": 8353,
+      "sizeFormatted": "8.16 KB"
+    },
+    {
+      "file": "components/ErrorDisplay.tsx",
+      "size": 375,
+      "sizeFormatted": "375 Bytes"
+    },
+    {
+      "file": "components/FixtureCard.tsx",
+      "size": 8198,
+      "sizeFormatted": "8.01 KB"
+    },
+    {
+      "file": "components/FixtureListItem.tsx",
+      "size": 6101,
+      "sizeFormatted": "5.96 KB"
+    },
+    {
+      "file": "components/GameweekHeader.tsx",
+      "size": 2060,
+      "sizeFormatted": "2.01 KB"
+    },
+    {
+      "file": "components/GoogleSignInButton.tsx",
+      "size": 2394,
+      "sizeFormatted": "2.34 KB"
+    },
+    {
+      "file": "components/GuestUserPickHistory.tsx",
+      "size": 1396,
+      "sizeFormatted": "1.36 KB"
+    },
+    {
+      "file": "components/GuestUserScoreDisplay.tsx",
+      "size": 1373,
+      "sizeFormatted": "1.34 KB"
+    },
+    {
+      "file": "components/GuestWeeklyPicks.tsx",
+      "size": 3491,
+      "sizeFormatted": "3.41 KB"
+    },
+    {
+      "file": "components/HeroSection.tsx",
+      "size": 3135,
+      "sizeFormatted": "3.06 KB"
+    },
+    {
+      "file": "components/LazyImageWithFallback.tsx",
+      "size": 1906,
+      "sizeFormatted": "1.86 KB"
+    },
+    {
+      "file": "components/LazyLoadedComponents.tsx",
+      "size": 1158,
+      "sizeFormatted": "1.13 KB"
+    },
+    {
+      "file": "components/LeaderboardHeader.tsx",
+      "size": 571,
+      "sizeFormatted": "571 Bytes"
+    },
+    {
+      "file": "components/LeagueAccessDenied.tsx",
+      "size": 1249,
+      "sizeFormatted": "1.22 KB"
+    },
+    {
+      "file": "components/LeagueDeleteSection.tsx",
+      "size": 3788,
+      "sizeFormatted": "3.7 KB"
+    },
+    {
+      "file": "components/LeagueDialogContent.tsx",
+      "size": 6173,
+      "sizeFormatted": "6.03 KB"
+    },
+    {
+      "file": "components/LeagueInviteCodeSection.tsx",
+      "size": 1209,
+      "sizeFormatted": "1.18 KB"
+    },
+    {
+      "file": "components/LeagueManagementTabs.tsx",
+      "size": 2361,
+      "sizeFormatted": "2.31 KB"
+    },
+    {
+      "file": "components/LeagueMembersList.tsx",
+      "size": 5348,
+      "sizeFormatted": "5.22 KB"
+    },
+    {
+      "file": "components/LeagueMembersTab.tsx",
+      "size": 2603,
+      "sizeFormatted": "2.54 KB"
+    },
+    {
+      "file": "components/LeagueRankingCard.tsx",
+      "size": 3609,
+      "sizeFormatted": "3.52 KB"
+    },
+    {
+      "file": "components/LeagueSettingsTab.tsx",
+      "size": 2692,
+      "sizeFormatted": "2.63 KB"
+    },
+    {
+      "file": "components/LeagueShareSection.tsx",
+      "size": 1708,
+      "sizeFormatted": "1.67 KB"
+    },
+    {
+      "file": "components/ManageLeagueDialog.tsx",
+      "size": 2777,
+      "sizeFormatted": "2.71 KB"
+    },
+    {
+      "file": "components/MobileStandingsCard.tsx",
+      "size": 2435,
+      "sizeFormatted": "2.38 KB"
+    },
+    {
+      "file": "components/Navbar.tsx",
+      "size": 7164,
+      "sizeFormatted": "7 KB"
+    },
+    {
+      "file": "components/OptimizedDesktopStandingsTable.tsx",
+      "size": 4327,
+      "sizeFormatted": "4.23 KB"
+    },
+    {
+      "file": "components/OptimizedRealtimeStandingsTable.tsx",
+      "size": 3100,
+      "sizeFormatted": "3.03 KB"
+    },
+    {
+      "file": "components/PerformanceDashboard.tsx",
+      "size": 10278,
+      "sizeFormatted": "10.04 KB"
+    },
+    {
+      "file": "components/PerformanceDebugger.tsx",
+      "size": 2958,
+      "sizeFormatted": "2.89 KB"
+    },
+    {
+      "file": "components/PickConfirmationActions.tsx",
+      "size": 2551,
+      "sizeFormatted": "2.49 KB"
+    },
+    {
+      "file": "components/PickConfirmationCard.tsx",
+      "size": 1602,
+      "sizeFormatted": "1.56 KB"
+    },
+    {
+      "file": "components/PickConfirmationDetails.tsx",
+      "size": 2165,
+      "sizeFormatted": "2.11 KB"
+    },
+    {
+      "file": "components/PickConfirmationHeader.tsx",
+      "size": 663,
+      "sizeFormatted": "663 Bytes"
+    },
+    {
+      "file": "components/PickConfirmationLocked.tsx",
+      "size": 980,
+      "sizeFormatted": "980 Bytes"
+    },
+    {
+      "file": "components/PickingGuide.tsx",
+      "size": 2406,
+      "sizeFormatted": "2.35 KB"
+    },
+    {
+      "file": "components/PremierLeagueStandings.tsx",
+      "size": 6033,
+      "sizeFormatted": "5.89 KB"
+    },
+    {
+      "file": "components/RankIcon.tsx",
+      "size": 409,
+      "sizeFormatted": "409 Bytes"
+    },
+    {
+      "file": "components/RankingIntegrityMonitor.tsx",
+      "size": 2608,
+      "sizeFormatted": "2.55 KB"
+    },
+    {
+      "file": "components/RealtimeDesktopStandingsTable.tsx",
+      "size": 4573,
+      "sizeFormatted": "4.47 KB"
+    },
+    {
+      "file": "components/RealtimeMobileStandingsCard.tsx",
+      "size": 2824,
+      "sizeFormatted": "2.76 KB"
+    },
+    {
+      "file": "components/RealtimeStandingsHeader.tsx",
+      "size": 637,
+      "sizeFormatted": "637 Bytes"
+    },
+    {
+      "file": "components/RealtimeStandingsTable.tsx",
+      "size": 2633,
+      "sizeFormatted": "2.57 KB"
+    },
+    {
+      "file": "components/RefreshStandingsButton.tsx",
+      "size": 945,
+      "sizeFormatted": "945 Bytes"
+    },
+    {
+      "file": "components/SecurityAuditDashboard.tsx",
+      "size": 7423,
+      "sizeFormatted": "7.25 KB"
+    },
+    {
+      "file": "components/SignInForm.tsx",
+      "size": 3089,
+      "sizeFormatted": "3.02 KB"
+    },
+    {
+      "file": "components/SignUpForm.tsx",
+      "size": 7750,
+      "sizeFormatted": "7.57 KB"
+    },
+    {
+      "file": "components/StandingsLoadingState.tsx",
+      "size": 339,
+      "sizeFormatted": "339 Bytes"
+    },
+    {
+      "file": "components/StandingsTable.tsx",
+      "size": 3444,
+      "sizeFormatted": "3.36 KB"
+    },
+    {
+      "file": "components/StreakIndicator.tsx",
+      "size": 427,
+      "sizeFormatted": "427 Bytes"
+    },
+    {
+      "file": "components/TeamCard.tsx",
+      "size": 2303,
+      "sizeFormatted": "2.25 KB"
+    },
+    {
+      "file": "components/UserFriendlyError.tsx",
+      "size": 4785,
+      "sizeFormatted": "4.67 KB"
+    },
+    {
+      "file": "components/UserSettingsForm.tsx",
+      "size": 3958,
+      "sizeFormatted": "3.87 KB"
+    },
+    {
+      "file": "components/UserSettingsLoading.tsx",
+      "size": 758,
+      "sizeFormatted": "758 Bytes"
+    },
+    {
+      "file": "components/WeeklyPicksDeadlinePassed.tsx",
+      "size": 768,
+      "sizeFormatted": "768 Bytes"
+    },
+    {
+      "file": "components/WeeklyPicksEmptyState.tsx",
+      "size": 1114,
+      "sizeFormatted": "1.09 KB"
+    },
+    {
+      "file": "components/WeeklyPicksFixtureList.tsx",
+      "size": 2682,
+      "sizeFormatted": "2.62 KB"
+    },
+    {
+      "file": "components/WeeklyPicksHeader.tsx",
+      "size": 1286,
+      "sizeFormatted": "1.26 KB"
+    },
+    {
+      "file": "components/WeeklyPicksInstructions.tsx",
+      "size": 988,
+      "sizeFormatted": "988 Bytes"
+    },
+    {
+      "file": "components/WeeklyPicksLoadingState.tsx",
+      "size": 631,
+      "sizeFormatted": "631 Bytes"
+    },
+    {
+      "file": "components/WeeklyPicksMessages.tsx",
+      "size": 1775,
+      "sizeFormatted": "1.73 KB"
+    },
+    {
+      "file": "components/WeeklyStandingsTable.tsx",
+      "size": 2372,
+      "sizeFormatted": "2.32 KB"
+    },
+    {
+      "file": "components/insights/EfficiencyLineChart.tsx",
+      "size": 4576,
+      "sizeFormatted": "4.47 KB"
+    },
+    {
+      "file": "components/insights/HeatMapChart.tsx",
+      "size": 3187,
+      "sizeFormatted": "3.11 KB"
+    },
+    {
+      "file": "components/insights/ProjectionStat.tsx",
+      "size": 3619,
+      "sizeFormatted": "3.53 KB"
+    },
+    {
+      "file": "components/onboarding/LeaguePrompt.tsx",
+      "size": 2092,
+      "sizeFormatted": "2.04 KB"
+    },
+    {
+      "file": "components/onboarding/UsernamePrompt.tsx",
+      "size": 3155,
+      "sizeFormatted": "3.08 KB"
+    },
+    {
+      "file": "components/ui/accordion.tsx",
+      "size": 1977,
+      "sizeFormatted": "1.93 KB"
+    },
+    {
+      "file": "components/ui/animated-chart.tsx",
+      "size": 3868,
+      "sizeFormatted": "3.78 KB"
+    },
+    {
+      "file": "components/ui/aspect-ratio.tsx",
+      "size": 140,
+      "sizeFormatted": "140 Bytes"
+    },
+    {
+      "file": "components/ui/avatar.tsx",
+      "size": 1405,
+      "sizeFormatted": "1.37 KB"
+    },
+    {
+      "file": "components/ui/breadcrumb.tsx",
+      "size": 2701,
+      "sizeFormatted": "2.64 KB"
+    },
+    {
+      "file": "components/ui/calendar.tsx",
+      "size": 2620,
+      "sizeFormatted": "2.56 KB"
+    },
+    {
+      "file": "components/ui/carousel.tsx",
+      "size": 6210,
+      "sizeFormatted": "6.06 KB"
+    },
+    {
+      "file": "components/ui/chart/ChartContainer.tsx",
+      "size": 1807,
+      "sizeFormatted": "1.76 KB"
+    },
+    {
+      "file": "components/ui/chart/ChartContext.tsx",
+      "size": 375,
+      "sizeFormatted": "375 Bytes"
+    },
+    {
+      "file": "components/ui/chart/ChartLegend.tsx",
+      "size": 1840,
+      "sizeFormatted": "1.8 KB"
+    },
+    {
+      "file": "components/ui/chart/ChartStyle.tsx",
+      "size": 876,
+      "sizeFormatted": "876 Bytes"
+    },
+    {
+      "file": "components/ui/chart/ChartTooltip.tsx",
+      "size": 5426,
+      "sizeFormatted": "5.3 KB"
+    },
+    {
+      "file": "components/ui/chart/index.ts",
+      "size": 309,
+      "sizeFormatted": "309 Bytes"
+    },
+    {
+      "file": "components/ui/chart/types.ts",
+      "size": 421,
+      "sizeFormatted": "421 Bytes"
+    },
+    {
+      "file": "components/ui/chart/utils.ts",
+      "size": 1002,
+      "sizeFormatted": "1002 Bytes"
+    },
+    {
+      "file": "components/ui/command.tsx",
+      "size": 4879,
+      "sizeFormatted": "4.76 KB"
+    },
+    {
+      "file": "components/ui/context-menu.tsx",
+      "size": 7246,
+      "sizeFormatted": "7.08 KB"
+    },
+    {
+      "file": "components/ui/drawer.tsx",
+      "size": 3007,
+      "sizeFormatted": "2.94 KB"
+    },
+    {
+      "file": "components/ui/form.tsx",
+      "size": 4085,
+      "sizeFormatted": "3.99 KB"
+    },
+    {
+      "file": "components/ui/hover-card.tsx",
+      "size": 1184,
+      "sizeFormatted": "1.16 KB"
+    },
+    {
+      "file": "components/ui/input-otp.tsx",
+      "size": 2154,
+      "sizeFormatted": "2.1 KB"
+    },
+    {
+      "file": "components/ui/menubar.tsx",
+      "size": 7974,
+      "sizeFormatted": "7.79 KB"
+    },
+    {
+      "file": "components/ui/mobile-optimized-chart.tsx",
+      "size": 5985,
+      "sizeFormatted": "5.84 KB"
+    },
+    {
+      "file": "components/ui/navigation-menu.tsx",
+      "size": 5046,
+      "sizeFormatted": "4.93 KB"
+    },
+    {
+      "file": "components/ui/pagination.tsx",
+      "size": 2751,
+      "sizeFormatted": "2.69 KB"
+    },
+    {
+      "file": "components/ui/popover.tsx",
+      "size": 1230,
+      "sizeFormatted": "1.2 KB"
+    },
+    {
+      "file": "components/ui/radio-group.tsx",
+      "size": 1467,
+      "sizeFormatted": "1.43 KB"
+    },
+    {
+      "file": "components/ui/resizable.tsx",
+      "size": 1709,
+      "sizeFormatted": "1.67 KB"
+    },
+    {
+      "file": "components/ui/select.tsx",
+      "size": 5615,
+      "sizeFormatted": "5.48 KB"
+    },
+    {
+      "file": "components/ui/sidebar.tsx",
+      "size": 23367,
+      "sizeFormatted": "22.82 KB"
+    },
+    {
+      "file": "components/ui/slider.tsx",
+      "size": 1077,
+      "sizeFormatted": "1.05 KB"
+    },
+    {
+      "file": "components/ui/toggle-group.tsx",
+      "size": 1739,
+      "sizeFormatted": "1.7 KB"
+    },
+    {
+      "file": "components/ui/use-toast.ts",
+      "size": 82,
+      "sizeFormatted": "82 Bytes"
+    },
+    {
+      "file": "hooks/useGlobalStandings.ts",
+      "size": 1029,
+      "sizeFormatted": "1 KB"
+    },
+    {
+      "file": "hooks/useLeagueStandings.ts",
+      "size": 991,
+      "sizeFormatted": "991 Bytes"
+    },
+    {
+      "file": "hooks/useOptimizedApi.ts",
+      "size": 3683,
+      "sizeFormatted": "3.6 KB"
+    },
+    {
+      "file": "hooks/useOptimizedGameweekData.ts",
+      "size": 6209,
+      "sizeFormatted": "6.06 KB"
+    },
+    {
+      "file": "hooks/useSecureForm.ts",
+      "size": 4976,
+      "sizeFormatted": "4.86 KB"
+    },
+    {
+      "file": "integrations/supabase/types.ts",
+      "size": 21483,
+      "sizeFormatted": "20.98 KB"
+    },
+    {
+      "file": "pages/Admin.tsx",
+      "size": 2564,
+      "sizeFormatted": "2.5 KB"
+    },
+    {
+      "file": "pages/Auth.tsx",
+      "size": 1970,
+      "sizeFormatted": "1.92 KB"
+    },
+    {
+      "file": "pages/Index.tsx",
+      "size": 956,
+      "sizeFormatted": "956 Bytes"
+    },
+    {
+      "file": "pages/Insights.tsx",
+      "size": 9442,
+      "sizeFormatted": "9.22 KB"
+    },
+    {
+      "file": "pages/Leaderboards.tsx",
+      "size": 3556,
+      "sizeFormatted": "3.47 KB"
+    },
+    {
+      "file": "pages/Leagues.tsx",
+      "size": 5275,
+      "sizeFormatted": "5.15 KB"
+    },
+    {
+      "file": "pages/NotFound.tsx",
+      "size": 739,
+      "sizeFormatted": "739 Bytes"
+    },
+    {
+      "file": "pages/OptimizedLeaderboards.tsx",
+      "size": 4029,
+      "sizeFormatted": "3.93 KB"
+    },
+    {
+      "file": "types/analytics.ts",
+      "size": 311,
+      "sizeFormatted": "311 Bytes"
+    },
+    {
+      "file": "types/league.ts",
+      "size": 453,
+      "sizeFormatted": "453 Bytes"
+    },
+    {
+      "file": "types/standings.ts",
+      "size": 436,
+      "sizeFormatted": "436 Bytes"
+    },
+    {
+      "file": "utils/enhancedRateLimiter.ts",
+      "size": 4158,
+      "sizeFormatted": "4.06 KB"
+    },
+    {
+      "file": "utils/enhancedValidation.ts",
+      "size": 7196,
+      "sizeFormatted": "7.03 KB"
+    },
+    {
+      "file": "utils/exportUtils.ts",
+      "size": 3890,
+      "sizeFormatted": "3.8 KB"
+    },
+    {
+      "file": "vite-env.d.ts",
+      "size": 38,
+      "sizeFormatted": "38 Bytes"
+    }
+  ],
+  "largestUnused": [
+    {
+      "file": "components/ui/sidebar.tsx",
+      "size": 23367
+    },
+    {
+      "file": "integrations/supabase/types.ts",
+      "size": 21483
+    },
+    {
+      "file": "components/AdminDataTable.tsx",
+      "size": 11455
+    },
+    {
+      "file": "components/PerformanceDashboard.tsx",
+      "size": 10278
+    },
+    {
+      "file": "pages/Insights.tsx",
+      "size": 9442
+    },
+    {
+      "file": "components/EnhancedSecurityMonitor.tsx",
+      "size": 8353
+    },
+    {
+      "file": "components/FixtureCard.tsx",
+      "size": 8198
+    },
+    {
+      "file": "components/ui/menubar.tsx",
+      "size": 7974
+    },
+    {
+      "file": "components/SignUpForm.tsx",
+      "size": 7750
+    },
+    {
+      "file": "components/SecurityAuditDashboard.tsx",
+      "size": 7423
+    }
+  ]
+}

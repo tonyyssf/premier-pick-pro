@@ -5,23 +5,39 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useInsights } from '@/hooks/useInsights';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePremiumUpgrade } from '@/hooks/usePremiumUpgrade';
-import { HeatMapChart } from '@/components/insights/HeatMapChart';
-import { EfficiencyLineChart } from '@/components/insights/EfficiencyLineChart';
-import { ProjectionStat } from '@/components/insights/ProjectionStat';
+import { LazyHeatMapChart, LazyEfficiencyLineChart, LazyProjectionStat } from '@/components/LazyChartComponents';
+import { SmartPickPlanner } from '@/components/SmartPickPlanner';
+import { PickEfficiencyGauge } from '@/components/PickEfficiencyGauge';
 import { UnlockBanner } from '@/components/insights/UnlockBanner';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ExportOptions } from '@/components/ExportOptions';
+import { usePremiumAccess } from '@/guards/usePremiumAccess';
+import { getPickRecommendations } from '@/utils/getPickRecommendations';
+import { useCurrentGameweek } from '@/hooks/useCurrentGameweek';
 import { toast } from '@/hooks/use-toast';
-import { Download, BarChart3, TrendingUp, Target, AlertCircle } from 'lucide-react';
-import * as Papa from 'papaparse';
-import { saveAs } from 'file-saver';
+import { analytics } from '@/utils/analytics';
+import { BarChart3, TrendingUp, Target, AlertCircle } from 'lucide-react';
 import { useEffect } from 'react';
 
 const Insights = () => {
   const { user } = useAuth();
   const { data: insights, isLoading, error } = useInsights();
   const { verifyPayment } = usePremiumUpgrade();
+  const isPremium = usePremiumAccess();
+  const currentGameweek = useCurrentGameweek();
   
-  // Check if user is premium
-  const isPremium = user?.user_metadata?.is_premium === true;
+  // Generate pick recommendations
+  const recommendations = insights ? getPickRecommendations(
+    insights.heatmap.map(item => [item.winProbability]),
+    insights.remainingTokens || {},
+    currentGameweek
+  ) : [];
+
+  // Track insights page view
+  useEffect(() => {
+    analytics.trackInsightsView(isPremium);
+    analytics.trackUserEngagement('insights_view');
+  }, [isPremium]);
 
   // Handle payment success/failure from URL params
   useEffect(() => {
@@ -30,10 +46,17 @@ const Insights = () => {
     const sessionId = urlParams.get('session_id');
 
     if (paymentStatus === 'success' && sessionId) {
+      // Track successful premium upgrade
+      analytics.trackPremiumUpgradeCompleted('stripe', 9.99);
+      analytics.trackUserEngagement('premium_upgrade');
+      
       verifyPayment(sessionId);
       // Clean up URL params
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (paymentStatus === 'cancelled') {
+      // Track cancelled premium upgrade
+      analytics.trackPremiumUpgradeCancelled('user_cancelled');
+      
       toast({
         title: "Payment Cancelled",
         description: "Your premium upgrade was cancelled. You can try again anytime.",
@@ -44,68 +67,34 @@ const Insights = () => {
     }
   }, [verifyPayment]);
 
-  const handleExportCSV = () => {
-    if (!isPremium) {
-      toast({
-        title: "Premium Feature",
-        description: "CSV export is only available for premium users.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!insights) {
-      toast({
-        title: "No Data",
-        description: "No insights data available to export.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Prepare efficiency data for CSV
-      const csvData = insights.efficiency.map(item => ({
-        gameweek: item.gameweek,
-        points_earned: item.pointsEarned,
-        max_possible: item.maxPossible,
-        efficiency_percentage: item.efficiency.toFixed(1),
-        win_rate: insights.winRate,
-        total_points: insights.totalPoints,
-      }));
-
-      const csv = Papa.unparse(csvData);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-      saveAs(blob, `insights-export-${new Date().toISOString().split('T')[0]}.csv`);
-
-      toast({
-        title: "Export Successful",
-        description: "Your insights data has been exported to CSV.",
-      });
-    } catch (error) {
-      console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: "There was an error exporting your data.",
-        variant: "destructive",
-      });
-    }
+  // Track chart interactions
+  const handleChartInteraction = (chartType: 'heatmap' | 'efficiency' | 'projections', action: 'view' | 'hover' | 'click') => {
+    analytics.trackInsightsChartInteraction(chartType, action);
+    analytics.trackUserEngagement('chart_interaction');
   };
 
   if (error) {
+    // Track error occurrence
+    analytics.trackError('insights_load_failed', 'insights_page');
+    
     return (
       <Layout>
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <Card className="w-full max-w-md">
-              <CardContent className="flex flex-col items-center justify-center p-8 text-center space-y-4">
-                <AlertCircle className="h-12 w-12 text-muted-foreground" />
-                <div>
-                  <h3 className="text-lg font-semibold">Unable to Load Insights</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    There was an error loading your analytics data. Please try again later.
-                  </p>
-                </div>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertCircle className="h-5 w-5" />
+                  Unable to Load Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  There was an error loading your insights data. This might be a temporary issue.
+                </p>
+                <Button onClick={() => window.location.reload()}>
+                  Try Again
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -117,149 +106,138 @@ const Insights = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Advanced Analytics
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Deep insights into your season performance and projections
-            </p>
-          </div>
-          
-          <Button
-            onClick={handleExportCSV}
-            variant="outline"
-            className="flex items-center gap-2"
-            disabled={!isPremium}
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Advanced Analytics</h1>
+          <p className="text-gray-600">
+            Deep insights into your performance, team analysis, and season projections.
+          </p>
         </div>
 
-        {/* Overview Stats */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-4 w-24" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : insights ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-2xl font-bold">{insights.totalPoints}</p>
-                    <p className="text-sm text-muted-foreground">Total Points</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-green-500" />
-                  <div>
-                    <p className="text-2xl font-bold">{insights.correctPicks}</p>
-                    <p className="text-sm text-muted-foreground">Correct Picks</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <p className="text-2xl font-bold">{insights.winRate}%</p>
-                    <p className="text-sm text-muted-foreground">Win Rate</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-orange-500" />
-                  <div>
-                    <p className="text-2xl font-bold">{insights.currentGameweek}</p>
-                    <p className="text-sm text-muted-foreground">Current GW</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ) : null}
-
-        {/* Premium Banner for Free Users */}
+        {/* Premium Upgrade Banner for Free Users */}
         {!isPremium && (
           <div className="mb-8">
-            <UnlockBanner
-              title="Unlock Advanced Analytics"
-              description="Get access to detailed performance insights, season projections, team analytics, and CSV exports with our Premium plan."
+            <UnlockBanner 
+              title="Unlock Premium Analytics"
+              description="Get access to advanced charts, season projections, and CSV exports to take your analysis to the next level."
+            />
+          </div>
+        )}
+
+        {/* Smart Pick Planner - First Section */}
+        <div className="mb-8">
+          <ErrorBoundary>
+            <SmartPickPlanner 
+              recommendations={recommendations}
+              remainingTokens={insights?.remainingTokens || {}}
+              isPremium={isPremium}
+              isLoading={isLoading}
+            />
+          </ErrorBoundary>
+        </div>
+
+        {/* Export Options for Premium Users */}
+        {isPremium && insights && (
+          <div className="mb-6">
+            <ExportOptions 
+              data={insights}
+              isPremium={isPremium}
             />
           </div>
         )}
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <HeatMapChart
-            data={insights?.heatmap}
-            isPremium={isPremium}
-            isLoading={isLoading}
-          />
-          
-          <EfficiencyLineChart
-            data={insights?.efficiency}
-            isPremium={isPremium}
-            isLoading={isLoading}
-          />
+          {/* Pick Efficiency Gauge - First on large screens */}
+          <ErrorBoundary>
+            <div onMouseEnter={() => handleChartInteraction('efficiency', 'view')}>
+              <PickEfficiencyGauge 
+                efficiencyData={insights?.efficiency || []}
+                isPremium={isPremium}
+                isLoading={isLoading}
+              />
+            </div>
+          </ErrorBoundary>
+
+          {/* Heat Map Chart */}
+          <ErrorBoundary>
+            <div onMouseEnter={() => handleChartInteraction('heatmap', 'view')}>
+              <LazyHeatMapChart 
+                data={insights?.heatmap}
+                isPremium={isPremium}
+                isLoading={isLoading}
+              />
+            </div>
+          </ErrorBoundary>
         </div>
 
-        {/* Projections Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <ProjectionStat
-              data={insights?.projections}
-              isPremium={isPremium}
-              isLoading={isLoading}
-            />
-          </div>
-          
-          {/* Additional space for future features */}
-          <div className="lg:col-span-2">
-            {isPremium && insights ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Performance Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center p-8 border-2 border-dashed border-muted-foreground/20 rounded-lg">
-                    <p className="text-muted-foreground">
-                      Additional analytics features coming soon!
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : !isPremium ? (
-              <UnlockBanner
-                title="More Analytics Coming"
-                description="Premium users will get access to even more detailed analytics, comparison tools, and performance insights."
+        {/* Projection Stats for Premium Users */}
+        {isPremium && insights?.projections && (
+          <ErrorBoundary>
+            <div onMouseEnter={() => handleChartInteraction('projections', 'view')}>
+              <LazyProjectionStat 
+                projections={insights.projections}
+                currentGameweek={insights.currentGameweek}
+                isLoading={isLoading}
               />
-            ) : null}
-          </div>
+            </div>
+          </ErrorBoundary>
+        )}
+
+        {/* Key Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Points</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{insights?.totalPoints || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Season total
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {insights?.winRate ? `${(insights.winRate * 100).toFixed(1)}%` : '0%'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Correct picks
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Picks</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{insights?.totalPicks || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Picks made
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Current GW</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{insights?.currentGameweek || 1}</div>
+              <p className="text-xs text-muted-foreground">
+                Active gameweek
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Layout>

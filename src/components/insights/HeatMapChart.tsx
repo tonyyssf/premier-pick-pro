@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, Treemap, Cell, Tooltip } from 'recharts';
+import { ResponsiveContainer, Treemap, Cell, Tooltip, TooltipProps } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,19 @@ interface HeatMapChartProps {
   data?: HeatMapData[];
   isPremium: boolean;
   isLoading?: boolean;
+}
+
+interface TreemapDataPoint {
+  name: string;
+  value: number;
+  fill: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: TreemapDataPoint;
+  }>;
 }
 
 export const HeatMapChart: React.FC<HeatMapChartProps> = ({
@@ -37,13 +50,13 @@ export const HeatMapChart: React.FC<HeatMapChartProps> = ({
   const displayData = isPremium ? data : data.slice(-2);
   
   // Transform data for treemap
-  const treemapData = displayData.map((item, index) => ({
+  const treemapData: TreemapDataPoint[] = displayData.map((item, index) => ({
     name: item.team,
     value: item.winProbability,
     fill: `hsl(${(item.winProbability / 100) * 120}, 70%, ${60 + (index % 2) * 10}%)`,
   }));
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
     if (active && payload && payload[0]) {
       const data = payload[0].payload;
       return (

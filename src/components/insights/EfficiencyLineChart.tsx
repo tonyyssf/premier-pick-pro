@@ -17,6 +17,16 @@ interface EfficiencyLineChartProps {
   isLoading?: boolean;
 }
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  label?: string;
+}
+
 export const EfficiencyLineChart: React.FC<EfficiencyLineChartProps> = ({
   data = [],
   isPremium,
@@ -38,12 +48,12 @@ export const EfficiencyLineChart: React.FC<EfficiencyLineChartProps> = ({
   // Show limited data for free users (last 2 gameweeks only)
   const displayData = isPremium ? data : data.slice(-2);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background/95 backdrop-blur-sm border rounded-lg p-3 shadow-md">
           <p className="font-medium">Gameweek {label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {entry.name === 'Efficiency' ? `${entry.value.toFixed(1)}%` : entry.value}
             </p>
