@@ -1,14 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ProcessedFixtureDifficulty } from '@/hooks/useFixtureDifficulty';
-import { Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ProcessedFixtureDifficulty, FixtureDifficultyData } from '@/hooks/useFixtureDifficulty';
+import { Shield, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
 
 interface FixtureDifficultyHeatMapProps {
   data: ProcessedFixtureDifficulty[];
+  rawData: FixtureDifficultyData[];
   currentGameweek: number;
 }
 
-export function FixtureDifficultyHeatMap({ data, currentGameweek }: FixtureDifficultyHeatMapProps) {
+export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: FixtureDifficultyHeatMapProps) {
+  const [selectedGameweek, setSelectedGameweek] = useState(currentGameweek);
+
   const getDifficultyColor = (difficulty: number) => {
     if (difficulty <= 2) return 'bg-green-500';
     if (difficulty <= 3) return 'bg-yellow-500';
@@ -29,70 +34,139 @@ export function FixtureDifficultyHeatMap({ data, currentGameweek }: FixtureDiffi
     return 'Very Hard';
   };
 
-  // Sort teams by current difficulty (easiest first)
-  const sortedData = [...data].sort((a, b) => a.currentDifficulty - b.currentDifficulty);
+  // Get difficulty for selected gameweek
+  const getGameweekDifficulty = (team: ProcessedFixtureDifficulty, gameweek: number) => {
+    const index = gameweek - currentGameweek;
+    if (index >= 0 && index < team.nextFiveGames.length) {
+      return team.nextFiveGames[index];
+    }
+    
+    // For past or far future gameweeks, get from raw data
+    const teamRawData = rawData.find(raw => raw.team === team.team);
+    if (teamRawData && teamRawData.difficulties[gameweek - 1]) {
+      return teamRawData.difficulties[gameweek - 1];
+    }
+    
+    return 3; // Default difficulty
+  };
+
+  // Sort teams by selected gameweek difficulty (easiest first)
+  const sortedData = [...data].sort((a, b) => {
+    const aDifficulty = getGameweekDifficulty(a, selectedGameweek);
+    const bDifficulty = getGameweekDifficulty(b, selectedGameweek);
+    return aDifficulty - bDifficulty;
+  });
+
+  const handlePreviousGameweek = () => {
+    if (selectedGameweek > 1) {
+      setSelectedGameweek(selectedGameweek - 1);
+    }
+  };
+
+  const handleNextGameweek = () => {
+    if (selectedGameweek < 38) {
+      setSelectedGameweek(selectedGameweek + 1);
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          Fixture Difficulty Analysis
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Current gameweek difficulty and upcoming fixtures for all teams
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Fixture Difficulty Analysis
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Pick difficulty for each team in gameweek {selectedGameweek}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreviousGameweek}
+              disabled={selectedGameweek <= 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="px-3 py-1 bg-muted rounded-md min-w-[80px] text-center">
+              <span className="text-sm font-medium">GW {selectedGameweek}</span>
+              {selectedGameweek === currentGameweek && (
+                <div className="text-xs text-green-600">Current</div>
+              )}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNextGameweek}
+              disabled={selectedGameweek >= 38}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sortedData.map((team) => (
-            <div
-              key={team.team}
-              className="p-4 border rounded-lg hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm">{team.team}</h3>
-                <Badge
-                  variant="outline"
-                  className={`${getDifficultyColor(team.currentDifficulty)} text-white border-none`}
-                >
-                  <div className="flex items-center gap-1">
-                    {getDifficultyIcon(team.currentDifficulty)}
-                    {team.currentDifficulty}
-                  </div>
-                </Badge>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Current GW:</span>
-                  <span className="font-medium">
-                    {getDifficultyLabel(team.currentDifficulty)}
-                  </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {sortedData.map((team) => {
+            const gameweekDifficulty = getGameweekDifficulty(team, selectedGameweek);
+            return (
+              <div
+                key={team.team}
+                className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-sm">{team.team}</h3>
+                  <Badge
+                    variant="outline"
+                    className={`${getDifficultyColor(gameweekDifficulty)} text-white border-none`}
+                  >
+                    <div className="flex items-center gap-1">
+                      {getDifficultyIcon(gameweekDifficulty)}
+                      {gameweekDifficulty}
+                    </div>
+                  </Badge>
                 </div>
                 
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Avg Remaining:</span>
-                  <span className="font-medium">{team.averageDifficulty}</span>
-                </div>
-                
-                <div className="mt-3">
-                  <div className="text-xs text-muted-foreground mb-1">Next 5 fixtures:</div>
-                  <div className="flex gap-1">
-                    {team.nextFiveGames.map((difficulty, index) => (
-                      <div
-                        key={index}
-                        className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white ${getDifficultyColor(difficulty)}`}
-                        title={`GW${currentGameweek + index}: ${getDifficultyLabel(difficulty)}`}
-                      >
-                        {difficulty}
-                      </div>
-                    ))}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Difficulty:</span>
+                    <span className="font-medium">
+                      {getDifficultyLabel(gameweekDifficulty)}
+                    </span>
                   </div>
+                  
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Season Avg:</span>
+                    <span className="font-medium">{team.averageDifficulty}</span>
+                  </div>
+                  
+                  {selectedGameweek === currentGameweek && (
+                    <div className="mt-2 p-2 bg-green-50 rounded text-xs text-green-700 font-medium">
+                      Available for picking this week
+                    </div>
+                  )}
+                  
+                  {selectedGameweek < currentGameweek && (
+                    <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                      Past gameweek
+                    </div>
+                  )}
+                  
+                  {selectedGameweek > currentGameweek && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                      Future gameweek
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         
         <div className="mt-6 p-4 bg-muted rounded-lg">

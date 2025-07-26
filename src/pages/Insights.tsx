@@ -220,6 +220,7 @@ const Insights = () => {
             <>
               <FixtureDifficultyHeatMap 
                 data={fixtureDifficulty.processedData} 
+                rawData={fixtureDifficulty.rawData}
                 currentGameweek={currentGameweek}
               />
               <FixtureRunAnalysis 
