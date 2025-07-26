@@ -177,6 +177,132 @@ export type Database = {
         }
         Relationships: []
       }
+      "PL FDR INT": {
+        Row: {
+          GW1: number | null
+          GW10: number | null
+          GW11: number | null
+          GW12: number | null
+          GW13: number | null
+          GW14: number | null
+          GW15: number | null
+          GW16: number | null
+          GW17: number | null
+          GW18: number | null
+          GW19: number | null
+          GW2: number | null
+          GW20: number | null
+          GW21: number | null
+          GW22: number | null
+          GW23: number | null
+          GW24: number | null
+          GW25: number | null
+          GW26: number | null
+          GW27: number | null
+          GW28: number | null
+          GW29: number | null
+          GW3: number | null
+          GW30: number | null
+          GW31: number | null
+          GW32: number | null
+          GW33: number | null
+          GW34: number | null
+          GW35: number | null
+          GW36: number | null
+          GW37: number | null
+          GW38: number | null
+          GW4: number | null
+          GW5: number | null
+          GW6: number | null
+          GW7: number | null
+          GW8: number | null
+          GW9: number | null
+          TEAM: string
+        }
+        Insert: {
+          GW1?: number | null
+          GW10?: number | null
+          GW11?: number | null
+          GW12?: number | null
+          GW13?: number | null
+          GW14?: number | null
+          GW15?: number | null
+          GW16?: number | null
+          GW17?: number | null
+          GW18?: number | null
+          GW19?: number | null
+          GW2?: number | null
+          GW20?: number | null
+          GW21?: number | null
+          GW22?: number | null
+          GW23?: number | null
+          GW24?: number | null
+          GW25?: number | null
+          GW26?: number | null
+          GW27?: number | null
+          GW28?: number | null
+          GW29?: number | null
+          GW3?: number | null
+          GW30?: number | null
+          GW31?: number | null
+          GW32?: number | null
+          GW33?: number | null
+          GW34?: number | null
+          GW35?: number | null
+          GW36?: number | null
+          GW37?: number | null
+          GW38?: number | null
+          GW4?: number | null
+          GW5?: number | null
+          GW6?: number | null
+          GW7?: number | null
+          GW8?: number | null
+          GW9?: number | null
+          TEAM: string
+        }
+        Update: {
+          GW1?: number | null
+          GW10?: number | null
+          GW11?: number | null
+          GW12?: number | null
+          GW13?: number | null
+          GW14?: number | null
+          GW15?: number | null
+          GW16?: number | null
+          GW17?: number | null
+          GW18?: number | null
+          GW19?: number | null
+          GW2?: number | null
+          GW20?: number | null
+          GW21?: number | null
+          GW22?: number | null
+          GW23?: number | null
+          GW24?: number | null
+          GW25?: number | null
+          GW26?: number | null
+          GW27?: number | null
+          GW28?: number | null
+          GW29?: number | null
+          GW3?: number | null
+          GW30?: number | null
+          GW31?: number | null
+          GW32?: number | null
+          GW33?: number | null
+          GW34?: number | null
+          GW35?: number | null
+          GW36?: number | null
+          GW37?: number | null
+          GW38?: number | null
+          GW4?: number | null
+          GW5?: number | null
+          GW6?: number | null
+          GW7?: number | null
+          GW8?: number | null
+          GW9?: number | null
+          TEAM?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           country_code: string | null
@@ -551,6 +677,50 @@ export type Database = {
           away_team_name: string
           away_team_short_name: string
           away_team_color: string
+        }[]
+      }
+      get_fixture_difficulty_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          team: string
+          gw1: number
+          gw2: number
+          gw3: number
+          gw4: number
+          gw5: number
+          gw6: number
+          gw7: number
+          gw8: number
+          gw9: number
+          gw10: number
+          gw11: number
+          gw12: number
+          gw13: number
+          gw14: number
+          gw15: number
+          gw16: number
+          gw17: number
+          gw18: number
+          gw19: number
+          gw20: number
+          gw21: number
+          gw22: number
+          gw23: number
+          gw24: number
+          gw25: number
+          gw26: number
+          gw27: number
+          gw28: number
+          gw29: number
+          gw30: number
+          gw31: number
+          gw32: number
+          gw33: number
+          gw34: number
+          gw35: number
+          gw36: number
+          gw37: number
+          gw38: number
         }[]
       }
       get_league_by_invite_code: {

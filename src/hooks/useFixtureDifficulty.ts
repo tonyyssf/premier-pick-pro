@@ -20,15 +20,15 @@ export function useFixtureDifficulty(currentGameweek: number = 1) {
       rawData: FixtureDifficultyData[];
       processedData: ProcessedFixtureDifficulty[];
     }> => {
-      // Use rpc or direct SQL query since the table has special characters
+      // Query the fixture difficulty data using the new RPC function
       const { data, error } = await supabase
-        .rpc('get_fixture_difficulty_data');
+        .rpc('get_fixture_difficulty_data') as { data: any[] | null, error: any };
 
       if (error) {
         throw new Error(`Failed to fetch fixture difficulty data: ${error.message}`);
       }
 
-      if (!data || data.length === 0) {
+      if (!data || !Array.isArray(data) || data.length === 0) {
         return { rawData: [], processedData: [] };
       }
 
