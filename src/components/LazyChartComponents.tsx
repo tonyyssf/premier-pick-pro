@@ -41,12 +41,12 @@ export const LazyEfficiencyLineChart = ({ data, isPremium, isLoading }: any) => 
   </Suspense>
 );
 
-export const LazyProjectionStat = ({ data, isPremium, isLoading }: any) => (
+export const LazyProjectionStat = ({ projections, currentGameweek, isLoading }: any) => (
   <Suspense fallback={<ChartSkeleton title="Season Projections" />}>
     <ProjectionStat 
-      data={data}
-      isPremium={isPremium}
+      projections={projections}
+      currentGameweek={currentGameweek}
       isLoading={isLoading}
     />
   </Suspense>
-);
+); 

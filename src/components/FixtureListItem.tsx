@@ -68,27 +68,27 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     }
   };
 
-  const getTeamButtonClass = (teamId: string, isDisabled: boolean, teamColor?: string) => {
+  const getTeamButtonClass = (teamId: string, isDisabled: boolean) => {
     const isBeingSubmitted = localSubmitting === teamId;
     const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted && !disabled;
     
     return `
-      flex items-center justify-center space-x-2 p-3 h-full transition-all duration-200 relative rounded-lg
+      flex items-center justify-center space-x-1 p-2 h-full transition-all duration-200 relative
       ${canSelect
-        ? 'cursor-pointer hover:bg-opacity-10 hover:shadow-md transform hover:scale-[1.02]'
+        ? 'cursor-pointer'
         : 'cursor-not-allowed opacity-60'
       }
-      ${isBeingSubmitted ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}
+      ${isBeingSubmitted ? 'ring-1 ring-plpe-purple ring-opacity-50' : ''}
     `;
   };
 
-  const getContainerClass = (teamId: string, isDisabled: boolean, teamColor?: string) => {
+  const getContainerClass = (teamId: string, isDisabled: boolean) => {
     const isBeingSubmitted = localSubmitting === teamId;
     const canSelect = !isDisabled && !isBeingSubmitted && !hasStarted && !disabled;
     
     return `
       flex items-center justify-center transition-all duration-200
-      ${canSelect ? `hover:bg-[${teamColor || '#6B7280'}] hover:bg-opacity-5` : ''}
+      ${canSelect ? 'hover:bg-gray-100' : ''}
     `;
   };
 
@@ -103,11 +103,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     return (
       <button
         type="button"
-        className={getTeamButtonClass(team.id, isDisabled, team.teamColor)}
-        style={{
-          backgroundColor: canSelect ? `${team.teamColor || '#6B7280'}08` : 'transparent',
-          borderLeft: `3px solid ${team.teamColor || '#6B7280'}`
-        }}
+        className={getTeamButtonClass(team.id, isDisabled)}
         onClick={(e) => {
           console.log('Button clicked!', team.name, 'canSelect:', canSelect);
           e.preventDefault();
@@ -126,13 +122,10 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
           </div>
         )}
 
-        {/* Team color indicator - enhanced */}
+        {/* Team color indicator - smaller */}
         <div 
-          className="w-4 h-4 rounded-full border-2 border-white shadow-sm flex-shrink-0"
-          style={{ 
-            backgroundColor: team.teamColor || '#6B7280',
-            boxShadow: `0 0 0 1px ${team.teamColor || '#6B7280'}40`
-          }}
+          className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
+          style={{ backgroundColor: team.teamColor || '#6B7280' }}
         />
         
         {/* Team name - show full name on desktop/tablet, short name on mobile */}
@@ -168,7 +161,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
     `}>
       <div className="flex h-14">
         {/* Home Team - Left Side */}
-        <div className={`${getContainerClass(fixture.homeTeam.id, isHomeTeamDisabled, fixture.homeTeam.teamColor)} flex-1 border-r border-gray-200`}>
+        <div className={`${getContainerClass(fixture.homeTeam.id, isHomeTeamDisabled)} flex-1 border-r border-gray-200`}>
           <TeamButton
             team={fixture.homeTeam}
             isDisabled={isHomeTeamDisabled}
@@ -182,7 +175,7 @@ export const FixtureListItem: React.FC<FixtureListItemProps> = ({
         </div>
         
         {/* Away Team - Right Side */}
-        <div className={`${getContainerClass(fixture.awayTeam.id, isAwayTeamDisabled, fixture.awayTeam.teamColor)} flex-1`}>
+        <div className={`${getContainerClass(fixture.awayTeam.id, isAwayTeamDisabled)} flex-1`}>
           <TeamButton
             team={fixture.awayTeam}
             isDisabled={isAwayTeamDisabled}

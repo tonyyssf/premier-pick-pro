@@ -24,8 +24,8 @@ export const Navbar: React.FC = () => {
   // Filter navigation items based on admin status - removed "How to Play"
   const baseNavigationItems = [
     { to: "/", label: "Picks" },
-    { to: "/leaderboards", label: "Leagues" }
-    // { to: "/insights", label: "Insights" } // Hidden until feature is complete
+    { to: "/leaderboards", label: "Leagues" },
+    { to: "/insights", label: "Insights" }
   ];
 
   const navigationItems = isAdmin 

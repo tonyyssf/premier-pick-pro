@@ -20,7 +20,6 @@ export interface InsightsData {
     currentPoints: number;
     averagePerGameweek: number;
   };
-  remainingTokens?: Record<string, number>;
   currentGameweek: number;
   totalPoints: number;
   correctPicks: number;

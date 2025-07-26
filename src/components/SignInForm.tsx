@@ -48,7 +48,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
       return;
     }
     
-    await signIn(email, password);
+    await signIn(email, password, rememberMe);
     onLoadingChange(false);
   };
 
