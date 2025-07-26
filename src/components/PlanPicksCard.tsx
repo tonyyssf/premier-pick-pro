@@ -128,9 +128,10 @@ export const PlanPicksCard = () => {
     };
   };
   
-  // Get teams from difficulty data
-  const teams = difficultyData?.processedData || [];
-  const rawTeams = difficultyData?.rawData || [];
+  // Get teams from difficulty data and filter out relegated teams
+  const currentSeasonTeams = ['ARS', 'AVL', 'BOU', 'BRE', 'BHA', 'CHE', 'CRY', 'EVE', 'FUL', 'IPS', 'LEI', 'LIV', 'MCI', 'MUN', 'NEW', 'NFO', 'SOU', 'TOT', 'WHU', 'WOL'];
+  const teams = (difficultyData?.processedData || []).filter(team => currentSeasonTeams.includes(team.team));
+  const rawTeams = (difficultyData?.rawData || []).filter(team => currentSeasonTeams.includes(team.team));
   
   // Get difficulty for a team and gameweek
   const getTeamDifficulty = (teamShortName: string, gameweekNumber: number) => {
