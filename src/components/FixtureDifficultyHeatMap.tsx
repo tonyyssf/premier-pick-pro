@@ -52,7 +52,7 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
     return 3; // Default difficulty
   };
 
-  // Team code to full name mapping
+  // Team code to full name mapping (using fixtures table names)
   const teamMapping: Record<string, string> = {
     'ARS': 'Arsenal',
     'AVL': 'Aston Villa', 
@@ -76,6 +76,33 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
     'WOL': 'Wolves'
   };
 
+  // Additional mapping for short names when available
+  const getOpponentShortName = (fullName: string) => {
+    const shortNameMap: Record<string, string> = {
+      'Arsenal': 'ARS',
+      'Aston Villa': 'AVL',
+      'Brighton': 'BHA', 
+      'Bournemouth': 'BOU',
+      'Brentford': 'BRE',
+      'Burnley': 'BUR',
+      'Chelsea': 'CHE',
+      'Crystal Palace': 'CRY',
+      'Everton': 'EVE',
+      'Fulham': 'FUL',
+      'Leeds': 'LEE',
+      'Liverpool': 'LIV',
+      'Man City': 'MCI',
+      'Man Utd': 'MUN',
+      'Newcastle': 'NEW',
+      "Nott'm Forest": 'NFO',
+      'Sunderland': 'SUN',
+      'Spurs': 'TOT',
+      'West Ham': 'WHU',
+      'Wolves': 'WOL'
+    };
+    return shortNameMap[fullName] || fullName;
+  };
+
   // Get opponent information for a team
   const getOpponentInfo = (teamCode: string) => {
     if (!fixtures || fixturesLoading) return null;
@@ -90,7 +117,8 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
     if (!fixture) return null;
     
     const isHome = fixture.home_team_name === fullTeamName;
-    const opponent = isHome ? fixture.away_team_short_name : fixture.home_team_short_name;
+    const opponentFullName = isHome ? fixture.away_team_name : fixture.home_team_name;
+    const opponent = getOpponentShortName(opponentFullName);
     
     return {
       opponent,
