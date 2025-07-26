@@ -52,17 +52,44 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
     return 3; // Default difficulty
   };
 
+  // Team code to full name mapping
+  const teamMapping: Record<string, string> = {
+    'ARS': 'Arsenal',
+    'AVL': 'Aston Villa', 
+    'BOU': 'Bournemouth',
+    'BRE': 'Brentford',
+    'BHA': 'Brighton',
+    'CHE': 'Chelsea',
+    'CRY': 'Crystal Palace',
+    'EVE': 'Everton',
+    'FUL': 'Fulham',
+    'IPS': 'Ipswich',
+    'LEI': 'Leicester',
+    'LIV': 'Liverpool',
+    'MCI': 'Man City',
+    'MUN': 'Man Utd',
+    'NEW': 'Newcastle',
+    'NFO': 'Nottingham Forest',
+    'SOU': 'Southampton',
+    'TOT': 'Spurs',
+    'WHU': 'West Ham',
+    'WOL': 'Wolves'
+  };
+
   // Get opponent information for a team
-  const getOpponentInfo = (teamName: string) => {
+  const getOpponentInfo = (teamCode: string) => {
     if (!fixtures || fixturesLoading) return null;
     
+    const fullTeamName = teamMapping[teamCode];
+    if (!fullTeamName) return null;
+    
     const fixture = fixtures.find(f => 
-      f.home_team_name === teamName || f.away_team_name === teamName
+      f.home_team_name === fullTeamName || f.away_team_name === fullTeamName
     );
     
     if (!fixture) return null;
     
-    const isHome = fixture.home_team_name === teamName;
+    const isHome = fixture.home_team_name === fullTeamName;
     const opponent = isHome ? fixture.away_team_short_name : fixture.home_team_short_name;
     
     return {
@@ -185,10 +212,6 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
                       </span>
                     </div>
                     
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Season Avg:</span>
-                      <span className="font-medium">{team.averageDifficulty}</span>
-                    </div>
                     
                     {selectedGameweek === currentGameweek && (
                       <div className="mt-2 p-2 bg-green-100 rounded text-xs text-green-700 font-medium">
@@ -252,10 +275,6 @@ export function FixtureDifficultyHeatMap({ data, rawData, currentGameweek }: Fix
                       </span>
                     </div>
                     
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Season Avg:</span>
-                      <span className="font-medium">{team.averageDifficulty}</span>
-                    </div>
                     
                     {selectedGameweek === currentGameweek && (
                       <div className="mt-2 p-2 bg-red-100 rounded text-xs text-red-700 font-medium">
