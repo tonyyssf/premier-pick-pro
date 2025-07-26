@@ -36,8 +36,8 @@ export const PlanPicksCard = () => {
     return count + plannedUsage;
   };
   
-  // Check if a team is already used
-  const isTeamUsed = (teamShortName: string) => getTeamUsage(teamShortName) > 0;
+  // Check if a team has reached the 2-use limit
+  const isTeamUsed = (teamShortName: string) => getTeamUsage(teamShortName) >= 2;
   
   // Get difficulty color class
   const getDifficultyColor = (difficulty: number) => {
@@ -239,7 +239,7 @@ export const PlanPicksCard = () => {
               </Badge>
             ))}
             <span className="text-muted-foreground ml-4">
-              (H) = Home • Used teams are marked
+              (H) = Home • Each team can be used twice per season
             </span>
           </div>
           
@@ -260,7 +260,7 @@ export const PlanPicksCard = () => {
               <tbody>
                 {teams.map(team => {
                   const teamUsage = getTeamUsage(team.team);
-                  const isOverused = teamUsage > 1;
+                  const isOverused = teamUsage > 2;
                   
                   return (
                     <tr key={team.team} className="border-b hover:bg-muted/50">
@@ -272,9 +272,9 @@ export const PlanPicksCard = () => {
                               <TooltipTrigger>
                                 <AlertTriangle className="h-3 w-3 text-orange-500" />
                               </TooltipTrigger>
-                              <TooltipContent>
-                                Team used {teamUsage} times
-                              </TooltipContent>
+                               <TooltipContent>
+                                 Team used {teamUsage}/2 times (limit: 2)
+                               </TooltipContent>
                             </Tooltip>
                           )}
                         </div>
@@ -320,7 +320,7 @@ export const PlanPicksCard = () => {
                                   <div className="font-medium">{team.team} vs {opponentInfo?.opponent || 'TBD'}</div>
                                   <div>Difficulty: {difficulty}/5</div>
                                   <div>{opponentInfo?.isHome ? 'Home' : 'Away'} fixture</div>
-                                  {isUsed && <div className="text-orange-500">Team already used</div>}
+                                  {isUsed && <div className="text-orange-500">Team limit reached (2/2)</div>}
                                   {isSelected && <div className="text-green-500">Selected for GW{gw}</div>}
                                 </div>
                               </TooltipContent>
@@ -331,10 +331,10 @@ export const PlanPicksCard = () => {
                       
                       <td className="py-2 px-1 text-center">
                         <Badge 
-                          variant={isOverused ? "destructive" : teamUsage > 0 ? "secondary" : "outline"}
+                          variant={isOverused ? "destructive" : teamUsage >= 2 ? "secondary" : teamUsage > 0 ? "default" : "outline"}
                           className="text-xs"
                         >
-                          {teamUsage}
+                          {teamUsage}/2
                         </Badge>
                       </td>
                     </tr>
